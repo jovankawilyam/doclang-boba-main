@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { dashboard, login } from '@/routes';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 
 interface DocumentItem {
@@ -152,6 +153,7 @@ export default function Welcome({
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-9 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/images/image.png" alt="Logo" className="h-15 md:h-15 w-auto object-contain" />
+            <a href="#welcome"></a>
             <div className="hidden md:flex flex-col leading-tight"></div>
           </div>
 
@@ -215,7 +217,7 @@ export default function Welcome({
         )}
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 md:px-8 py-12 flex flex-col items-center">
+     
         <section className="w-full">
           <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
             <img src={images[current]} alt="slider" className="w-full h-[580px] object-cover object-[center_10%] transition-all duration-700" />
@@ -240,17 +242,35 @@ export default function Welcome({
           </div>
         </section>
 
-        <section className="paneltext-center max-w-2xl w-full mb-20 mt-20 animate-in fade-in slide-in-from-bottom-8 duration-700">
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-black mb-6">
-            Lacak Status Dokumen Pasca Lelang <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-cyan-500">Dengan Mudah dan Cepat</span>
-          </h1>
-          <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 max-w-lg mx-auto leading-relaxed">
-            Masukkan nomor pengajuan Anda untuk melihat status pemrosesan dokumen secara real-time. Tidak perlu menunggu, cukup lacak dan ketahui kapan dokumen Anda siap diambil!
-          </p>
-        </section>
+        <section className="flex flex-col items-center justify-center text-center min-h-[70vh] w-full max-w-4xl mx-auto px-4 mb-20 mt-10 animate-in fade-in slide-in-from-bottom-10 duration-1000">
+  
+  {/* Aksen Kecil agar lebih Modern */}
+  <div className="flex items-center gap-2 mb-6 px-4 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-full">
+    <Search className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+    <span className="text-[10px] md:text-xs font-bold tracking-widest uppercase text-indigo-600 dark:text-indigo-400">
+      Monitoring Layanan Pasca Lelang
+    </span>
+  </div>
+
+  {/* Headline Utama dengan Gradient yang sesuai tema Navbar/Card kamu */}
+  <h1 className="text-4xl md:text-7xl font-black tracking-tight text-slate-900 dark:text-black leading-[1.1] mb-6">
+    Lacak Status <br />
+    <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500">
+      Dokumen Anda
+    </span>
+  </h1>
+  
+  {/* Deskripsi: Dibuat lebih ramping di mobile agar enak dibaca */}
+  <p className="text-base md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed mb-10 px-2">
+    Masukkan nomor pengajuan untuk memantau progres kuitansi, kutipan RL, hingga validasi PPh secara <span className="text-slate-900 dark:text-black font-semibold">transparan dan real-time.</span>
+  </p>
+
+
+
+</section>
 
         {/* Kuitansi */}
+         <main className="max-w-7xl mx-auto px-4 md:px-8 py-12 flex flex-col items-center">
         <section id="kuitansi" className="mt-20 scroll-mt-40 w-full bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-xl border border-slate-100 dark:border-zinc-800">
           <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-10">
 
@@ -540,34 +560,54 @@ export default function Welcome({
       </div>
 
       <div className="text-sm leading-relaxed space-y-3 ">
-        <p>Hak Cipta Kementerian Keuangan Republik Indonesia</p>
-        <p>Manajemen Situs Kemenkeu - Gedung Djuanda I Lt. 9</p>
-        <p>Jalan Dr. Wahidin Raya No. 1 Jakarta Pusat Indonesia</p>
+        <p>© 2026 KPKNL Bogor</p>
+        <p>Jalan Veteran No. 45, Panaragan, Kecamatan Bogor Tengah, Kota Bogor, Jawa Barat 16125</p>
       </div>
     </div>
 
     {/* RIGHT SECTION */}
     <div className="flex flex-col items-start md:items-end gap-6">
-      <p className="font-semibold">Ikuti Kami di kanal:</p>
+  <div className="flex flex-col items-start md:items-end">
+    <p className="font-bold text-sm tracking-wider uppercase text-indigo-200/80 mb-1">
+      Ikuti Kami
+    </p>
+    <div className="h-1 w-12 bg-cyan-400 rounded-full"></div>
+  </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        {[
-          "facebook",
-          "twitter",
-          "instagram",
-          "youtube",
-          "tiktok",
-          "linkedin"
-        ].map((item, index) => (
-          <div
-            key={index}
-            className="w-12 h-12 flex items-center justify-center rounded-full bg-white text-[#0F3D7A] hover:scale-110 transition cursor-pointer"
-          >
-            <i className={`fa-brands fa-${item} text-xl`} />
-          </div>
-        ))}
-      </div>
-    </div>
+  <div className="flex gap-4">
+    {[
+      { 
+        name: "facebook", 
+        url: "https://www.facebook.com/kpknl.bogor", 
+        color: "hover:bg-[#1877F2]" 
+      },
+      { 
+        name: "instagram", 
+        url: "https://www.instagram.com/kpknlbogor", 
+        color: "hover:bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]" 
+      },
+      { 
+        name: "tiktok", 
+        url: "https://www.tiktok.com/@kpknlbogor", 
+        color: "hover:bg-black" 
+      }
+    ].map((item, index) => (
+      <a
+        key={index}
+        href={item.url}
+        target="_blank" // Supaya link terbuka di tab baru
+        rel="noopener noreferrer" // Standar keamanan untuk link eksternal
+        className={`group w-12 h-12 flex items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 text-white transition-all duration-300 ${item.color} hover:shadow-xl hover:shadow-indigo-500/20 hover:-translate-y-1 active:scale-95`}
+      >
+        <i className={`fa-brands fa-${item.name} text-xl group-hover:scale-110 transition-transform`} />
+      </a>
+    ))}
+  </div>
+  
+  <p className="text-[10px] text-indigo-300/60 font-medium tracking-widest uppercase text-left md:text-right">
+    KPKNL Bogor <br /> @kpknlbogor
+  </p>
+</div>
 
   </div>
 </footer>  
