@@ -21,12 +21,18 @@ Route::get('/', function (\Illuminate\Http\Request $request) {
     $search_rl = $request->input('nomor_kutipan');
     $document_rl = $search_rl ? \App\Models\Document::where('nomor_pengajuan', $search_rl)->where('category', 'kutipan_rl')->first() : null;
 
+    // Support public search for Validasi PPh as well (separate category)
+    $search_validasi = $request->input('nomor_validasi');
+    $document_validasi = $search_validasi ? \App\Models\Document::where('nomor_pengajuan', $search_validasi)->where('category', 'validasi_pph')->first() : null;
+
     return Inertia::render('welcome', [
         'canRegister' => Features::enabled(Features::registration()),
         'document' => $document,
         'search' => $search,
         'document_rl' => $document_rl,
         'search_rl' => $search_rl,
+        'document_validasi' => $document_validasi,
+        'search_validasi' => $search_validasi,
     ]);
 })->name('home');
 
@@ -140,3 +146,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/documents/rl/{document}', [\App\Http\Controllers\DocumentRLController::class, 'destroy'])->name('documents.rl.destroy');
 });
 require __DIR__.'/settings.php';
+
+
+
+Route::get('/persyaratan', function () {
+    return Inertia::render('persyaratan');
+});

@@ -1,6 +1,6 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { useEffect, useState } from "react";
-import { Search, CheckCircle2, Clock, FileText, User as UserIcon, Shield, Inbox } from 'lucide-react';
+import { Search, CheckCircle2, Clock, FileText, Inbox } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -21,19 +21,19 @@ function TableRow({ title, status }: { title: string; status: DocumentItem['stat
         return {
           badge: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-900',
           icon: <CheckCircle2 className="h-4 w-4 mr-1.5" />,
-          label: 'Selesai'
+          label: 'Selesai',
         };
       case 'siap_diambil':
         return {
           badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-900',
           icon: <Inbox className="h-4 w-4 mr-1.5" />,
-          label: 'Siap Diambil'
+          label: 'Siap Diambil',
         };
       default:
         return {
           badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-900',
           icon: <Clock className="h-4 w-4 mr-1.5" />,
-          label: 'Dalam Proses'
+          label: 'Dalam Proses',
         };
     }
   };
@@ -53,13 +53,61 @@ function TableRow({ title, status }: { title: string; status: DocumentItem['stat
   );
 }
 
-export default function Welcome({ document, search, document_rl, search_rl }: { document: DocumentItem | null; search: string | null; document_rl: DocumentItem | null; search_rl: string | null }) {
-  const { data: dataK, setData: setDataK, get: getK, processing: processingK } = useForm({ nomor_pengajuan: search || '' });
-  const { data: dataRL, setData: setDataRL, get: getRL, processing: processingRL } = useForm({ nomor_kutipan: search_rl || '' });
+export default function Welcome({
+  document,
+  search,
+  document_rl,
+  search_rl,
+  document_validasi,
+  search_validasi,
+}: {
+  document: DocumentItem | null;
+  search: string | null;
+  document_rl: DocumentItem | null;
+  search_rl: string | null;
+  document_validasi: DocumentItem | null;
+  search_validasi: string | null;
+}) {
+  const {
+    data: dataK,
+    setData: setDataK,
+    get: getK,
+    processing: processingK,
+  } = useForm({ nomor_pengajuan: search || '' });
+
+  const {
+    data: dataRL,
+    setData: setDataRL,
+    get: getRL,
+    processing: processingRL,
+  } = useForm({ nomor_kutipan: search_rl || '' });
+
+  const {
+    data: dataV,
+    setData: setDataV,
+    get: getV,
+    processing: processingV,
+  } = useForm({ nomor_validasi: search_validasi || '' });
+
   const { auth } = usePage().props as any;
   const [showNav, setShowNav] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
-  const [open, setOpen] = useState(false); // ✅ Tambahkan state open untuk menu mobile
+  const [open, setOpen] = useState(false);
+
+  const images = [
+    '/images/profile-1.png',
+    '/images/profile-2.png',
+    '/images/profile-3.png',
+    '/images/profile-4.png',
+  ];
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrent((p) => (p + 1) % images.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [images.length]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -70,10 +118,12 @@ export default function Welcome({ document, search, document_rl, search_rl }: { 
       }
       setLastScrollY(window.scrollY);
     };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
+
+  const prevSlide = () => setCurrent((c) => (c === 0 ? images.length - 1 : c - 1));
+  const nextSlide = () => setCurrent((c) => (c + 1) % images.length);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,213 +135,442 @@ export default function Welcome({ document, search, document_rl, search_rl }: { 
     getRL('/', { preserveState: true });
   };
 
+  const handleSearchValidasi = (e: React.FormEvent) => {
+    e.preventDefault();
+    getV('/', { preserveState: true });
+  };
+
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#3a3a3d] font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#ffffff] font-sans">
       <Head title="Tracking Dokumen Pasca Lelang" />
 
-
-      {/* ⚪ NAVBAR UTAMA */}
-      <nav className={`sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm transition-transform duration-300 ${showNav ? 'translate-y-0' : '-translate-y-full'}`}>
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-9.5 flex items-center justify-between">
+      <nav
+        className={`sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm transition-transform duration-300 ${
+          showNav ? 'translate-y-0' : '-translate-y-full'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-9 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/images/image.png" alt="Logo" className="h-15 md:h-15 w-auto object-contain" />
-            <div className="hidden md:flex flex-col leading-tight">
-            </div>
+            <div className="hidden md:flex flex-col leading-tight"></div>
           </div>
 
           <div className="hidden md:flex items-center gap-10">
-            <a href="#kuitansi" className="text-sm text-gray-600 hover:text-indigo-600 font-extrabold">Kuitansi</a>
-            <a href="#kutipan" className="text-sm text-gray-600 hover:text-indigo-600 font-extrabold">Kutipan RL</a>
-            <a href="#validasiPPh" className="text-sm text-gray-600 hover:text-indigo-600 font-extrabold">Validasi PPh</a>
+            <a href="#kuitansi" className="text-sm text-gray-600 hover:text-indigo-600 font-extrabold">
+              Kuitansi
+            </a>
+            <a href="#kutipan" className="text-sm text-gray-600 hover:text-indigo-600 font-extrabold">
+              Kutipan RL
+            </a>
+            <a href="#validasiPPh" className="text-sm text-gray-600 hover:text-indigo-600 font-extrabold">
+              Validasi PPh
+            </a>
+            <Link href="/persyaratan" className="text-sm text-gray-600 hover:text-indigo-600 font-extrabold">
+              Persyaratan
+            </Link>
             {auth?.user ? (
-              <Link href={dashboard()}><Button className="rounded-full px-5">Dashboard</Button></Link>
+              <Link href={dashboard()}>
+                <Button className="rounded-full px-5">Dashboard</Button>
+              </Link>
             ) : (
-              <Link href={login()}><Button className="rounded-full px-5 bg-white-600 text-black">Login</Button></Link>
+              <Link href={login()}>
+                <Button className="rounded-full px-5 bg-white-600 text-black">Login</Button>
+              </Link>
             )}
           </div>
 
-          <button className="md:hidden text-gray-700 text-xl" onClick={() => setOpen(!open)}>☰</button>
+          <button className="md:hidden text-gray-700 text-xl" onClick={() => setOpen(!open)}>
+            ☰
+          </button>
         </div>
 
-
-{/* ⚪ MENU MOBILE (Hanya muncul saat open=true) */}
         {open && (
-          <div className="md:hidden px-8 pb-4 space-y-5 bg-white border-t animate-in fade-in slide-in-from-bottom-12 duration-500 delay-150 fill-mode-both">
-            <a href="#kuitansi" className="block text-sm mt-5 text-black bg">Kuitansi</a>
-            <a href="#kutipan" className="block text-sm text-card">Kutipan RL</a>
-            <a href="#validasiPPh" className="block text-sm text-card">Validasi PPh</a>
+          <div className="md:hidden px-8 pb-4 space-y-4 bg-white border-t shadow-sm animate-in fade-in slide-in-from-top-2 duration-800">
+            <div className="flex justify-between">
+              <a href="#kuitansi" className="text-sm text-black mt-4">
+                Kuitansi
+              </a>
+              <Link href="/persyaratan" className="text-sm text-gray-600 hover:text-indigo-600 font-extrabold mt-4">
+                Persyaratan
+              </Link>
+            </div>
+
+            <a href="#kutipan" className="block text-sm text-card">
+              Kutipan RL
+            </a>
+
+            <a href="#validasiPPh" className="block text-sm text-card">
+              Validasi PPh
+            </a>
             {auth?.user ? (
-              <Link href={dashboard()}><Button className="w-full rounded-full">Dashboard</Button></Link>
+              <Link href={dashboard()}>
+                <Button className="w-full rounded-full">Dashboard</Button>
+              </Link>
             ) : (
-              <Link href={login()}><Button className="w-full rounded-full bg-indigo-600 text-white">Login</Button></Link>
+              <Link href={login()}>
+                <Button className="w-full rounded-full bg-indigo-600 text-white">Login</Button>
+              </Link>
             )}
           </div>
         )}
       </nav>
 
-      {/* ✅ Semua section harus ada di dalam div utama agar tidak error */}
       <main className="max-w-7xl mx-auto px-4 md:px-8 py-12 flex flex-col items-center">
-        
+        <section className="w-full">
+          <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
+            <img src={images[current]} alt="slider" className="w-full h-[580px] object-cover object-[center_10%] transition-all duration-700" />
+            <div className="absolute inset-0 bg-black/20" />
 
-
-
-
-
-        {/* KUITANSI */}
-        <section id="kuitansi" className="mt-20 scroll-mt-40 flex flex-col items-center w-full">
-          <div className="text-center max-w-2xl w-full mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6">
-              Pengajuan Kuitansi <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-cyan-500">Siap Diambil</span>
-            </h1>
-            <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 max-w-lg mx-auto leading-relaxed">
-              Masukkan Nomor Pengajuan Anda untuk melihat status pemrosesan dokumen secara real-time.
-            </p>
-            <Card className="shadow-2xl shadow-indigo-500/10 border-slate-200 dark:border-slate-800 overflow-hidden rounded-2xl">
-              <CardContent className="p-2">
-                <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                    <Input
-                      type="text"
-                      placeholder="Contoh: 123/KPHL/2026..."
-                      className="h-14 pl-12 pr-4 text-lg border-0 bg-transparent ring-0 focus-visible:ring-0 shadow-none dark:text-white"
-                      value={dataK.nomor_pengajuan}
-                      onChange={e => setDataK('nomor_pengajuan', e.target.value)}
-                      required />
-                  </div>
-                  <Button type="submit" disabled={processingK} className="h-14 px-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium text-base transition-all hover:shadow-lg hover:shadow-indigo-500/30">
-                    {processingK ? 'Mencari...' : 'Lacak Sekarang'}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+            <button onClick={prevSlide} className="absolute top-1/2 left-4 -translate-y-1/2 bg-black/50 text-white px-3 py-1 rounded-full">
+              ‹
+            </button>
+            <button onClick={nextSlide} className="absolute top-1/2 right-4 -translate-y-1/2 bg-black/50 text-white px-3 py-1 rounded-full">
+              ›
+            </button>
           </div>
 
-          {search && (
-            <div className="w-full max-w-3xl animate-in fade-in slide-in-from-bottom-12 duration-500 delay-150 fill-mode-both">
-              {document ? (
-                <div className="bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-xl border border-slate-100 dark:border-zinc-800">
-                  <div className="flex items-center gap-4 mb-8 pb-6 border-b border-slate-100 dark:border-zinc-800">
-                    <div className="bg-indigo-50 dark:bg-indigo-900/30 p-4 rounded-2xl text-indigo-600 dark:text-indigo-400">
-                      <FileText className="h-8 w-8" />
+          <div className="flex justify-center gap-2 mt-4">
+            {images.map((_, index) => (
+              <div
+                key={index}
+                onClick={() => setCurrent(index)}
+                className={`w-3 h-3 rounded-full cursor-pointer ${current === index ? 'bg-indigo-600' : 'bg-gray-300'}`}
+              />
+            ))}
+          </div>
+        </section>
+
+        <section className="paneltext-center max-w-2xl w-full mb-20 mt-20 animate-in fade-in slide-in-from-bottom-8 duration-700">
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-black mb-6">
+            Lacak Status Dokumen Pasca Lelang <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-cyan-500">Dengan Mudah dan Cepat</span>
+          </h1>
+          <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 max-w-lg mx-auto leading-relaxed">
+            Masukkan nomor pengajuan Anda untuk melihat status pemrosesan dokumen secara real-time. Tidak perlu menunggu, cukup lacak dan ketahui kapan dokumen Anda siap diambil!
+          </p>
+        </section>
+
+        {/* Kuitansi */}
+        <section id="kuitansi" className="mt-20 scroll-mt-40 w-full bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-xl border border-slate-100 dark:border-zinc-800">
+          <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-10">
+
+            <div className="flex flex-col items-center w-full">
+              <div className="text-center max-w-2xl w-full mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6">
+                  Pengajuan Kuitansi <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-cyan-500">Siap Diambil</span>
+                </h1>
+                <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 max-w-lg mx-auto leading-relaxed">
+                  Masukkan Nomor Pengajuan Anda untuk melihat status pemrosesan dokumen secara real-time.
+                </p>
+                <Card className="shadow-2xl shadow-indigo-500/10 border-slate-200 dark:border-slate-800 overflow-hidden rounded-2xl">
+                  <CardContent className="p-2">
+                    <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                        <Input
+                          type="text"
+                          placeholder="Contoh: 123/KPHL/2026"
+                          className="h-14 pl-12 pr-4 text-lg border-0 bg-transparent ring-0 focus-visible:ring-0 shadow-none dark:text-white"
+                          value={dataK.nomor_pengajuan}
+                          onChange={(e) => setDataK('nomor_pengajuan', e.target.value)}
+                          required
+                        />
+                      </div>
+                      <Button type="submit" disabled={processingK} className="h-14 px-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium text-base transition-all hover:shadow-lg hover:shadow-indigo-500/30">
+                        {processingK ? 'Mencari...' : 'Lacak Sekarang'}
+                      </Button>
+                    </form>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {search && (
+                <div className="w-full max-w-3xl animate-in fade-in slide-in-from-bottom-12 duration-500 delay-150 fill-mode-both">
+                  {document ? (
+                    <div className="bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-xl border border-slate-100 dark:border-zinc-800">
+                      <div className="flex items-center gap-4 mb-8 pb-6 border-b border-slate-100 dark:border-zinc-800">
+                        <div className="bg-indigo-50 dark:bg-indigo-900/30 p-4 rounded-2xl text-indigo-600 dark:text-indigo-400">
+                          <FileText className="h-8 w-8" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Hasil Pencarian untuk:</p>
+                          <h2 className="text-2xl font-bold font-mono">{document.nomor_pengajuan}</h2>
+                        </div>
+                      </div>
+                      <div className="overflow-hidden rounded-2xl border border-slate-100 dark:border-zinc-800">
+                        <table className="w-full text-left text-sm">
+                          <thead className="bg-slate-50 dark:bg-zinc-800/50 border-b border-slate-100 dark:border-zinc-800">
+                            <tr>
+                              <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Jenis Dokumen</th>
+                              <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
+                            <TableRow title="Status Proses Dokumen" status={document.status_proses} />
+                          </tbody>
+                        </table>
+                      </div>
+                      {document.catatan && (
+                        <div className="mt-6 p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-xl border border-slate-100 dark:border-zinc-800">
+                          <p className="text-sm font-medium text-slate-500 mb-1">Catatan Petugas:</p>
+                          <p className="text-slate-700 dark:text-slate-300 italic">"{document.catatan}"</p>
+                        </div>
+                      )}
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Hasil Pencarian untuk:</p>
-                      <h2 className="text-2xl font-bold font-mono">{document.nomor_pengajuan}</h2>
-                    </div>
-                  </div>
-                  <div className="overflow-hidden rounded-2xl border border-slate-100 dark:border-zinc-800">
-                    <table className="w-full text-left text-sm">
-                      <thead className="bg-slate-50 dark:bg-zinc-800/50 border-b border-slate-100 dark:border-zinc-800">
-                        <tr>
-                          <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Jenis Dokumen</th>
-                          <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
-                        <TableRow title="Status Proses Dokumen" status={document.status_proses} />
-                      </tbody>
-                    </table>
-                  </div>
-                  {document.catatan && (
-                    <div className="mt-6 p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-xl border border-slate-100 dark:border-zinc-800">
-                      <p className="text-sm font-medium text-slate-500 mb-1">Catatan Petugas:</p>
-                      <p className="text-slate-700 dark:text-slate-300 italic">"{document.catatan}"</p>
+                  ) : (
+                    <div className="bg-white dark:bg-zinc-900 rounded-3xl p-12 shadow-xl border border-slate-100 dark:border-zinc-800 text-center">
+                      <div className="mx-auto w-20 h-20 bg-slate-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mb-6">
+                        <Search className="h-10 w-10 text-slate-400" />
+                      </div>
+                      <h3 className="text-xl font-bold mb-2">Dokumen Tidak Ditemukan</h3>
+                      <p className="text-slate-500 dark:text-slate-400">
+                        Kami tidak menemukan pengajuan dengan nomor <span className="font-mono font-medium text-slate-900 dark:text-white">{search}</span>.
+                      </p>
                     </div>
                   )}
                 </div>
-              ) : (
-                <div className="bg-white dark:bg-zinc-900 rounded-3xl p-12 shadow-xl border border-slate-100 dark:border-zinc-800 text-center">
-                  <div className="mx-auto w-20 h-20 bg-slate-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mb-6">
-                    <Search className="h-10 w-10 text-slate-400" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">Dokumen Tidak Ditemukan</h3>
-                  <p className="text-slate-500 dark:text-slate-400">
-                    Kami tidak menemukan pengajuan dengan nomor <span className="font-mono font-medium text-slate-900 dark:text-white">{search}</span>.
-                  </p>
+              )}
+            </div>
+
+            <div className=" flex justify-center w-full md:w-1/2">
+              <img src="/images/siapwbk.png" alt="Ilustrasi" className=" object-contain drop-shadow-xl" />
+            </div>
+          </div>
+        </section>
+
+        {/* Kutipan RL */}
+        <section id="kutipan" className="mt-20 scroll-mt-40 w-full bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-xl border border-slate-100 dark:border-zinc-800">
+          <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-10">
+            <div className=" flex justify-center w-full md:w-1/2">
+              <img src="/images/menujuwbk.png" alt="Ilustrasi" className=" object-contain drop-shadow-xl" />
+            </div>
+
+            <div className="flex flex-col items-center w-full">
+              <div className="text-center max-w-2xl w-full mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6">
+                  Pengajuan Kutipan RL <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-cyan-500">Siap Diambil</span>
+                </h1>
+                <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 max-w-lg mx-auto leading-relaxed">
+                  Masukkan Nomor Pengajuan Anda untuk melihat status pemrosesan dokumen secara real-time.
+                </p>
+                <Card className="shadow-2xl shadow-indigo-500/10 border-slate-200 dark:border-slate-800 overflow-hidden rounded-2xl">
+                  <CardContent className="p-2">
+                    <form onSubmit={handleSearchRL} className="flex flex-col sm:flex-row gap-2">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                        <Input
+                          type="text"
+                          placeholder="Contoh: 123/K-RL/2026"
+                          className="h-14 pl-12 pr-4 text-lg border-0 bg-transparent ring-0 focus-visible:ring-0 shadow-none dark:text-white"
+                          value={dataRL.nomor_kutipan}
+                          onChange={(e) => setDataRL('nomor_kutipan', e.target.value)}
+                          required
+                        />
+                      </div>
+                      <Button type="submit" disabled={processingRL} className="h-14 px-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium text-base transition-all hover:shadow-lg hover:shadow-indigo-500/30">
+                        {processingRL ? 'Mencari...' : 'Lacak Sekarang'}
+                      </Button>
+                    </form>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {search_rl && (
+                <div className="w-full max-w-3xl animate-in fade-in slide-in-from-bottom-12 duration-500 delay-150 fill-mode-both">
+                  {document_rl ? (
+                    <div className="bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-xl border border-slate-100 dark:border-zinc-800">
+                      <div className="flex items-center gap-4 mb-8 pb-6 border-b border-slate-100 dark:border-zinc-800">
+                        <div className="bg-indigo-50 dark:bg-indigo-900/30 p-4 rounded-2xl text-indigo-600 dark:text-indigo-400">
+                          <FileText className="h-8 w-8" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Hasil Pencarian untuk:</p>
+                          <h2 className="text-2xl font-bold font-mono">{document_rl.nomor_pengajuan}</h2>
+                        </div>
+                      </div>
+                      <div className="overflow-hidden rounded-2xl border border-slate-100 dark:border-zinc-800">
+                        <table className="w-full text-left text-sm">
+                          <thead className="bg-slate-50 dark:bg-zinc-800/50 border-b border-slate-100 dark:border-zinc-800">
+                            <tr>
+                              <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Jenis Dokumen</th>
+                              <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
+                            <TableRow title="Status Proses Dokumen" status={document_rl.status_proses} />
+                          </tbody>
+                        </table>
+                      </div>
+                      {document_rl.catatan && (
+                        <div className="mt-6 p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-xl border border-slate-100 dark:border-zinc-800">
+                          <p className="text-sm font-medium text-slate-500 mb-1">Catatan Petugas:</p>
+                          <p className="text-slate-700 dark:text-slate-300 italic">"{document_rl.catatan}"</p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="bg-white dark:bg-zinc-900 rounded-3xl p-12 shadow-xl border border-slate-100 dark:border-zinc-800 text-center">
+                      <div className="mx-auto w-20 h-20 bg-slate-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mb-6">
+                        <Search className="h-10 w-10 text-slate-400" />
+                      </div>
+                      <h3 className="text-xl font-bold mb-2">Dokumen Tidak Ditemukan</h3>
+                      <p className="text-slate-500 dark:text-slate-400">
+                        Kami tidak menemukan pengajuan dengan nomor <span className="font-mono font-medium text-slate-900 dark:text-white">{search_rl}</span>.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          )}
+          </div>
         </section>
 
-        {/* KUTIPAN RL SECTION */}
-        <section id="kutipan" className="mt-40 scroll-mt-40 flex flex-col items-center w-full">
-          <div className="text-center max-w-2xl w-full mb-12">
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6">
-              Pengajuan Kutipan RL <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-cyan-500">Siap Diambil</span>
-            </h1>
-          </div>
-          <Card className="w-full max-w-2xl shadow-xl border rounded-2xl mb-10">
-            <CardContent className="p-2">
-              <form onSubmit={handleSearchRL} className="flex flex-col sm:flex-row gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                  <Input
-                    type="text"
-                    placeholder="Contoh: 146/K-RL/2026"
-                    className="h-14 pl-12 pr-4 text-lg border-0 bg-transparent ring-0 focus-visible:ring-0 shadow-none"
-                    value={dataRL.nomor_kutipan}
-                    onChange={e => setDataRL('nomor_kutipan', e.target.value)}
-                    required
-                  />
-                </div>
-                <Button type="submit" disabled={processingRL} className="h-14 px-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl">
-                  {processingRL ? 'Mencari...' : 'Lacak Sekarang'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-          {search_rl && (
-            <div className="w-full flex justify-center">
-              {document_rl ? (
-                <div className="w-full max-w-3xl bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-xl border border-slate-100 dark:border-zinc-800">
-                  <div className="flex items-center gap-4 mb-8 pb-6 border-b">
-                    <div className="bg-indigo-50 p-4 rounded-2xl text-indigo-600"><FileText className="h-8 w-8" /></div>
-                    <h2 className="text-2xl font-bold font-mono">{document_rl.nomor_pengajuan}</h2>
-                  </div>
-                  <div className="overflow-hidden rounded-2xl border">
-                    <table className="w-full text-left text-sm">
-                      <thead className="bg-slate-50 border-b">
-                        <tr><th className="px-6 py-4 font-semibold">Jenis Dokumen</th><th className="px-6 py-4 font-semibold">Status</th></tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td className="px-6 py-4">Status Proses Dokumen</td>
-                          <td className="px-6 py-4">
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-700">
-                              {document_rl.status_proses === 'siap_diambil' ? 'Siap Diambil' : 'Dalam Proses'}
-                            </span>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-white dark:bg-zinc-900 rounded-3xl p-12 shadow-xl border text-center w-full max-w-3xl">
-                  <h3 className="text-xl font-bold">Dokumen Tidak Ditemukan</h3>
+        {/* Validasi PPh */}
+       <section id="validasiPPh" className="mt-20 scroll-mt-40 w-full bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-xl border border-slate-100 dark:border-zinc-800">
+          <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-10">
+
+            <div className="flex flex-col items-center w-full">
+              <div className="text-center max-w-2xl w-full mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6">
+                  Pengajuan Validasi PPh <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-cyan-500">Siap Diambil</span>
+                </h1>
+                <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 max-w-lg mx-auto leading-relaxed">
+                  Masukkan Nomor Pengajuan Anda untuk melihat status pemrosesan dokumen secara real-time.
+                </p>
+                <Card className="shadow-2xl shadow-indigo-500/10 border-slate-200 dark:border-slate-800 overflow-hidden rounded-2xl">
+                  <CardContent className="p-2">
+                    <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                        <Input
+                          type="text"
+                          placeholder="Contoh: 123/V-PPh/2026"
+                          className="h-14 pl-12 pr-4 text-lg border-0 bg-transparent ring-0 focus-visible:ring-0 shadow-none dark:text-white"
+                          value={dataK.nomor_pengajuan}
+                          onChange={(e) => setDataK('nomor_pengajuan', e.target.value)}
+                          required
+                        />
+                      </div>
+                      <Button type="submit" disabled={processingK} className="h-14 px-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium text-base transition-all hover:shadow-lg hover:shadow-indigo-500/30">
+                        {processingK ? 'Mencari...' : 'Lacak Sekarang'}
+                      </Button>
+                    </form>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {search && (
+                <div className="w-full max-w-3xl animate-in fade-in slide-in-from-bottom-12 duration-500 delay-150 fill-mode-both">
+                  {document ? (
+                    <div className="bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-xl border border-slate-100 dark:border-zinc-800">
+                      <div className="flex items-center gap-4 mb-8 pb-6 border-b border-slate-100 dark:border-zinc-800">
+                        <div className="bg-indigo-50 dark:bg-indigo-900/30 p-4 rounded-2xl text-indigo-600 dark:text-indigo-400">
+                          <FileText className="h-8 w-8" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Hasil Pencarian untuk:</p>
+                          <h2 className="text-2xl font-bold font-mono">{document.nomor_pengajuan}</h2>
+                        </div>
+                      </div>
+                      <div className="overflow-hidden rounded-2xl border border-slate-100 dark:border-zinc-800">
+                        <table className="w-full text-left text-sm">
+                          <thead className="bg-slate-50 dark:bg-zinc-800/50 border-b border-slate-100 dark:border-zinc-800">
+                            <tr>
+                              <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Jenis Dokumen</th>
+                              <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
+                            <TableRow title="Status Proses Dokumen" status={document.status_proses} />
+                          </tbody>
+                        </table>
+                      </div>
+                      {document.catatan && (
+                        <div className="mt-6 p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-xl border border-slate-100 dark:border-zinc-800">
+                          <p className="text-sm font-medium text-slate-500 mb-1">Catatan Petugas:</p>
+                          <p className="text-slate-700 dark:text-slate-300 italic">"{document.catatan}"</p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="bg-white dark:bg-zinc-900 rounded-3xl p-12 shadow-xl border border-slate-100 dark:border-zinc-800 text-center">
+                      <div className="mx-auto w-20 h-20 bg-slate-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mb-6">
+                        <Search className="h-10 w-10 text-slate-400" />
+                      </div>
+                      <h3 className="text-xl font-bold mb-2">Dokumen Tidak Ditemukan</h3>
+                      <p className="text-slate-500 dark:text-slate-400">
+                        Kami tidak menemukan pengajuan dengan nomor <span className="font-mono font-medium text-slate-900 dark:text-white">{search}</span>.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          )}
-        </section>
 
-        {/* VALIDASI PPH SECTION */}
-        <section id='validasiPPh' className='mt-40 scroll-mt-40 flex flex-col items-center w-full mb-20'>
-          <div className="text-center max-w-2xl w-full mb-12">
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6">
-              Pengajuan Validasi PPh <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-cyan-500">Siap Diambil</span>
-            </h1>
+            <div className=" flex justify-center w-full md:w-1/2">
+              <img src="/images/layanan.png" alt="Ilustrasi" className=" object-contain drop-shadow-xl" />
+            </div>
           </div>
-          {/* Form dan hasil PPh (Logika serupa dengan Kuitansi) */}
-          {/* ... */}
         </section>
 
-      </main>
+{/* FOOTER KPKNL */}
+</main>
+
+{/* Hapus max-w-7xl dan mx-auto di sini supaya background biru bisa full ke samping */}
+<footer className="w-full bg-[#0F3D7A] text-white mt-24 py-9">
+  
+  {/* Bungkus konten dengan div ini agar isi tetap di tengah dan tidak melebar ke pinggir layar */}
+  <div className="max-w-7xl mx-auto px-4 md:px-8 grid md:grid-cols-2 gap-10 items-center">
+    
+    {/* LEFT SECTION */}
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center gap-4">
+        <img
+          src="images/NAGARA-DANA-RAKCA.png"
+          alt="Logo"
+          className="w-16 h-16 object-contain"/>
+        <img 
+          src="images/kpknl-bogor.png" 
+          alt="Logo" 
+          className="w-16 h-16 object-contain"/>
+        
+      </div>
+
+      <div className="text-sm leading-relaxed space-y-3 ">
+        <p>Hak Cipta Kementerian Keuangan Republik Indonesia</p>
+        <p>Manajemen Situs Kemenkeu - Gedung Djuanda I Lt. 9</p>
+        <p>Jalan Dr. Wahidin Raya No. 1 Jakarta Pusat Indonesia</p>
+      </div>
+    </div>
+
+    {/* RIGHT SECTION */}
+    <div className="flex flex-col items-start md:items-end gap-6">
+      <p className="font-semibold">Ikuti Kami di kanal:</p>
+
+      <div className="grid grid-cols-3 gap-4">
+        {[
+          "facebook",
+          "twitter",
+          "instagram",
+          "youtube",
+          "tiktok",
+          "linkedin"
+        ].map((item, index) => (
+          <div
+            key={index}
+            className="w-12 h-12 flex items-center justify-center rounded-full bg-white text-[#0F3D7A] hover:scale-110 transition cursor-pointer"
+          >
+            <i className={`fa-brands fa-${item} text-xl`} />
+          </div>
+        ))}
+      </div>
+    </div>
+
+  </div>
+</footer>  
     </div>
   );
-}
+} 

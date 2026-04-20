@@ -136,6 +136,22 @@ html {
   scroll-behavior: smooth;
 }
 
+.panel{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 30px;
+    height: 30px;
+    top: 0;
+    position: sticky;
+}
+
+panel-1{
+    background-color: white;
+    z-index: 1;
+}
+
 @layer base {
     * {
         @apply border-border;
