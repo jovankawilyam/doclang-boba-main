@@ -171,7 +171,7 @@ export default function Dashboard({ admins = [], stats, docStats, docStatsKutipa
                                     
                                 </Link>
                                 <Link
-                                    href="/documents/kutipan-rl"
+                                    href="/documents/rl"
                                     className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-accent"
                                 >
                                     <div className="flex items-center gap-4">

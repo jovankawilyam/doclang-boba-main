@@ -4,13 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Prunable;
 
 class Document extends Model
 {
     /** @use HasFactory<\Database\Factories\DocumentFactory> */
-    use HasFactory, SoftDeletes, Prunable;
+    use HasFactory, Prunable;
 
     protected $fillable = [
         'nomor_pengajuan',

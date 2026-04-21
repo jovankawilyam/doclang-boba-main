@@ -8,13 +8,29 @@ use Inertia\Inertia;
 
 class DocumentController extends Controller
 {
-    public function index(Request $request)
+    public static function getStatistics()
+    {
+        $categories = ['kuitansi', 'kutipan_rl', 'validasi_pph'];
+        $stats = [];
+
+        foreach ($categories as $cat) {
+            $stats[$cat] = [
+                'total' => Document::where('category', $cat)->count(),
+                'proses' => Document::where('category', $cat)->where('status_proses', 'proses')->count(),
+                'siap_diambil' => Document::where('category', $cat)->where('status_proses', 'siap_diambil')->count(),
+                'selesai' => Document::where('category', $cat)->where('status_proses', 'selesai')->count(),
+            ];
+        }
+
+        return $stats;
+    }
+
+    public function index(Request $request, $category = 'kuitansi')
     {
         $search = $request->input('search');
 
         $documents = Document::with('creator')
-            // Only list documents in the 'kuitansi' category for this controller
-            ->where('category', 'kuitansi')
+            ->where('category', $category)
             ->when($search, function ($query, $search) {
                 $query->where('nomor_pengajuan', 'like', "%{$search}%");
             })
@@ -22,8 +38,13 @@ class DocumentController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        // Render the kuitansi page (frontend at resources/js/pages/documents/kuitansi.tsx)
-        return Inertia::render('documents/kuitansi', [
+        $viewMap = [
+            'kuitansi' => 'documents/kuitansi',
+            'kutipan_rl' => 'documents/rl',
+            'validasi_pph' => 'documents/validasi-pph',
+        ];
+
+        return Inertia::render($viewMap[$category] ?? 'documents/kuitansi', [
             'documents' => $documents,
             'filters' => ['search' => $search]
         ]);
@@ -32,16 +53,13 @@ class DocumentController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            // Expect full formatted nomor_pengajuan like '200/KPHL/2026'
-            'nomor_pengajuan' => ['required', 'string', 'unique:documents,nomor_pengajuan', 'regex:/^\\d+\/KPHL\/2026$/'],
+            'nomor_pengajuan' => ['required', 'string', 'unique:documents,nomor_pengajuan'],
             'status_proses' => 'required|in:proses,siap_diambil,selesai',
             'catatan' => 'nullable|string',
+            'category' => 'required|in:kuitansi,kutipan_rl,validasi_pph',
         ]);
 
         $validated['created_by'] = auth()->id();
-
-        // Force category to 'kuitansi' regardless of input to prevent cross-category insertion
-        $validated['category'] = 'kuitansi';
 
         Document::create($validated);
 
@@ -50,11 +68,6 @@ class DocumentController extends Controller
 
     public function update(Request $request, Document $document)
     {
-        // Only allow updates on 'kuitansi' documents via this controller
-        if ($document->category !== 'kuitansi') {
-            abort(404);
-        }
-
         $validated = $request->validate([
             'status_proses' => 'sometimes|required|in:proses,siap_diambil,selesai',
             'catatan' => 'nullable|string',
@@ -67,11 +80,6 @@ class DocumentController extends Controller
 
     public function destroy(Document $document)
     {
-        // Only allow deletion of kuitansi documents via this controller
-        if ($document->category !== 'kuitansi') {
-            abort(404);
-        }
-
         $document->delete();
 
         return redirect()->back()->with('success', 'Dokumen pengajuan berhasil dihapus.');

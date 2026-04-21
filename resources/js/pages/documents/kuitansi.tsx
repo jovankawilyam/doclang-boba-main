@@ -9,7 +9,7 @@ import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Manajemen Dokumen Pengajuan Kuitansi', href: '/documents' },
+    { title: 'Manajemen Dokumen Pengajuan Kuitansi', href: '/documents/kuitansi' },
 ];
 
 const statusOptions = [
@@ -28,17 +28,15 @@ interface DocumentItem {
 export default function DocumentsIndex({ documents, filters }: any) {
     const [search, setSearch] = useState(filters.search || '');
     const [showAddForm, setShowAddForm] = useState(false);
-
-    // Form State
     const [nomorPengajuan, setNomorPengajuan] = useState('');
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        router.get('/documents', { search }, { preserveState: true });
+        router.get('/documents/kuitansi', { search }, { preserveState: true });
     };
 
     const handleStatusChange = (docId: number, field: string, value: string) => {
-        // Send a PATCH request to update exactly one status
+        // Mengirim PATCH ke endpoint umum /documents/{id}
         router.patch(`/documents/${docId}`, {
             [field]: value
         }, { preserveScroll: true });
@@ -52,17 +50,21 @@ export default function DocumentsIndex({ documents, filters }: any) {
 
     const handleAddSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // Build the templated nomor_pengajuan: expected input is the number only (e.g. "200")
         const formatted = `${nomorPengajuan}/KPHL/2026`;
 
+        // PENTING: Mengirim ke /documents dengan category 'kuitansi'
         router.post('/documents', {
             nomor_pengajuan: formatted,
             status_proses: 'proses',
-            category: 'kuitansi',
+            category: 'kuitansi', // Penanda agar muncul di welcome page kuitansi
         }, {
             onSuccess: () => {
                 setShowAddForm(false);
                 setNomorPengajuan('');
+            },
+            onError: (errors) => {
+                // Memberikan feedback jika nomor sudah ada atau error lainnya
+                alert(Object.values(errors).flat().join(', '));
             }
         });
     };
@@ -77,13 +79,13 @@ export default function DocumentsIndex({ documents, filters }: any) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Manajemen Dokumen Pasca Lelang" />
+            <Head title="Manajemen Dokumen Kuitansi" />
 
             <div className="flex flex-col gap-6 p-6">
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight">Dokumen Kuitansi</h1>
-                        <p className="text-muted-foreground">Kelola status Kuitansi.</p>
+                        <p className="text-muted-foreground">Kelola status Kuitansi Pasca Lelang.</p>
                     </div>
                 </div>
 
@@ -91,7 +93,7 @@ export default function DocumentsIndex({ documents, filters }: any) {
                     <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
                         <CardTitle className="flex items-center gap-2">
                             <FileText className="h-5 w-5" />
-                            Daftar Pengajuan
+                            Daftar Pengajuan Kuitansi
                         </CardTitle>
                         <div className="flex items-center gap-4">
                             <form onSubmit={handleSearch} className="flex items-center gap-2">
@@ -124,6 +126,7 @@ export default function DocumentsIndex({ documents, filters }: any) {
                                         value={nomorPengajuan}
                                         onChange={(e) => setNomorPengajuan(e.target.value.replace(/[^0-9]/g, ''))}
                                     />
+                                    <p className="text-[10px] text-muted-foreground">Akan tersimpan sebagai: {nomorPengajuan ? `${nomorPengajuan}/KPHL/2026` : '.../KPHL/2026'}</p>
                                 </div>
                                 <Button type="submit">Simpan</Button>
                                 <Button type="button" variant="ghost" onClick={() => setShowAddForm(false)}>Batal</Button>
@@ -144,15 +147,13 @@ export default function DocumentsIndex({ documents, filters }: any) {
                                 <tbody>
                                     {documents.data.length === 0 ? (
                                         <tr>
-                                            <td colSpan={6} className="p-8 text-center text-muted-foreground">
-                                                Tidak ada data ditemukan.
+                                            <td colSpan={3} className="p-8 text-center text-muted-foreground">
+                                                Tidak ada data kuitansi ditemukan.
                                             </td>
                                         </tr>
                                     ) : documents.data.map((doc: DocumentItem) => (
                                         <tr key={doc.id} className="border-b transition-colors hover:bg-muted/30">
                                             <td className="px-4 py-3 font-medium">{doc.nomor_pengajuan}</td>
-
-                                            {/* Status Proses */}
                                             <td className="px-4 py-3">
                                                 <select
                                                     value={doc.status_proses}
@@ -162,7 +163,6 @@ export default function DocumentsIndex({ documents, filters }: any) {
                                                     {statusOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                                                 </select>
                                             </td>
-
                                             <td className="px-4 py-3 text-right">
                                                 <Button
                                                     variant="ghost"
@@ -179,10 +179,8 @@ export default function DocumentsIndex({ documents, filters }: any) {
                             </table>
                         </div>
 
-                        {/* Pagination placeholder (since we are getting 15 rows initially) */}
                         <div className="p-4 border-t flex items-center justify-between text-sm text-muted-foreground">
                             <span>Menampilkan {documents.data.length} dari total {documents.total} pengajuan</span>
-
                             <div className="flex gap-2">
                                 {documents.links.map((link: any, index: number) => (
                                     link.url ? (
@@ -207,11 +205,9 @@ export default function DocumentsIndex({ documents, filters }: any) {
                                 ))}
                             </div>
                         </div>
-
                     </CardContent>
                 </Card>
             </div>
         </AppLayout>
     );
 }
-

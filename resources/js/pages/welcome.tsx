@@ -61,6 +61,7 @@ export default function Welcome({
   search_rl,
   document_validasi,
   search_validasi,
+  statistics,
 }: {
   document: DocumentItem | null;
   search: string | null;
@@ -68,27 +69,28 @@ export default function Welcome({
   search_rl: string | null;
   document_validasi: DocumentItem | null;
   search_validasi: string | null;
+  statistics: any;
 }) {
   const {
     data: dataK,
     setData: setDataK,
     get: getK,
     processing: processingK,
-  } = useForm({ nomor_pengajuan: search || '' });
+  } = useForm({ search: search || '', category: 'kuitansi' });
 
   const {
     data: dataRL,
     setData: setDataRL,
     get: getRL,
     processing: processingRL,
-  } = useForm({ nomor_kutipan: search_rl || '' });
+  } = useForm({ search: search_rl || '', category: 'kutipan_rl' });
 
   const {
     data: dataV,
     setData: setDataV,
     get: getV,
     processing: processingV,
-  } = useForm({ nomor_validasi: search_validasi || '' });
+  } = useForm({ search: search_validasi || '', category: 'validasi_pph' });
 
   const { auth } = usePage().props as any;
   const [showNav, setShowNav] = useState(true);
@@ -262,12 +264,120 @@ export default function Welcome({
   
   {/* Deskripsi: Dibuat lebih ramping di mobile agar enak dibaca */}
   <p className="text-base md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed mb-10 px-2">
-    Masukkan nomor pengajuan untuk memantau progres kuitansi, kutipan RL, hingga validasi PPh secara <span className="text-slate-900 dark:text-black font-semibold">transparan dan real-time.</span>
+    Masukkan nomor pengajuan untuk memantau progres kuitansi, kutipan RL, hingga validasi PPh secara <span className="text-slate-900 dark:text-black font-semibold">real-time.</span>
   </p>
 
 
 
 </section>
+
+        {/* Dashboard Statistik (Read-only) */}
+        <section className="w-full max-w-7xl mx-auto px-4 md:px-8 mb-20 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-150 fill-mode-both">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-black tracking-tight mb-4">
+              Dokumen Pasca Lelang Bogor Bageur
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400 font-bold">Ringkasan statistik real-time dokumen pasca lelang.</p>
+          </div>
+
+
+          <section className="bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-xl border border-slate-100 dark:border-zinc-800">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Kuitansi (Biru) */}
+            <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-xl shadow-blue-500/10 border border-blue-100 dark:border-blue-900/50 hover:-translate-y-1 transition-transform duration-300">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-blue-100 dark:bg-blue-900/50 rounded-xl">
+                  <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">Kuitansi</h3>
+              </div>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-4 bg-slate-50 dark:bg-zinc-800/50 rounded-2xl">
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Total Dokumen</span>
+                  <span className="text-2xl font-black text-slate-800 dark:text-white">{statistics?.kuitansi?.total || 0}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-2xl text-center flex flex-col justify-center">
+                    <span className="block text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase mb-1">Proses</span>
+                    <span className="text-lg font-black text-amber-700 dark:text-amber-300">{statistics?.kuitansi?.proses || 0}</span>
+                  </div>
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-2xl text-center flex flex-col justify-center border border-blue-200 dark:border-blue-800">
+                    <span className="block text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase mb-1">Siap Diambil</span>
+                    <span className="text-xl font-black text-blue-700 dark:text-blue-300">{statistics?.kuitansi?.siap_diambil || 0}</span>
+                  </div>
+                  <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-2xl text-center flex flex-col justify-center">
+                    <span className="block text-[10px] font-bold text-green-600 dark:text-green-400 uppercase mb-1">Selesai</span>
+                    <span className="text-lg font-black text-green-700 dark:text-green-300">{statistics?.kuitansi?.selesai || 0}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Kutipan RL (Oranye) */}
+            <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-xl shadow-orange-500/10 border border-orange-100 dark:border-orange-900/50 hover:-translate-y-1 transition-transform duration-300">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-orange-100 dark:bg-orange-900/50 rounded-xl">
+                  <FileText className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">Kutipan RL</h3>
+              </div>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-4 bg-slate-50 dark:bg-zinc-800/50 rounded-2xl">
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Total Dokumen</span>
+                  <span className="text-2xl font-black text-slate-800 dark:text-white">{statistics?.kutipan_rl?.total || 0}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-2xl text-center flex flex-col justify-center">
+                    <span className="block text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase mb-1">Proses</span>
+                    <span className="text-lg font-black text-amber-700 dark:text-amber-300">{statistics?.kutipan_rl?.proses || 0}</span>
+                  </div>
+                  <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded-2xl text-center flex flex-col justify-center border border-orange-200 dark:border-orange-800">
+                    <span className="block text-[10px] font-bold text-orange-600 dark:text-orange-400 uppercase mb-1">Siap Diambil</span>
+                    <span className="text-xl font-black text-orange-700 dark:text-orange-300">{statistics?.kutipan_rl?.siap_diambil || 0}</span>
+                  </div>
+                  <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-2xl text-center flex flex-col justify-center">
+                    <span className="block text-[10px] font-bold text-green-600 dark:text-green-400 uppercase mb-1">Selesai</span>
+                    <span className="text-lg font-black text-green-700 dark:text-green-300">{statistics?.kutipan_rl?.selesai || 0}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Validasi PPh (Hijau) */}
+            <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-xl shadow-green-500/10 border border-green-100 dark:border-green-900/50 hover:-translate-y-1 transition-transform duration-300">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-green-100 dark:bg-green-900/50 rounded-xl">
+                  <FileText className="w-6 h-6 text-green-600 dark:text-green-400" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">Validasi PPh</h3>
+              </div>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-4 bg-slate-50 dark:bg-zinc-800/50 rounded-2xl">
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Total Dokumen</span>
+                  <span className="text-2xl font-black text-slate-800 dark:text-white">{statistics?.validasi_pph?.total || 0}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-2xl text-center flex flex-col justify-center">
+                    <span className="block text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase mb-1">Proses</span>
+                    <span className="text-lg font-black text-amber-700 dark:text-amber-300">{statistics?.validasi_pph?.proses || 0}</span>
+                  </div>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-2xl text-center flex flex-col justify-center border border-emerald-200 dark:border-emerald-800">
+                    <span className="block text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase mb-1">Siap Diambil</span>
+                    <span className="text-xl font-black text-emerald-700 dark:text-emerald-300">{statistics?.validasi_pph?.siap_diambil || 0}</span>
+                  </div>
+                  <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-2xl text-center flex flex-col justify-center">
+                    <span className="block text-[10px] font-bold text-green-600 dark:text-green-400 uppercase mb-1">Selesai</span>
+                    <span className="text-lg font-black text-green-700 dark:text-green-300">{statistics?.validasi_pph?.selesai || 0}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          </section>
+        </section>
+
+
+
 
         {/* Kuitansi */}
          <main className="max-w-7xl mx-auto px-4 md:px-8 py-12 flex flex-col items-center">
@@ -292,8 +402,8 @@ export default function Welcome({
                           type="text"
                           placeholder="Contoh: 123/KPHL/2026"
                           className="h-14 pl-12 pr-4 text-lg border-0 bg-transparent ring-0 focus-visible:ring-0 shadow-none dark:text-white"
-                          value={dataK.nomor_pengajuan}
-                          onChange={(e) => setDataK('nomor_pengajuan', e.target.value)}
+                          value={dataK.search}
+                          onChange={(e) => setDataK('search', e.target.value)}
                           required
                         />
                       </div>
@@ -384,8 +494,8 @@ export default function Welcome({
                           type="text"
                           placeholder="Contoh: 123/K-RL/2026"
                           className="h-14 pl-12 pr-4 text-lg border-0 bg-transparent ring-0 focus-visible:ring-0 shadow-none dark:text-white"
-                          value={dataRL.nomor_kutipan}
-                          onChange={(e) => setDataRL('nomor_kutipan', e.target.value)}
+                          value={dataRL.search}
+                          onChange={(e) => setDataRL('search', e.target.value)}
                           required
                         />
                       </div>
@@ -462,29 +572,29 @@ export default function Welcome({
                 </p>
                 <Card className="shadow-2xl shadow-indigo-500/10 border-slate-200 dark:border-slate-800 overflow-hidden rounded-2xl">
                   <CardContent className="p-2">
-                    <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2">
+                    <form onSubmit={handleSearchValidasi} className="flex flex-col sm:flex-row gap-2">
                       <div className="relative flex-1">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                         <Input
                           type="text"
                           placeholder="Contoh: 123/V-PPh/2026"
                           className="h-14 pl-12 pr-4 text-lg border-0 bg-transparent ring-0 focus-visible:ring-0 shadow-none dark:text-white"
-                          value={dataK.nomor_pengajuan}
-                          onChange={(e) => setDataK('nomor_pengajuan', e.target.value)}
+                          value={dataV.search}
+                          onChange={(e) => setDataV('search', e.target.value)}
                           required
                         />
                       </div>
-                      <Button type="submit" disabled={processingK} className="h-14 px-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium text-base transition-all hover:shadow-lg hover:shadow-indigo-500/30">
-                        {processingK ? 'Mencari...' : 'Lacak Sekarang'}
+                      <Button type="submit" disabled={processingV} className="h-14 px-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium text-base transition-all hover:shadow-lg hover:shadow-indigo-500/30">
+                        {processingV ? 'Mencari...' : 'Lacak Sekarang'}
                       </Button>
                     </form>
                   </CardContent>
                 </Card>
               </div>
 
-              {search && (
+              {search_validasi && (
                 <div className="w-full max-w-3xl animate-in fade-in slide-in-from-bottom-12 duration-500 delay-150 fill-mode-both">
-                  {document ? (
+                  {document_validasi ? (
                     <div className="bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-xl border border-slate-100 dark:border-zinc-800">
                       <div className="flex items-center gap-4 mb-8 pb-6 border-b border-slate-100 dark:border-zinc-800">
                         <div className="bg-indigo-50 dark:bg-indigo-900/30 p-4 rounded-2xl text-indigo-600 dark:text-indigo-400">
@@ -492,7 +602,7 @@ export default function Welcome({
                         </div>
                         <div>
                           <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Hasil Pencarian untuk:</p>
-                          <h2 className="text-2xl font-bold font-mono">{document.nomor_pengajuan}</h2>
+                          <h2 className="text-2xl font-bold font-mono">{document_validasi.nomor_pengajuan}</h2>
                         </div>
                       </div>
                       <div className="overflow-hidden rounded-2xl border border-slate-100 dark:border-zinc-800">
@@ -504,14 +614,14 @@ export default function Welcome({
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
-                            <TableRow title="Status Proses Dokumen" status={document.status_proses} />
+                            <TableRow title="Status Proses Dokumen" status={document_validasi.status_proses} />
                           </tbody>
                         </table>
                       </div>
-                      {document.catatan && (
+                      {document_validasi.catatan && (
                         <div className="mt-6 p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-xl border border-slate-100 dark:border-zinc-800">
                           <p className="text-sm font-medium text-slate-500 mb-1">Catatan Petugas:</p>
-                          <p className="text-slate-700 dark:text-slate-300 italic">"{document.catatan}"</p>
+                          <p className="text-slate-700 dark:text-slate-300 italic">"{document_validasi.catatan}"</p>
                         </div>
                       )}
                     </div>
@@ -522,7 +632,7 @@ export default function Welcome({
                       </div>
                       <h3 className="text-xl font-bold mb-2">Dokumen Tidak Ditemukan</h3>
                       <p className="text-slate-500 dark:text-slate-400">
-                        Kami tidak menemukan pengajuan dengan nomor <span className="font-mono font-medium text-slate-900 dark:text-white">{search}</span>.
+                        Kami tidak menemukan pengajuan dengan nomor <span className="font-mono font-medium text-slate-900 dark:text-white">{search_validasi}</span>.
                       </p>
                     </div>
                   )}

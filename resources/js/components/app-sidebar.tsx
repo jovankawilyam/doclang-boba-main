@@ -25,7 +25,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Kuitansi',
-        href: '/documents',
+        href: '/documents/kuitansi',
         icon: FileText,
     },
     {
@@ -36,7 +36,7 @@ const mainNavItems: NavItem[] = [
 
     {
         title: 'Validasi PPh',
-        href: '/validasi-pph',
+        href: '/documents/validasi-pph',
         icon: FileText,
     },
     {

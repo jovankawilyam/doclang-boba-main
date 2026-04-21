@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import { dummyKutipanRL } from '@/data/dummyKutipanRL';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -26,44 +25,48 @@ interface DocumentItem {
     catatan: string | null;
 }
 
-export default function DocumentsRLIndex({ documents = dummyKutipanRL, filters = {} }: any) {
+export default function DocumentsRLIndex({ documents, filters }: any) {
     const [search, setSearch] = useState(filters.search || '');
     const [showAddForm, setShowAddForm] = useState(false);
-
-    // Form State
     const [nomorPengajuan, setNomorPengajuan] = useState('');
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
+        // Tetap ke /documents/rl untuk filter tampilan di index
         router.get('/documents/rl', { search }, { preserveState: true });
     };
 
     const handleStatusChange = (docId: number, field: string, value: string) => {
-        // Send a PATCH request to update exactly one status
-        router.patch(`/documents/rl/${docId}`, {
+        // PATCH diarahkan ke endpoint umum /documents
+        router.patch(`/documents/${docId}`, {
             [field]: value
         }, { preserveScroll: true });
     };
 
     const handleDelete = (docId: number) => {
         if (confirm('Apakah Anda yakin ingin menghapus pengajuan ini?')) {
-            router.delete(`/documents/rl/${docId}`, { preserveScroll: true });
+            // DELETE diarahkan ke endpoint umum /documents
+            router.delete(`/documents/${docId}`, { preserveScroll: true });
         }
     };
 
     const handleAddSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // Build templated nomor_pengajuan for Kutipan RL
+        // Format nomor untuk Kutipan RL
         const formatted = `${nomorPengajuan}/K-RL/2026`;
 
-        router.post('/documents/rl', {
+        // POST diarahkan ke endpoint umum /documents dengan category kutipan_rl
+        router.post('/documents', {
             nomor_pengajuan: formatted,
             status_proses: 'proses',
-            category: 'kutipan_rl',
+            category: 'kutipan_rl', // Ini pembeda utamanya
         }, {
             onSuccess: () => {
                 setShowAddForm(false);
                 setNomorPengajuan('');
+            },
+            onError: (errors) => {
+                alert(Object.values(errors).flat().join(', '));
             }
         });
     };
@@ -84,7 +87,7 @@ export default function DocumentsRLIndex({ documents = dummyKutipanRL, filters =
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight">Dokumen Kutipan RL</h1>
-                        <p className="text-muted-foreground">Kelola status Kutipan RL.</p>
+                        <p className="text-muted-foreground">Kelola status Kutipan Risalah Lelang.</p>
                     </div>
                 </div>
 
@@ -92,7 +95,7 @@ export default function DocumentsRLIndex({ documents = dummyKutipanRL, filters =
                     <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
                         <CardTitle className="flex items-center gap-2">
                             <FileText className="h-5 w-5" />
-                            Daftar Pengajuan
+                            Daftar Pengajuan Kutipan RL
                         </CardTitle>
                         <div className="flex items-center gap-4">
                             <form onSubmit={handleSearch} className="flex items-center gap-2">
@@ -125,12 +128,12 @@ export default function DocumentsRLIndex({ documents = dummyKutipanRL, filters =
                                         value={nomorPengajuan}
                                         onChange={(e) => setNomorPengajuan(e.target.value.replace(/[^0-9]/g, ''))}
                                     />
+                                    <p className="text-[10px] text-muted-foreground">Format: {nomorPengajuan ? `${nomorPengajuan}/K-RL/2026` : '.../K-RL/2026'}</p>
                                 </div>
                                 <Button type="submit">Simpan</Button>
                                 <Button type="button" variant="ghost" onClick={() => setShowAddForm(false)}>Batal</Button>
                             </form>
                         </div>
-                        
                     )}
 
                     <CardContent className="p-0">
@@ -146,15 +149,13 @@ export default function DocumentsRLIndex({ documents = dummyKutipanRL, filters =
                                 <tbody>
                                     {documents.data.length === 0 ? (
                                         <tr>
-                                            <td colSpan={6} className="p-8 text-center text-muted-foreground">
-                                                Tidak ada data ditemukan.
+                                            <td colSpan={3} className="p-8 text-center text-muted-foreground">
+                                                Tidak ada data Kutipan RL ditemukan.
                                             </td>
                                         </tr>
                                     ) : documents.data.map((doc: DocumentItem) => (
                                         <tr key={doc.id} className="border-b transition-colors hover:bg-muted/30">
                                             <td className="px-4 py-3 font-medium">{doc.nomor_pengajuan}</td>
-
-                                            {/* Status Proses */}
                                             <td className="px-4 py-3">
                                                 <select
                                                     value={doc.status_proses}
@@ -164,7 +165,6 @@ export default function DocumentsRLIndex({ documents = dummyKutipanRL, filters =
                                                     {statusOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                                                 </select>
                                             </td>
-
                                             <td className="px-4 py-3 text-right">
                                                 <Button
                                                     variant="ghost"
@@ -181,10 +181,8 @@ export default function DocumentsRLIndex({ documents = dummyKutipanRL, filters =
                             </table>
                         </div>
 
-                        {/* Pagination placeholder (since we are getting 15 rows initially) */}
                         <div className="p-4 border-t flex items-center justify-between text-sm text-muted-foreground">
                             <span>Menampilkan {documents.data.length} dari total {documents.total} pengajuan</span>
-
                             <div className="flex gap-2">
                                 {documents.links.map((link: any, index: number) => (
                                     link.url ? (
@@ -209,7 +207,6 @@ export default function DocumentsRLIndex({ documents = dummyKutipanRL, filters =
                                 ))}
                             </div>
                         </div>
-
                     </CardContent>
                 </Card>
             </div>
