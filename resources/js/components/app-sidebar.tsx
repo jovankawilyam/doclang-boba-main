@@ -1,9 +1,10 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid, FileText, Users } from 'lucide-react';
+import { BookOpen, FolderGit2, LayoutGrid, FileText, Users, BookOpenText } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
+import { NavMiddle } from '@/components/nav-middle';
 import {
     Sidebar,
     SidebarContent,
@@ -15,14 +16,16 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
+
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        // Use the raw URL string here so the sidebar Link becomes a plain
-        // anchor href and is reliably clickable inside the sidebar slot.
         href: dashboard.url(),
         icon: LayoutGrid,
     },
+];
+
+const middleNavItems: NavItem[] = [
     {
         title: 'Kuitansi',
         href: '/documents/kuitansi',
@@ -31,9 +34,8 @@ const mainNavItems: NavItem[] = [
     {
         title: 'Kutipan RL',
         href: '/documents/rl',
-        icon: FileText,
+        icon: BookOpenText,
     },
-
     {
         title: 'Validasi PPh',
         href: '/documents/validasi-pph',
@@ -44,8 +46,6 @@ const mainNavItems: NavItem[] = [
         href: '/admin',
         icon: Users,
     },
-   
-    
 ];
 
 const footerNavItems: NavItem[] = [
@@ -78,6 +78,7 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMain items={mainNavItems} />
+                <NavMiddle items={middleNavItems} /> {/* ini sebelumnya belum dipakai */}
             </SidebarContent>
 
             <SidebarFooter>

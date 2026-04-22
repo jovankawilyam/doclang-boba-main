@@ -49,7 +49,7 @@ export default function ValidasiPPh({ documents, filters }: any) {
 
     const handleAddSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const formatted = `${nomorPengajuan}/PPh/2026`;
+        const formatted = `${nomorPengajuan}/V-PPh/2026`;
 
         // Kirim ke endpoint tunggal /documents dengan kategori validasi_pph
         router.post('/documents', {
@@ -125,10 +125,9 @@ export default function ValidasiPPh({ documents, filters }: any) {
                                         value={nomorPengajuan}
                                         onChange={(e) => setNomorPengajuan(e.target.value.replace(/[^0-9]/g, ''))}
                                     />
-                                    <p className="text-[10px] text-muted-foreground">Format: {nomorPengajuan ? `${nomorPengajuan}/PPh/2026` : '.../PPh/2026'}</p>
+                                    <p className="text-[10px] text-muted-foreground">Format: {nomorPengajuan ? `${nomorPengajuan}/V-PPh/2026` : '.../V-PPh/2026'}</p>
                                 </div>
                                 <Button type="submit">Simpan</Button>
-                                <Button type="button" variant="ghost" onClick={() => setShowAddForm(false)}>Batal</Button>
                             </form>
                         </div>
                     )}

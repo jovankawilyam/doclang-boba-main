@@ -222,10 +222,10 @@ export default function Welcome({
      
         <section className="w-full">
           <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
-            <img src={images[current]} alt="slider" className="w-full h-[580px] object-cover object-[center_10%] transition-all duration-700" />
+            <img src={images[current]} alt="slider" className="w-full h-[590px] object-cover object-[center_10%] transition-all duration-700" />
             <div className="absolute inset-0 bg-black/20" />
 
-            <button onClick={prevSlide} className="absolute top-1/2 left-4 -translate-y-1/2 bg-black/50 text-white px-3 py-1 rounded-full">
+            <button onClick={prevSlide} className="absolute top-1/2 left-4   -translate-y-1/2 bg-black/50 text-white px-3 py-1 rounded-full">
               ‹
             </button>
             <button onClick={nextSlide} className="absolute top-1/2 right-4 -translate-y-1/2 bg-black/50 text-white px-3 py-1 rounded-full">
@@ -688,19 +688,25 @@ export default function Welcome({
     {[
       { 
         name: "facebook", 
-        url: "https://www.facebook.com/kpknl.bogor", 
+        url: "https://www.facebook.com/kpknlbogor", 
         color: "hover:bg-[#1877F2]" 
       },
       { 
         name: "instagram", 
-        url: "https://www.instagram.com/kpknlbogor", 
+        url: "https://www.instagram.com/kpknl.bogor", 
         color: "hover:bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]" 
       },
       { 
         name: "tiktok", 
-        url: "https://www.tiktok.com/@kpknlbogor", 
+        url: "https://www.tiktok.com/@kpknl.bogor", 
         color: "hover:bg-black" 
-      }
+      },
+      { 
+        name: "whatsapp", 
+        url: "https://wa.me/6282323040445", 
+        color: "hover:bg-[#25D366]" 
+      },
+      
     ].map((item, index) => (
       <a
         key={index}
