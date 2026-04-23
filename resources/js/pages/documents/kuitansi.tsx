@@ -71,9 +71,9 @@ export default function DocumentsIndex({ documents, filters }: any) {
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'siap_diambil': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400';
-            case 'selesai': return 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400';
-            case 'proses': default: return 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400';
+            case 'siap_diambil': return 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+            case 'selesai': return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+            case 'proses': default: return 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
         }
     };
 
@@ -81,55 +81,57 @@ export default function DocumentsIndex({ documents, filters }: any) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Manajemen Dokumen Kuitansi" />
 
-            <div className="flex flex-col gap-6 p-6">
+            <div className="flex flex-col gap-8 p-6 md:p-8">
                 <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight">Dokumen Kuitansi</h1>
+                    <div className="flex flex-col gap-2">
+                        <h1 className="text-3xl font-bold tracking-tight">Dokumen Kuitansi</h1>
                         <p className="text-muted-foreground">Kelola status Kuitansi Pasca Lelang.</p>
                     </div>
                 </div>
 
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
-                        <CardTitle className="flex items-center gap-2">
-                            <FileText className="h-5 w-5" />
+                <Card className="rounded-2xl shadow-sm border-slate-200/60 dark:border-slate-800">
+                    <CardHeader className="flex flex-col md:flex-row items-center justify-between border-b pb-5 gap-4">
+                        <CardTitle className="flex items-center gap-2 text-xl font-semibold">
+                            <FileText className="h-5 w-5 text-primary" />
                             Daftar Pengajuan Kuitansi
                         </CardTitle>
-                        <div className="flex items-center gap-4">
-                            <form onSubmit={handleSearch} className="flex items-center gap-2">
+                        <div className="flex w-full md:w-auto items-center gap-3">
+                            <form onSubmit={handleSearch} className="relative w-full md:w-64">
+                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                 <Input
                                     type="text"
                                     placeholder="Cari Nomor Pengajuan..."
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
-                                    className="w-64"
+                                    className="pl-9 w-full shadow-sm rounded-full bg-slate-50 dark:bg-slate-900"
                                 />
-                                <Button type="submit" variant="secondary" size="icon">
-                                    <Search className="h-4 w-4" />
-                                </Button>
                             </form>
-                            <Button onClick={() => setShowAddForm(!showAddForm)} className="gap-2">
+                            <Button 
+                                onClick={() => setShowAddForm(!showAddForm)} 
+                                className="gap-2 shadow-sm hover:shadow-md transition-all whitespace-nowrap rounded-full px-5"
+                            >
                                 <Plus className="h-4 w-4" />
-                                Tambah Pengajuan
+                                Tambah Data
                             </Button>
                         </div>
                     </CardHeader>
 
                     {showAddForm && (
-                        <div className="p-4 bg-muted/30 border-b">
+                        <div className="p-6 bg-slate-50/50 dark:bg-slate-900/20 border-b border-slate-100 dark:border-slate-800">
                             <form onSubmit={handleAddSubmit} className="flex gap-4 items-end max-w-lg">
-                                <div className="flex-1 space-y-1">
-                                    <label className="text-sm font-medium">Nomor Pengajuan Baru (angka saja)</label>
+                                <div className="flex-1 space-y-2">
+                                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Nomor Pengajuan Baru (angka saja)</label>
                                     <Input
                                         required
                                         placeholder="Masukkan angka saja, misal: 200"
                                         value={nomorPengajuan}
                                         onChange={(e) => setNomorPengajuan(e.target.value.replace(/[^0-9]/g, ''))}
+                                        className="shadow-sm bg-white dark:bg-slate-950"
                                     />
-                                    <p className="text-[10px] text-muted-foreground">Akan tersimpan sebagai: {nomorPengajuan ? `${nomorPengajuan}/KPHL/2026` : '.../KPHL/2026'}</p>
+                                    <p className="text-[10px] text-muted-foreground">Akan tersimpan sebagai: <span className="font-medium text-slate-600 dark:text-slate-400">{nomorPengajuan ? `${nomorPengajuan}/KPHL/2026` : '.../KPHL/2026'}</span></p>
                                 </div>
-                                <Button type="submit">Simpan</Button>
-                                <Button type="button" variant="ghost" onClick={() => setShowAddForm(false)}>Batal</Button>
+                                <Button type="submit" className="rounded-full px-6">Simpan</Button>
+                                <Button type="button" variant="ghost" className="rounded-full" onClick={() => setShowAddForm(false)}>Batal</Button>
                             </form>
                         </div>
                     )}
@@ -137,14 +139,14 @@ export default function DocumentsIndex({ documents, filters }: any) {
                     <CardContent className="p-0">
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-muted/50">
-                                    <tr className="border-b text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                        <th className="px-4 py-3">No. Pengajuan</th>
-                                        <th className="px-4 py-3">Status Proses</th>
-                                        <th className="px-4 py-3 text-right">Aksi</th>
+                                <thead className="bg-slate-50/80 dark:bg-slate-800/30">
+                                    <tr className="border-b text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                        <th className="px-6 py-4">No. Pengajuan</th>
+                                        <th className="px-6 py-4">Status Proses</th>
+                                        <th className="px-6 py-4 text-right">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                                     {documents.data.length === 0 ? (
                                         <tr>
                                             <td colSpan={3} className="p-8 text-center text-muted-foreground">
@@ -152,22 +154,22 @@ export default function DocumentsIndex({ documents, filters }: any) {
                                             </td>
                                         </tr>
                                     ) : documents.data.map((doc: DocumentItem) => (
-                                        <tr key={doc.id} className="border-b transition-colors hover:bg-muted/30">
-                                            <td className="px-4 py-3 font-medium">{doc.nomor_pengajuan}</td>
-                                            <td className="px-4 py-3">
+                                        <tr key={doc.id} className="transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                                            <td className="px-6 py-5 font-medium text-slate-800 dark:text-slate-200">{doc.nomor_pengajuan}</td>
+                                            <td className="px-6 py-5">
                                                 <select
                                                     value={doc.status_proses}
                                                     onChange={(e) => handleStatusChange(doc.id, 'status_proses', e.target.value)}
-                                                    className={`text-xs font-medium rounded-full px-2 py-1 outline-none border cursor-pointer border-transparent ${getStatusColor(doc.status_proses)}`}
+                                                    className={`text-xs font-semibold rounded-full px-4 py-1.5 appearance-none outline-none border border-transparent cursor-pointer transition-all hover:opacity-80 focus:ring-2 focus:ring-offset-1 focus:ring-primary/20 ${getStatusColor(doc.status_proses)}`}
                                                 >
                                                     {statusOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                                                 </select>
                                             </td>
-                                            <td className="px-4 py-3 text-right">
+                                            <td className="px-6 py-5 text-right">
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                    className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full h-8 w-8"
                                                     onClick={() => handleDelete(doc.id)}
                                                 >
                                                     <Trash2 className="h-4 w-4" />
@@ -179,16 +181,16 @@ export default function DocumentsIndex({ documents, filters }: any) {
                             </table>
                         </div>
 
-                        <div className="p-4 border-t flex items-center justify-between text-sm text-muted-foreground">
-                            <span>Menampilkan {documents.data.length} dari total {documents.total} pengajuan</span>
-                            <div className="flex gap-2">
+                        <div className="p-5 border-t border-slate-100 dark:border-slate-800/60 flex flex-col sm:flex-row items-center justify-between text-sm text-slate-500 dark:text-slate-400 gap-4">
+                            <span>Menampilkan <span className="font-medium text-slate-900 dark:text-white">{documents.data.length}</span> dari total <span className="font-medium text-slate-900 dark:text-white">{documents.total}</span> data</span>
+                            <div className="flex gap-1.5">
                                 {documents.links.map((link: any, index: number) => (
                                     link.url ? (
                                         <Button
                                             key={index}
                                             variant={link.active ? "default" : "outline"}
                                             size="sm"
-                                            className="h-8"
+                                            className={`min-w-8 h-8 px-3 rounded-md transition-colors font-medium ${link.active ? 'shadow-sm' : 'text-slate-600 dark:text-slate-300'}`}
                                             onClick={() => router.get(link.url)}
                                             dangerouslySetInnerHTML={{ __html: link.label }}
                                         />
@@ -198,7 +200,7 @@ export default function DocumentsIndex({ documents, filters }: any) {
                                             variant="outline"
                                             size="sm"
                                             disabled
-                                            className="h-8 opacity-50"
+                                            className="min-w-8 h-8 px-3 opacity-50 rounded-md font-medium"
                                             dangerouslySetInnerHTML={{ __html: link.label }}
                                         />
                                     )
