@@ -212,7 +212,7 @@ export default function Welcome({
               </Link>
             ) : (
               <Link href={login()}>
-                <Button className="w-full rounded-full bg-indigo-600 text-white">Login</Button>
+                <Button className="w-full rounded-full bg-white-600 text-black">Login</Button>
               </Link>
             )}
           </div>
