@@ -101,7 +101,7 @@ export default function Welcome({
     '/images/profile-1.png',
     '/images/profile-2.png',
     '/images/profile-3.png',
-    '/images/profile-4.png',
+    '/images/profile-4.jpeg',
   ];
   const [current, setCurrent] = useState(0);
 
