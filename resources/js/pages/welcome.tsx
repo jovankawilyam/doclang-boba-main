@@ -43,8 +43,8 @@ function TableRow({ title, status }: { title: string; status: DocumentItem['stat
 
   return (
     <tr className="hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors">
-      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">{title}</td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm">
+      <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-slate-100">{title}</td>
+      <td className="px-6 py-4 text-sm">
         <span className={`inline-flex items-center px-2.5 py-1 rounded-full border text-xs font-semibold ${style.badge}`}>
           {style.icon}
           {style.label}
@@ -101,7 +101,7 @@ export default function Welcome({
     '/images/profile-1.png',
     '/images/profile-2.png',
     '/images/profile-3.png',
-    '/images/profile-4.png',
+    '/images/profile-4.jpeg',
   ];
   const [current, setCurrent] = useState(0);
 
@@ -130,17 +130,17 @@ export default function Welcome({
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    getK('/', { preserveState: true });
+    getK('/', { preserveState: true,  preserveScroll: true });
   };
 
   const handleSearchRL = (e: React.FormEvent) => {
     e.preventDefault();
-    getRL('/', { preserveState: true });
+    getRL('/', { preserveState: true,  preserveScroll: true });
   };
 
   const handleSearchValidasi = (e: React.FormEvent) => {
     e.preventDefault();
-    getV('/', { preserveState: true });
+    getV('/', { preserveState: true,  preserveScroll: true });
   };
 
   return (
@@ -148,9 +148,8 @@ export default function Welcome({
       <Head title="Tracking Dokumen Pasca Lelang" />
 
       <nav
-        className={`sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm transition-transform duration-300 ${
-          showNav ? 'translate-y-0' : '-translate-y-full'
-        }`}
+        className={`sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm transition-transform duration-300 ${showNav ? 'translate-y-0' : '-translate-y-full'
+          }`}
       >
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-9 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -212,76 +211,76 @@ export default function Welcome({
               </Link>
             ) : (
               <Link href={login()}>
-                <Button className="w-full rounded-full bg-indigo-600 text-white">Login</Button>
+                <Button className="w-full rounded-full bg-white-600 text-black">Login</Button>
               </Link>
             )}
           </div>
         )}
       </nav>
 
-     
-        <section className="w-full">
-          <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
-            <img src={images[current]} alt="slider" className="w-full h-[580px] object-cover object-[center_10%] transition-all duration-700" />
-            <div className="absolute inset-0 bg-black/20" />
 
-            <button onClick={prevSlide} className="absolute top-1/2 left-4 -translate-y-1/2 bg-black/50 text-white px-3 py-1 rounded-full">
-              ‹
-            </button>
-            <button onClick={nextSlide} className="absolute top-1/2 right-4 -translate-y-1/2 bg-black/50 text-white px-3 py-1 rounded-full">
-              ›
-            </button>
-          </div>
+      <section className="w-full">
+        <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
+          <img src={images[current]} alt="slider" className="w-full h-[590px] object-cover object-[center_10%] transition-all duration-700" />
+          <div className="absolute inset-0 bg-black/20" />
 
-          <div className="flex justify-center gap-2 mt-4">
-            {images.map((_, index) => (
-              <div
-                key={index}
-                onClick={() => setCurrent(index)}
-                className={`w-3 h-3 rounded-full cursor-pointer ${current === index ? 'bg-indigo-600' : 'bg-gray-300'}`}
-              />
-            ))}
-          </div>
-        </section>
+          <button onClick={prevSlide} className="absolute top-1/2 left-4   -translate-y-1/2 bg-black/50 text-white px-3 py-1 rounded-full">
+            ‹
+          </button>
+          <button onClick={nextSlide} className="absolute top-1/2 right-4 -translate-y-1/2 bg-black/50 text-white px-3 py-1 rounded-full">
+            ›
+          </button>
+        </div>
 
-        <section className="flex flex-col items-center justify-center text-center min-h-[70vh] w-full max-w-4xl mx-auto px-4 mb-20 mt-10 animate-in fade-in slide-in-from-bottom-10 duration-1000">
-  
-  {/* Aksen Kecil agar lebih Modern */}
-  <div className="flex items-center gap-2 mb-6 px-4 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-full">
-    <Search className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-    <span className="text-[10px] md:text-xs font-bold tracking-widest uppercase text-indigo-600 dark:text-indigo-400">
-      Monitoring Layanan Pasca Lelang
-    </span>
-  </div>
+        <div className="flex justify-center gap-2 mt-4">
+          {images.map((_, index) => (
+            <div
+              key={index}
+              onClick={() => setCurrent(index)}
+              className={`w-3 h-3 rounded-full cursor-pointer ${current === index ? 'bg-indigo-600' : 'bg-gray-300'}`}
+            />
+          ))}
+        </div>
+      </section>
 
-  {/* Headline Utama dengan Gradient yang sesuai tema Navbar/Card kamu */}
-  <h1 className="text-4xl md:text-7xl font-black tracking-tight text-slate-900 dark:text-black leading-[1.1] mb-6">
-    Lacak Status <br />
-    <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500">
-      Dokumen Anda
-    </span>
-  </h1>
-  
-  {/* Deskripsi: Dibuat lebih ramping di mobile agar enak dibaca */}
-  <p className="text-base md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed mb-10 px-2">
-    Masukkan nomor pengajuan untuk memantau progres kuitansi, kutipan RL, hingga validasi PPh secara <span className="text-slate-900 dark:text-black font-semibold">real-time.</span>
-  </p>
+      <section className="flex flex-col items-center justify-center text-center min-h-[70vh] w-full max-w-4xl mx-auto px-4 mb-20 mt-10 animate-in fade-in slide-in-from-bottom-10 duration-1000">
 
+        {/* Aksen Kecil agar lebih Modern */}
+        <div className="flex items-center gap-2 mb-6 px-4 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-full">
+          <Search className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+          <span className="text-[10px] md:text-xs font-bold tracking-widest uppercase text-indigo-600 dark:text-indigo-400">
+            Monitoring Layanan Pasca Lelang
+          </span>
+        </div>
 
+        {/* Headline Utama dengan Gradient yang sesuai tema Navbar/Card kamu */}
+        <h1 className="text-4xl md:text-7xl font-black tracking-tight text-slate-900 dark:text-black leading-[1.1] mb-6">
+          Lacak Status <br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500">
+            Dokumen Anda
+          </span>
+        </h1>
 
-</section>
-
-        {/* Dashboard Statistik (Read-only) */}
-        <section className="w-full max-w-7xl mx-auto px-4 md:px-8 mb-20 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-150 fill-mode-both">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-black tracking-tight mb-4">
-              Dokumen Pasca Lelang Bogor Bageur
-            </h2>
-            <p className="text-slate-500 dark:text-slate-400 font-bold">Ringkasan statistik real-time dokumen pasca lelang.</p>
-          </div>
+        {/* Deskripsi: Dibuat lebih ramping di mobile agar enak dibaca */}
+        <p className="text-base md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed mb-10 px-2">
+          Masukkan nomor pengajuan untuk memantau progres kuitansi, kutipan RL, hingga validasi PPh secara <span className="text-slate-900 dark:text-black font-semibold">real-time.</span>
+        </p>
 
 
-          <section className="bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-xl border border-slate-100 dark:border-zinc-800">
+
+      </section>
+
+      {/* Dashboard Statistik (Read-only) */}
+      <section className="w-full max-w-100xl mx-auto px-4 md:px-8 mb-20 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-150 fill-mode-both">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-black tracking-tight mb-4">
+            Dokumen Pasca Lelang Bogor Bageur
+          </h2>
+          <p className="text-slate-500 dark:text-slate-400 font-bold">Ringkasan statistik real-time dokumen pasca lelang.</p>
+        </div>
+
+
+        <section className="bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-xl border border-slate-100 dark:border-zinc-800">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Kuitansi (Biru) */}
             <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-xl shadow-blue-500/10 border border-blue-100 dark:border-blue-900/50 hover:-translate-y-1 transition-transform duration-300">
@@ -373,14 +372,14 @@ export default function Welcome({
               </div>
             </div>
           </div>
-          </section>
         </section>
+      </section>
 
 
 
 
-        {/* Kuitansi */}
-         <main className="max-w-7xl mx-auto px-4 md:px-8 py-12 flex flex-col items-center">
+      {/* Kuitansi */}
+      <main className="max-w-100xl mx-auto px-4 md:px-8 py-12 flex flex-col items-center">
         <section id="kuitansi" className="mt-20 scroll-mt-40 w-full bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-xl border border-slate-100 dark:border-zinc-800">
           <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-10">
 
@@ -416,7 +415,7 @@ export default function Welcome({
               </div>
 
               {search && (
-                <div className="w-full max-w-3xl animate-in fade-in slide-in-from-bottom-12 duration-500 delay-150 fill-mode-both">
+                <div className="flex flex-col items-center animate-in fade-in slide-in-from-bottom-12 duration-500 delay-150 fill-mode-both">
                   {document ? (
                     <div className="bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-xl border border-slate-100 dark:border-zinc-800">
                       <div className="flex items-center gap-4 mb-8 pb-6 border-b border-slate-100 dark:border-zinc-800">
@@ -429,17 +428,19 @@ export default function Welcome({
                         </div>
                       </div>
                       <div className="overflow-hidden rounded-2xl border border-slate-100 dark:border-zinc-800">
-                        <table className="w-full text-left text-sm">
-                          <thead className="bg-slate-50 dark:bg-zinc-800/50 border-b border-slate-100 dark:border-zinc-800">
-                            <tr>
-                              <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Jenis Dokumen</th>
-                              <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Status</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
-                            <TableRow title="Status Proses Dokumen" status={document.status_proses} />
-                          </tbody>
-                        </table>
+                        <div className="overflow-x-auto">
+                          <table className="w-full min-w-[450px] text-left text-sm">
+                            <thead className="bg-slate-50 dark:bg-zinc-800/50 border-b border-slate-100 dark:border-zinc-800">
+                              <tr>
+                                <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Jenis Dokumen</th>
+                                <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
+                              <TableRow title="Status Proses Dokumen" status={document.status_proses} />
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                       {document.catatan && (
                         <div className="mt-6 p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-xl border border-slate-100 dark:border-zinc-800">
@@ -521,17 +522,19 @@ export default function Welcome({
                         </div>
                       </div>
                       <div className="overflow-hidden rounded-2xl border border-slate-100 dark:border-zinc-800">
-                        <table className="w-full text-left text-sm">
-                          <thead className="bg-slate-50 dark:bg-zinc-800/50 border-b border-slate-100 dark:border-zinc-800">
-                            <tr>
-                              <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Jenis Dokumen</th>
-                              <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Status</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
-                            <TableRow title="Status Proses Dokumen" status={document_rl.status_proses} />
-                          </tbody>
-                        </table>
+                        <div className="overflow-x-auto">
+                          <table className="w-full min-w-[450px] text-left text-sm">
+                            <thead className="bg-slate-50 dark:bg-zinc-800/50 border-b border-slate-100 dark:border-zinc-800">
+                              <tr>
+                                <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Jenis Dokumen</th>
+                                <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
+                              <TableRow title="Status Proses Dokumen" status={document_rl.status_proses} />
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                       {document_rl.catatan && (
                         <div className="mt-6 p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-xl border border-slate-100 dark:border-zinc-800">
@@ -558,7 +561,7 @@ export default function Welcome({
         </section>
 
         {/* Validasi PPh */}
-       <section id="validasiPPh" className="mt-20 scroll-mt-40 w-full bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-xl border border-slate-100 dark:border-zinc-800">
+        <section id="validasiPPh" className="mt-20 scroll-mt-40 w-full bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-xl border border-slate-100 dark:border-zinc-800">
           <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-10">
 
             <div className="flex flex-col items-center w-full">
@@ -606,17 +609,19 @@ export default function Welcome({
                         </div>
                       </div>
                       <div className="overflow-hidden rounded-2xl border border-slate-100 dark:border-zinc-800">
-                        <table className="w-full text-left text-sm">
-                          <thead className="bg-slate-50 dark:bg-zinc-800/50 border-b border-slate-100 dark:border-zinc-800">
-                            <tr>
-                              <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Jenis Dokumen</th>
-                              <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Status</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
-                            <TableRow title="Status Proses Dokumen" status={document_validasi.status_proses} />
-                          </tbody>
-                        </table>
+                        <div className="overflow-x-auto">
+                          <table className="w-full min-w-[450px] text-left text-sm">
+                            <thead className="bg-slate-50 dark:bg-zinc-800/50 border-b border-slate-100 dark:border-zinc-800">
+                              <tr>
+                                <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Jenis Dokumen</th>
+                                <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
+                              <TableRow title="Status Proses Dokumen" status={document_validasi.status_proses} />
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                       {document_validasi.catatan && (
                         <div className="mt-6 p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-xl border border-slate-100 dark:border-zinc-800">
@@ -646,81 +651,87 @@ export default function Welcome({
           </div>
         </section>
 
-{/* FOOTER KPKNL */}
-</main>
+        {/* FOOTER KPKNL */}
+      </main>
 
-{/* Hapus max-w-7xl dan mx-auto di sini supaya background biru bisa full ke samping */}
-<footer className="w-full bg-[#0F3D7A] text-white mt-24 py-9">
-  
-  {/* Bungkus konten dengan div ini agar isi tetap di tengah dan tidak melebar ke pinggir layar */}
-  <div className="max-w-7xl mx-auto px-4 md:px-8 grid md:grid-cols-2 gap-10 items-center">
-    
-    {/* LEFT SECTION */}
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-4">
-        <img
-          src="images/NAGARA-DANA-RAKCA.png"
-          alt="Logo"
-          className="w-16 h-16 object-contain"/>
-        <img 
-          src="images/kpknl-bogor.png" 
-          alt="Logo" 
-          className="w-16 h-16 object-contain"/>
-        
-      </div>
+      {/* Hapus max-w-7xl dan mx-auto di sini supaya background biru bisa full ke samping */}
+      <footer className="w-full bg-[#0F3D7A] text-white mt-24 py-9">
 
-      <div className="text-sm leading-relaxed space-y-3 ">
-        <p>© 2026 KPKNL Bogor</p>
-        <p>Jalan Veteran No. 45, Panaragan, Kecamatan Bogor Tengah, Kota Bogor, Jawa Barat 16125</p>
-      </div>
-    </div>
+        {/* Bungkus konten dengan div ini agar isi tetap di tengah dan tidak melebar ke pinggir layar */}
+        <div className="max-w-7xl mx-auto px-4 md:px-8 grid md:grid-cols-2 gap-10 items-center">
 
-    {/* RIGHT SECTION */}
-    <div className="flex flex-col items-start md:items-end gap-6">
-  <div className="flex flex-col items-start md:items-end">
-    <p className="font-bold text-sm tracking-wider uppercase text-indigo-200/80 mb-1">
-      Ikuti Kami
-    </p>
-    <div className="h-1 w-12 bg-cyan-400 rounded-full"></div>
-  </div>
+          {/* LEFT SECTION */}
+          <div className="flex flex-col gap-6">
+            <div className="flex items-center gap-4">
+              <img
+                src="images/NAGARA-DANA-RAKCA.png"
+                alt="Logo"
+                className="w-16 h-16 object-contain" />
+              <img
+                src="images/kpknl-bogor.png"
+                alt="Logo"
+                className="w-16 h-16 object-contain" />
 
-  <div className="flex gap-4">
-    {[
-      { 
-        name: "facebook", 
-        url: "https://www.facebook.com/kpknl.bogor", 
-        color: "hover:bg-[#1877F2]" 
-      },
-      { 
-        name: "instagram", 
-        url: "https://www.instagram.com/kpknlbogor", 
-        color: "hover:bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]" 
-      },
-      { 
-        name: "tiktok", 
-        url: "https://www.tiktok.com/@kpknlbogor", 
-        color: "hover:bg-black" 
-      }
-    ].map((item, index) => (
-      <a
-        key={index}
-        href={item.url}
-        target="_blank" // Supaya link terbuka di tab baru
-        rel="noopener noreferrer" // Standar keamanan untuk link eksternal
-        className={`group w-12 h-12 flex items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 text-white transition-all duration-300 ${item.color} hover:shadow-xl hover:shadow-indigo-500/20 hover:-translate-y-1 active:scale-95`}
-      >
-        <i className={`fa-brands fa-${item.name} text-xl group-hover:scale-110 transition-transform`} />
-      </a>
-    ))}
-  </div>
-  
-  <p className="text-[10px] text-indigo-300/60 font-medium tracking-widest uppercase text-left md:text-right">
-    KPKNL Bogor <br /> @kpknlbogor
-  </p>
-</div>
+            </div>
 
-  </div>
-</footer>  
+            <div className="text-sm leading-relaxed space-y-3 ">
+              <p>© 2026 KPKNL Bogor</p>
+              <p>Jalan Veteran No. 45, Panaragan, Kecamatan Bogor Tengah, Kota Bogor, Jawa Barat 16125</p>
+            </div>
+          </div>
+
+          {/* RIGHT SECTION */}
+          <div className="flex flex-col items-start md:items-end gap-6">
+            <div className="flex flex-col items-start md:items-end">
+              <p className="font-bold text-sm tracking-wider uppercase text-indigo-200/80 mb-1">
+                Ikuti Kami
+              </p>
+              <div className="h-1 w-12 bg-cyan-400 rounded-full"></div>
+            </div>
+
+            <div className="flex gap-4">
+              {[
+                {
+                  name: "facebook",
+                  url: "https://www.facebook.com/kpknlbogor",
+                  color: "hover:bg-[#1877F2]"
+                },
+                {
+                  name: "instagram",
+                  url: "https://www.instagram.com/kpknl.bogor",
+                  color: "hover:bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]"
+                },
+                {
+                  name: "tiktok",
+                  url: "https://www.tiktok.com/@kpknl.bogor",
+                  color: "hover:bg-black"
+                },
+                {
+                  name: "whatsapp",
+                  url: "https://wa.me/6282323040445",
+                  color: "hover:bg-[#25D366]"
+                },
+
+              ].map((item, index) => (
+                <a
+                  key={index}
+                  href={item.url}
+                  target="_blank" // Supaya link terbuka di tab baru
+                  rel="noopener noreferrer" // Standar keamanan untuk link eksternal
+                  className={`group w-12 h-12 flex items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 text-white transition-all duration-300 ${item.color} hover:shadow-xl hover:shadow-indigo-500/20 hover:-translate-y-1 active:scale-95`}
+                >
+                  <i className={`fa-brands fa-${item.name} text-xl group-hover:scale-110 transition-transform`} />
+                </a>
+              ))}
+            </div>
+
+            <p className="text-[10px] text-indigo-300/60 font-medium tracking-widest uppercase text-left md:text-right">
+              KPKNL Bogor <br /> @kpknlbogor
+            </p>
+          </div>
+
+        </div>
+      </footer>
     </div>
   );
-} 
+}

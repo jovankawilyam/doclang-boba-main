@@ -26,40 +26,43 @@ export default function ResetPassword({ token, email }: Props) {
                 resetOnSuccess={['password', 'password_confirmation']}
             >
                 {({ processing, errors }) => (
-                    <div className="grid gap-6">
+                    <div className="grid gap-5">
                         <div className="grid gap-2">
-                            <Label htmlFor="email">Email</Label>
+                            <Label htmlFor="email" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                                Email
+                            </Label>
                             <Input
                                 id="email"
                                 type="email"
                                 name="email"
                                 autoComplete="email"
                                 value={email}
-                                className="mt-1 block w-full"
+                                className="block w-full bg-slate-50 text-slate-500 dark:bg-slate-900 dark:text-slate-400"
                                 readOnly
                             />
                             <InputError
                                 message={errors.email}
-                                className="mt-2"
                             />
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="password">Password</Label>
+                            <Label htmlFor="password" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                                Password
+                            </Label>
                             <Input
                                 id="password"
                                 type="password"
                                 name="password"
                                 autoComplete="new-password"
-                                className="mt-1 block w-full"
+                                className="block w-full transition-colors focus-visible:ring-2 focus-visible:ring-primary/20"
                                 autoFocus
-                                placeholder="Password"
+                                placeholder="••••••••"
                             />
                             <InputError message={errors.password} />
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="password_confirmation">
+                            <Label htmlFor="password_confirmation" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                                 Confirm password
                             </Label>
                             <Input
@@ -67,22 +70,21 @@ export default function ResetPassword({ token, email }: Props) {
                                 type="password"
                                 name="password_confirmation"
                                 autoComplete="new-password"
-                                className="mt-1 block w-full"
-                                placeholder="Confirm password"
+                                className="block w-full transition-colors focus-visible:ring-2 focus-visible:ring-primary/20"
+                                placeholder="••••••••"
                             />
                             <InputError
                                 message={errors.password_confirmation}
-                                className="mt-2"
                             />
                         </div>
 
                         <Button
                             type="submit"
-                            className="mt-4 w-full"
+                            className="mt-2 w-full font-semibold shadow-sm transition-all duration-300 ease-in-out hover:shadow-md hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                             disabled={processing}
                             data-test="reset-password-button"
                         >
-                            {processing && <Spinner />}
+                            {processing && <Spinner className="mr-2 h-4 w-4" />}
                             Reset password
                         </Button>
                     </div>

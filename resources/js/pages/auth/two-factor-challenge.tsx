@@ -85,13 +85,14 @@ export default function TwoFactorChallenge() {
                                             disabled={processing}
                                             pattern={REGEXP_ONLY_DIGITS}
                                         >
-                                            <InputOTPGroup>
+                                            <InputOTPGroup className="gap-2">
                                                 {Array.from(
                                                     { length: OTP_MAX_LENGTH },
                                                     (_, index) => (
                                                         <InputOTPSlot
                                                             key={index}
                                                             index={index}
+                                                            className="rounded-md border-slate-300 focus-visible:ring-2 focus-visible:ring-primary/20 dark:border-slate-700"
                                                         />
                                                     ),
                                                 )}
@@ -104,9 +105,10 @@ export default function TwoFactorChallenge() {
 
                             <Button
                                 type="submit"
-                                className="w-full"
+                                className="mt-2 w-full font-semibold shadow-sm transition-all duration-300 ease-in-out hover:shadow-md hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                                 disabled={processing}
                             >
+                                {processing ? <Spinner className="mr-2 h-4 w-4" /> : null}
                                 Continue
                             </Button>
 

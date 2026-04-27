@@ -19,13 +19,16 @@ export default function ConfirmPassword() {
                 {({ processing, errors }) => (
                     <div className="space-y-6">
                         <div className="grid gap-2">
-                            <Label htmlFor="password">Password</Label>
+                            <Label htmlFor="password" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                                Password
+                            </Label>
                             <Input
                                 id="password"
                                 type="password"
                                 name="password"
-                                placeholder="Password"
+                                placeholder="••••••••"
                                 autoComplete="current-password"
+                                className="transition-colors focus-visible:ring-2 focus-visible:ring-primary/20"
                                 autoFocus
                             />
 
@@ -34,11 +37,11 @@ export default function ConfirmPassword() {
 
                         <div className="flex items-center">
                             <Button
-                                className="w-full"
+                                className="w-full font-semibold shadow-sm transition-all duration-300 ease-in-out hover:shadow-md hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                                 disabled={processing}
                                 data-test="confirm-password-button"
                             >
-                                {processing && <Spinner />}
+                                {processing && <Spinner className="mr-2 h-4 w-4" />}
                                 Confirm password
                             </Button>
                         </div>
