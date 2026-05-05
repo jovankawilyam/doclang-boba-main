@@ -379,8 +379,8 @@ export default function Welcome({
 
 
       {/* Kuitansi */}
-      <main className="max-w-100xl mx-auto px-4 md:px-8 py-12 flex flex-col items-center">
-        <section id="kuitansi" className="mt-20 scroll-mt-40 w-full bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-xl border border-slate-100 dark:border-zinc-800">
+      <main className="mx-6 mt-10 rounded-3xl">
+        <section id="kuitansi" className="mt-20 scroll-mt-40 w-full bg-white dark:bg-[#1E56A0] p-8 shadow-xl border border-slate-100 dark:border-zinc-800 rounded-3xl">
           <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-10">
 
             <div className="flex flex-col items-center w-full">
@@ -471,7 +471,7 @@ export default function Welcome({
         </section>
 
         {/* Kutipan RL */}
-        <section id="kutipan" className="mt-20 scroll-mt-40 w-full bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-xl border border-slate-100 dark:border-zinc-800">
+        <section id="kutipan" className="mt-20 scroll-mt-40 w-full bg-white dark:bg-[#1E56A0] p-8 shadow-xl border border-slate-100 dark:border-zinc-800 rounded-3xl">
           <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-10">
             <div className=" flex justify-center w-full md:w-1/2">
               <img src="/images/menujuwbk.png" alt="Ilustrasi" className=" object-contain drop-shadow-xl" />
@@ -561,7 +561,7 @@ export default function Welcome({
         </section>
 
         {/* Validasi PPh */}
-        <section id="validasiPPh" className="mt-20 scroll-mt-40 w-full bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-xl border border-slate-100 dark:border-zinc-800">
+        <section id="validasiPPh" className="mt-20 scroll-mt-40 w-full bg-white dark:bg-[#1E56A0] p-8 shadow-xl border border-slate-100 dark:border-zinc-800 rounded-3xl">
           <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-10">
 
             <div className="flex flex-col items-center w-full">
@@ -650,88 +650,89 @@ export default function Welcome({
             </div>
           </div>
         </section>
+        </main>
+      
 
-        {/* FOOTER KPKNL */}
-      </main>
+      {/* FOOTER KPKNL */}
 
-      {/* Hapus max-w-7xl dan mx-auto di sini supaya background biru bisa full ke samping */}
-      <footer className="w-full bg-[#0F3D7A] text-white mt-24 py-9">
 
-        {/* Bungkus konten dengan div ini agar isi tetap di tengah dan tidak melebar ke pinggir layar */}
-        <div className="max-w-7xl mx-auto px-4 md:px-8 grid md:grid-cols-2 gap-10 items-center">
+<section className="mt-45">
+  {/* BAGIAN ATAS: Biru Tua (Zona Integritas) */}
+  {/* py ditingkatkan ke py-10 agar lebih lega */}
+  <div className="w-full bg-[#0F3D7A] text-gray-100 px-6 md:px-12 py-10 text-center border-b border-white/10">
+    {/* Ukuran naik ke text-base (mobile) dan text-xl (desktop) */}
+    <p className="text-base md:text-xl max-w-10xl mx-auto leading-relaxed font-medium">
+      Bahwa dalam rangka mewujudkan Zona Integritas menuju Wilayah Bebas dari Korupsi,
+      <strong className="text-white font-extrabold"> KPKNL Bogor berkomitmen untuk meningkatkan kualitas pelayanan </strong>
+      dengan prinsip utama <strong className="text-cyan-300">BAGeUR</strong> (Bersih, Amanah, Gesit, Unggul dan Ramah)
+    </p>
+  </div>
 
-          {/* LEFT SECTION */}
-          <div className="flex flex-col gap-6">
-            <div className="flex items-center gap-4">
-              <img
-                src="images/NAGARA-DANA-RAKCA.png"
-                alt="Logo"
-                className="w-16 h-16 object-contain" />
-              <img
-                src="images/kpknl-bogor.png"
-                alt="Logo"
-                className="w-16 h-16 object-contain" />
+  {/* BAGIAN BAWAH: Biru Muda (Informasi & Sosmed) */}
+  <footer className="w-full bg-[#1E56A0] text-white py-16">
+    <div className="max-w-7xl mx-auto px-6 md:px-8 grid md:grid-cols-2 gap-12 items-center">
 
-            </div>
-
-            <div className="text-sm leading-relaxed space-y-3 ">
-              <p>© 2026 KPKNL Bogor</p>
-              <p>Jalan Veteran No. 45, Panaragan, Kecamatan Bogor Tengah, Kota Bogor, Jawa Barat 16125</p>
-            </div>
-          </div>
-
-          {/* RIGHT SECTION */}
-          <div className="flex flex-col items-start md:items-end gap-6">
-            <div className="flex flex-col items-start md:items-end">
-              <p className="font-bold text-sm tracking-wider uppercase text-indigo-200/80 mb-1">
-                Ikuti Kami
-              </p>
-              <div className="h-1 w-12 bg-cyan-400 rounded-full"></div>
-            </div>
-
-            <div className="flex gap-4">
-              {[
-                {
-                  name: "facebook",
-                  url: "https://www.facebook.com/kpknlbogor",
-                  color: "hover:bg-[#1877F2]"
-                },
-                {
-                  name: "instagram",
-                  url: "https://www.instagram.com/kpknl.bogor",
-                  color: "hover:bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]"
-                },
-                {
-                  name: "tiktok",
-                  url: "https://www.tiktok.com/@kpknl.bogor",
-                  color: "hover:bg-black"
-                },
-                {
-                  name: "whatsapp",
-                  url: "https://wa.me/6282323040445",
-                  color: "hover:bg-[#25D366]"
-                },
-
-              ].map((item, index) => (
-                <a
-                  key={index}
-                  href={item.url}
-                  target="_blank" // Supaya link terbuka di tab baru
-                  rel="noopener noreferrer" // Standar keamanan untuk link eksternal
-                  className={`group w-12 h-12 flex items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 text-white transition-all duration-300 ${item.color} hover:shadow-xl hover:shadow-indigo-500/20 hover:-translate-y-1 active:scale-95`}
-                >
-                  <i className={`fa-brands fa-${item.name} text-xl group-hover:scale-110 transition-transform`} />
-                </a>
-              ))}
-            </div>
-
-            <p className="text-[10px] text-indigo-300/60 font-medium tracking-widest uppercase text-left md:text-right">
-              KPKNL Bogor <br /> @kpknlbogor
-            </p>
-          </div>
-
+      {/* LEFT SECTION */}
+      <div className="flex flex-col gap-8">
+        <div className="flex items-center gap-6">
+          <img
+            src="images/NAGARA-DANA-RAKCA.png"
+            alt="Logo"
+            className="w-20 h-20 object-contain" />
+          <img
+            src="images/kpknl-bogor.png"
+            alt="Logo"
+            className="w-20 h-20 object-contain" />
         </div>
-      </footer>
+
+        {/* Ukuran naik ke text-lg */}
+        <div className="text-base md:text-lg leading-relaxed space-y-4 font-semibold">
+          <p className="text-xl md:text-2xl font-bold">© 2026 KPKNL Bogor</p>
+          <p className="opacity-90">Jalan Veteran No. 45, Panaragan, Kecamatan Bogor Tengah, Kota Bogor, Jawa Barat 16125</p>
+        </div>
+      </div>
+
+      {/* RIGHT SECTION */}
+      <div className="flex flex-col items-start md:items-end gap-8">
+        <div className="flex flex-col items-start md:items-end">
+          {/* Judul Ikuti Kami naik ke text-lg */}
+          <p className="font-black text-lg tracking-widest uppercase text-cyan-200 mb-2">
+            Ikuti Kami
+          </p>
+          <div className="h-1.5 w-16 bg-cyan-400 rounded-full"></div>
+        </div>
+
+        <div className="flex gap-5">
+          {[
+            { name: "facebook", url: "https://www.facebook.com/kpknlbogor", color: "hover:bg-[#1877F2]" },
+            { name: "instagram", url: "https://www.instagram.com/kpknl.bogor", color: "hover:bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]" },
+            { name: "tiktok", url: "https://www.tiktok.com/@kpknl.bogor", color: "hover:bg-black" },
+            { name: "whatsapp", url: "https://wa.me/6282323040445", color: "hover:bg-[#25D366]" },
+          ].map((item, index) => (
+            /* Ukuran box sosmed naik dari w-12 ke w-14 */
+            <a
+              key={index}
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`group w-14 h-14 flex items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 text-white transition-all duration-300 ${item.color} hover:shadow-2xl hover:-translate-y-2 active:scale-90`}
+            >
+              <i className={`fa-brands fa-${item.name} text-2xl group-hover:scale-110 transition-transform`} />
+            </a>
+          ))}
+        </div>
+
+        {/* Username bawah naik ke text-sm */}
+        <p className="text-xs md:text-sm text-blue-100 font-black tracking-widest uppercase text-left md:text-right leading-loose">
+          Kantor Pelayanan Kekayaan Negara dan Lelang Bogor <br /> 
+          <span className="text-cyan-300">@kpknlbogor</span>
+        </p>
+      </div>
+
     </div>
+  </footer>
+</section>
+    </div>
+    
   );
 }
