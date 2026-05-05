@@ -79,21 +79,23 @@ class AdminController extends Controller
         return back()->with('success', "Admin {$user->name} berhasil {$status}.");
     }
 
-    /**
-     * Hapus admin.
-     */
     public function destroy(User $user)
     {
         if ($user->id === auth()->id()) {
             return back()->with('error', 'Tidak dapat menghapus akun Anda sendiri.');
         }
 
-        if ($user->role === 'super_admin') {
-            return back()->with('error', 'Tidak dapat menghapus Super Admin.');
+        try {
+            $user->delete();
+            return back()->with('success', "Admin {$user->name} berhasil dihapus.");
+        } catch (\Illuminate\Database\QueryException $e) {
+            $errorCode = $e->errorInfo[1];
+            if ($errorCode == 1451) {
+                return back()->with('error', 'Gagal menghapus admin karena masih ada data yang terkait (misal: dokumen). Disarankan menggunakan SoftDeletes.');
+            }
+            return back()->with('error', 'Gagal menghapus admin: Terjadi kesalahan database.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menghapus admin: Terjadi kesalahan.');
         }
-
-        $user->delete();
-
-        return back()->with('success', "Admin {$user->name} berhasil dihapus.");
     }
 }

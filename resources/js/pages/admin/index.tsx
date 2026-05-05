@@ -46,8 +46,9 @@ interface Props {
 }
 
 export default function AdminIndex({ admins, stats }: Props) {
-    const { props } = usePage<{ flash: { success?: string; error?: string } }>();
+    const { props } = usePage<{ auth: { user: { id: number } }; flash: { success?: string; error?: string } }>();
     const flash = props.flash ?? {};
+    const auth = props.auth;
     const [search, setSearch] = useState('');
     const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
@@ -63,8 +64,10 @@ export default function AdminIndex({ admins, stats }: Props) {
 
     const handleDelete = (id: number) => {
         if (confirmDelete === id) {
-            router.delete(`/admin/${id}`, { preserveScroll: true });
-            setConfirmDelete(null);
+            router.delete(`/admin/${id}`, { 
+                preserveScroll: true,
+                onFinish: () => setConfirmDelete(null)
+            });
         } else {
             setConfirmDelete(id);
         }
@@ -222,7 +225,7 @@ export default function AdminIndex({ admins, stats }: Props) {
                                                                 </>
                                                             )}
                                                         </Button>
-                                                        {admin.role !== 'super_admin' && (
+                                                        {admin.id !== auth.user.id && (
                                                             <Button
                                                                 variant={confirmDelete === admin.id ? 'destructive' : 'ghost'}
                                                                 size="sm"

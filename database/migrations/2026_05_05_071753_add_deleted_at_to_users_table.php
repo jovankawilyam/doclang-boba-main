@@ -11,11 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('documents', 'category')) {
-            Schema::table('documents', function (Blueprint $table) {
-                $table->string('category')->default('kuitansi')->after('nomor_pengajuan');
-            });
-        }
+        Schema::table('users', function (Blueprint $table) {
+            $table->softDeletes();
+        });
     }
 
     /**
@@ -23,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('documents', function (Blueprint $table) {
-            $table->dropColumn('category');
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropSoftDeletes();
         });
     }
 };
