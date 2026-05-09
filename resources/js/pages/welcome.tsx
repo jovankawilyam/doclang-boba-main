@@ -1,5 +1,5 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { Search, CheckCircle2, Clock, FileText, Inbox } from 'lucide-react';
+import { Search, CheckCircle2, Clock, FileText, Inbox, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -29,6 +29,12 @@ function TableRow({ title, status }: { title: string; status: DocumentItem['stat
           badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-900',
           icon: <Inbox className="h-4 w-4 mr-1.5" />,
           label: 'Siap Diambil',
+        };
+      case 'tidak_valid':
+        return {
+          badge: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-900',
+          icon: <XCircle className="h-4 w-4 mr-1.5" />,
+          label: 'Tidak Valid',
         };
       default:
         return {
@@ -271,109 +277,147 @@ export default function Welcome({
       </section>
 
       {/* Dashboard Statistik (Read-only) */}
-      <section className="w-full max-w-100xl mx-auto px-4 md:px-8 mb-20 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-150 fill-mode-both">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-black tracking-tight mb-4">
-            Dokumen Pasca Lelang Bogor Bageur
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400 font-bold">Ringkasan statistik real-time dokumen pasca lelang.</p>
-        </div>
 
+  {/* --- AWAL BAGIAN STATISTIK BARU (SESUAI GAMBAR) --- */}
+<section className="w-full max-w-100xl mx-auto px-4 md:px-8 mb-20">
+  <div className="text-center mb-10">
+    <h2 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight mb-4">
+      Dokumen Pasca Lelang Bogor Bageur
+    </h2>
+    <p className="text-slate-500 font-bold">Ringkasan statistik real-time dokumen pasca lelang.</p>
+  </div>
 
-        <section className="bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-xl border border-slate-100 dark:border-zinc-800">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Kuitansi (Biru) */}
-            <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-xl shadow-blue-500/10 border border-blue-100 dark:border-blue-900/50 hover:-translate-y-1 transition-transform duration-300">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-blue-100 dark:bg-blue-900/50 rounded-xl">
-                  <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">Kuitansi</h3>
-              </div>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-4 bg-slate-50 dark:bg-zinc-800/50 rounded-2xl">
-                  <span className="text-slate-500 dark:text-slate-400 font-medium">Total Dokumen</span>
-                  <span className="text-2xl font-black text-slate-800 dark:text-white">{statistics?.kuitansi?.total || 0}</span>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-2xl text-center flex flex-col justify-center">
-                    <span className="block text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase mb-1">Proses</span>
-                    <span className="text-lg font-black text-amber-700 dark:text-amber-300">{statistics?.kuitansi?.proses || 0}</span>
-                  </div>
-                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-2xl text-center flex flex-col justify-center border border-blue-200 dark:border-blue-800">
-                    <span className="block text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase mb-1">Siap Diambil</span>
-                    <span className="text-xl font-black text-blue-700 dark:text-blue-300">{statistics?.kuitansi?.siap_diambil || 0}</span>
-                  </div>
-                  <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-2xl text-center flex flex-col justify-center">
-                    <span className="block text-[10px] font-bold text-green-600 dark:text-green-400 uppercase mb-1">Selesai</span>
-                    <span className="text-lg font-black text-green-700 dark:text-green-300">{statistics?.kuitansi?.selesai || 0}</span>
-                  </div>
-                </div>
-              </div>
+  {/* Container Biru Utama */}
+  <section className="bg-[#1E56A0] rounded-3xl p-8 shadow-2xl border border-indigo-500/20">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+      {/* 1. KUITANSI (BIRU) */}
+      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20">
+        <h3 className="text-4xl font-extrabold text-white text-center mb-6">kuitansi</h3>
+        
+        <div className="space-y-3">
+          {/* Baris Atas: Total (Kiri) dan Group Kanan */}
+          <div className="flex gap-3 items-stretch">
+            {/* Box Total (Tinggi Penuh) */}
+            <div className="w-1/3 bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-white/20">
+              <span className="text-xs text-blue-100 font-medium">Total</span>
+              <span className="text-4xl font-black text-white">{statistics?.kuitansi?.total || 0}</span>
             </div>
-
-            {/* Kutipan RL (Oranye) */}
-            <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-xl shadow-orange-500/10 border border-orange-100 dark:border-orange-900/50 hover:-translate-y-1 transition-transform duration-300">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-orange-100 dark:bg-orange-900/50 rounded-xl">
-                  <FileText className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">Kutipan RL</h3>
+            
+            {/* Group Kanan */}
+            <div className="w-2/3 space-y-3">
+              {/* Siap Diambil (Lebar Penuh) */}
+              <div className="bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-white/20">
+                <span className="text-xs text-blue-100 font-medium">Siap Diambil</span>
+                <span className="text-3xl font-black text-white">{statistics?.kuitansi?.siap_diambil || 0}</span>
               </div>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-4 bg-slate-50 dark:bg-zinc-800/50 rounded-2xl">
-                  <span className="text-slate-500 dark:text-slate-400 font-medium">Total Dokumen</span>
-                  <span className="text-2xl font-black text-slate-800 dark:text-white">{statistics?.kutipan_rl?.total || 0}</span>
+              {/* Proses & Selesai (Dua Kolom) */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-white/20">
+                  <span className="text-xs text-blue-100 font-medium">Proses</span>
+                  <span className="text-3xl font-black text-white">{statistics?.kuitansi?.proses || 0}</span>
                 </div>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-2xl text-center flex flex-col justify-center">
-                    <span className="block text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase mb-1">Proses</span>
-                    <span className="text-lg font-black text-amber-700 dark:text-amber-300">{statistics?.kutipan_rl?.proses || 0}</span>
-                  </div>
-                  <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded-2xl text-center flex flex-col justify-center border border-orange-200 dark:border-orange-800">
-                    <span className="block text-[10px] font-bold text-orange-600 dark:text-orange-400 uppercase mb-1">Siap Diambil</span>
-                    <span className="text-xl font-black text-orange-700 dark:text-orange-300">{statistics?.kutipan_rl?.siap_diambil || 0}</span>
-                  </div>
-                  <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-2xl text-center flex flex-col justify-center">
-                    <span className="block text-[10px] font-bold text-green-600 dark:text-green-400 uppercase mb-1">Selesai</span>
-                    <span className="text-lg font-black text-green-700 dark:text-green-300">{statistics?.kutipan_rl?.selesai || 0}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Validasi PPh (Hijau) */}
-            <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-xl shadow-green-500/10 border border-green-100 dark:border-green-900/50 hover:-translate-y-1 transition-transform duration-300">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-green-100 dark:bg-green-900/50 rounded-xl">
-                  <FileText className="w-6 h-6 text-green-600 dark:text-green-400" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">Validasi PPh</h3>
-              </div>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-4 bg-slate-50 dark:bg-zinc-800/50 rounded-2xl">
-                  <span className="text-slate-500 dark:text-slate-400 font-medium">Total Dokumen</span>
-                  <span className="text-2xl font-black text-slate-800 dark:text-white">{statistics?.validasi_pph?.total || 0}</span>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-2xl text-center flex flex-col justify-center">
-                    <span className="block text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase mb-1">Proses</span>
-                    <span className="text-lg font-black text-amber-700 dark:text-amber-300">{statistics?.validasi_pph?.proses || 0}</span>
-                  </div>
-                  <div className="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-2xl text-center flex flex-col justify-center border border-emerald-200 dark:border-emerald-800">
-                    <span className="block text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase mb-1">Siap Diambil</span>
-                    <span className="text-xl font-black text-emerald-700 dark:text-emerald-300">{statistics?.validasi_pph?.siap_diambil || 0}</span>
-                  </div>
-                  <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-2xl text-center flex flex-col justify-center">
-                    <span className="block text-[10px] font-bold text-green-600 dark:text-green-400 uppercase mb-1">Selesai</span>
-                    <span className="text-lg font-black text-green-700 dark:text-green-300">{statistics?.validasi_pph?.selesai || 0}</span>
-                  </div>
+                <div className="bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-white/20">
+                  <span className="text-xs text-blue-100 font-medium">Selesai</span>
+                  <span className="text-3xl font-black text-white">{statistics?.kuitansi?.selesai || 0}</span>
                 </div>
               </div>
             </div>
           </div>
-        </section>
-      </section>
+
+          {/* Baris Bawah: Tidak Valid */}
+          <div className="bg-white/20 rounded-xl p-4 flex justify-between items-center border border-white/20">
+            <span className="text-lg text-blue-100 font-medium">Tidak Valid</span>
+            <span className="text-3xl font-black text-white">{statistics?.kuitansi?.tidak_valid || 0}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. KUTIPAN RL (ORANYE) */}
+      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20">
+        <h3 className="text-4xl font-extrabold text-white text-center mb-6">kutipan RL</h3>
+        
+        <div className="space-y-3">
+          <div className="flex gap-3 items-stretch">
+            {/* Box Total */}
+            <div className="w-1/3 bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-orange-500/40">
+              <span className="text-xs text-orange-100 font-medium">Total</span>
+              <span className="text-4xl font-black text-white">{statistics?.kutipan_rl?.total || 0}</span>
+            </div>
+            
+            {/* Group Kanan */}
+            <div className="w-2/3 space-y-3">
+              {/* Siap Diambil */}
+              <div className="bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-orange-500/40">
+                <span className="text-xs text-orange-100 font-medium">Siap Diambil</span>
+                <span className="text-3xl font-black text-white">{statistics?.kutipan_rl?.siap_diambil || 0}</span>
+              </div>
+              {/* Proses & Selesai */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-orange-500/40">
+                  <span className="text-xs text-orange-100 font-medium">Proses</span>
+                  <span className="text-3xl font-black text-white">{statistics?.kutipan_rl?.proses || 0}</span>
+                </div>
+                <div className="bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-orange-500/40">
+                  <span className="text-xs text-orange-100 font-medium">Selesai</span>
+                  <span className="text-3xl font-black text-white">{statistics?.kutipan_rl?.selesai || 0}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tidak Valid */}
+          <div className="bg-white/20 rounded-xl p-4 flex justify-between items-center border border-orange-500/40">
+            <span className="text-lg text-orange-100 font-medium">Tidak Valid</span>
+            <span className="text-3xl font-black text-white">{statistics?.kutipan_rl?.tidak_valid || 0}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. VALIDASI PPH (HIJAU) */}
+      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20">
+        <h3 className="text-4xl font-extrabold text-white text-center mb-6">validasi PPh</h3>
+        
+        <div className="space-y-3">
+          <div className="flex gap-3 items-stretch">
+            {/* Box Total */}
+            <div className="w-1/3 bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-emerald-500/40">
+              <span className="text-xs text-emerald-100 font-medium">Total</span>
+              <span className="text-4xl font-black text-white">{statistics?.validasi_pph?.total || 0}</span>
+            </div>
+            
+            {/* Group Kanan */}
+            <div className="w-2/3 space-y-3">
+              {/* Siap Diambil */}
+              <div className="bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-emerald-500/40">
+                <span className="text-xs text-emerald-100 font-medium">Siap Diambil</span>
+                <span className="text-3xl font-black text-white">{statistics?.validasi_pph?.siap_diambil || 0}</span>
+              </div>
+              {/* Proses & Selesai */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-emerald-500/40">
+                  <span className="text-xs text-emerald-100 font-medium">Proses</span>
+                  <span className="text-3xl font-black text-white">{statistics?.validasi_pph?.proses || 0}</span>
+                </div>
+                <div className="bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-emerald-500/40">
+                  <span className="text-xs text-emerald-100 font-medium">Selesai</span>
+                  <span className="text-3xl font-black text-white">{statistics?.validasi_pph?.selesai || 0}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tidak Valid */}
+          <div className="bg-white/20 rounded-xl p-4 flex justify-between items-center border border-emerald-500/40">
+            <span className="text-lg text-emerald-100 font-medium">Tidak Valid</span>
+            <span className="text-3xl font-black text-white">{statistics?.validasi_pph?.tidak_valid || 0}</span>
+          </div>
+        </div>
+      </div>
+
+    </div> {/* Tutup Grid */}
+  </section> {/* Tutup Container Biru */}
+</section> {/* Tutup Section Statistik */}
 
 
 
@@ -656,83 +700,62 @@ export default function Welcome({
       {/* FOOTER KPKNL */}
 
 
-<section className="mt-45">
-  {/* BAGIAN ATAS: Biru Tua (Zona Integritas) */}
-  {/* py ditingkatkan ke py-10 agar lebih lega */}
-  <div className="w-full bg-[#0F3D7A] text-gray-100 px-6 md:px-12 py-10 text-center border-b border-white/10">
-    {/* Ukuran naik ke text-base (mobile) dan text-xl (desktop) */}
-    <p className="text-base md:text-xl max-w-10xl mx-auto leading-relaxed font-medium">
-      Bahwa dalam rangka mewujudkan Zona Integritas menuju Wilayah Bebas dari Korupsi,
-      <strong className="text-white font-extrabold"> KPKNL Bogor berkomitmen untuk meningkatkan kualitas pelayanan </strong>
-      dengan prinsip utama <strong className="text-cyan-300">BAGeUR</strong> (Bersih, Amanah, Gesit, Unggul dan Ramah)
-    </p>
-  </div>
-
-  {/* BAGIAN BAWAH: Biru Muda (Informasi & Sosmed) */}
-  <footer className="w-full bg-[#1E56A0] text-white py-16">
-    <div className="max-w-7xl mx-auto px-6 md:px-8 grid md:grid-cols-2 gap-12 items-center">
-
-      {/* LEFT SECTION */}
-      <div className="flex flex-col gap-8">
-        <div className="flex items-center gap-6">
-          <img
-            src="images/NAGARA-DANA-RAKCA.png"
-            alt="Logo"
-            className="w-20 h-20 object-contain" />
-          <img
-            src="images/kpknl-bogor.png"
-            alt="Logo"
-            className="w-20 h-20 object-contain" />
-        </div>
-
-        {/* Ukuran naik ke text-lg */}
-        <div className="text-base md:text-lg leading-relaxed space-y-4 font-semibold">
-          <p className="text-xl md:text-2xl font-bold">© 2026 KPKNL Bogor</p>
-          <p className="opacity-90">Jalan Veteran No. 45, Panaragan, Kecamatan Bogor Tengah, Kota Bogor, Jawa Barat 16125</p>
-        </div>
-      </div>
-
-      {/* RIGHT SECTION */}
-      <div className="flex flex-col items-start md:items-end gap-8">
-        <div className="flex flex-col items-start md:items-end">
-          {/* Judul Ikuti Kami naik ke text-lg */}
-          <p className="font-black text-lg tracking-widest uppercase text-cyan-200 mb-2">
-            Ikuti Kami
+{/* FOOTER KPKNL */}
+      <section className="mt-45">
+        <div className="w-full bg-[#0F3D7A] text-gray-100 px-6 md:px-12 py-10 text-center border-b border-white/10">
+          <p className="text-base md:text-xl max-w-10xl mx-auto leading-relaxed font-medium">
+            Bahwa dalam rangka mewujudkan Zona Integritas menuju Wilayah Bebas dari Korupsi,
+            <strong className="text-white font-extrabold"> KPKNL Bogor berkomitmen untuk meningkatkan kualitas pelayanan </strong>
+            dengan prinsip utama <strong className="text-cyan-300">BAGeUR</strong> (Bersih, Amanah, Gesit, Unggul dan Ramah)
           </p>
-          <div className="h-1.5 w-16 bg-cyan-400 rounded-full"></div>
         </div>
 
-        <div className="flex gap-5">
-          {[
-            { name: "facebook", url: "https://www.facebook.com/kpknlbogor", color: "hover:bg-[#1877F2]" },
-            { name: "instagram", url: "https://www.instagram.com/kpknl.bogor", color: "hover:bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]" },
-            { name: "tiktok", url: "https://www.tiktok.com/@kpknl.bogor", color: "hover:bg-black" },
-            { name: "whatsapp", url: "https://wa.me/6282323040445", color: "hover:bg-[#25D366]" },
-          ].map((item, index) => (
-            /* Ukuran box sosmed naik dari w-12 ke w-14 */
-            <a
-              key={index}
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`group w-14 h-14 flex items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 text-white transition-all duration-300 ${item.color} hover:shadow-2xl hover:-translate-y-2 active:scale-90`}
-            >
-              <i className={`fa-brands fa-${item.name} text-2xl group-hover:scale-110 transition-transform`} />
-            </a>
-          ))}
-        </div>
+        <footer className="w-full bg-[#1E56A0] text-white py-16">
+          <div className="max-w-7xl mx-auto px-6 md:px-8 grid md:grid-cols-2 gap-12 items-center">
+            {/* LEFT SECTION */}
+            <div className="flex flex-col gap-8">
+              <div className="flex items-center gap-6">
+                <img src="images/NAGARA-DANA-RAKCA.png" alt="Logo" className="w-20 h-20 object-contain" />
+                <img src="images/kpknl-bogor.png" alt="Logo" className="w-20 h-20 object-contain" />
+              </div>
+              <div className="text-base md:text-lg leading-relaxed space-y-4 font-semibold">
+                <p className="text-xl md:text-2xl font-bold">© 2026 KPKNL Bogor</p>
+                <p className="opacity-90">Jalan Veteran No. 45, Panaragan, Kecamatan Bogor Tengah, Kota Bogor, Jawa Barat 16125</p>
+              </div>
+            </div>
 
-        {/* Username bawah naik ke text-sm */}
-        <p className="text-xs md:text-sm text-blue-100 font-black tracking-widest uppercase text-left md:text-right leading-loose">
-          Kantor Pelayanan Kekayaan Negara dan Lelang Bogor <br /> 
-          <span className="text-cyan-300">@kpknlbogor</span>
-        </p>
-      </div>
-
-    </div>
-  </footer>
-</section>
-    </div>
-    
+            {/* RIGHT SECTION */}
+            <div className="flex flex-col items-start md:items-end gap-8">
+              <div className="flex flex-col items-start md:items-end">
+                <p className="font-black text-lg tracking-widest uppercase text-cyan-200 mb-2">Ikuti Kami</p>
+                <div className="h-1.5 w-16 bg-cyan-400 rounded-full"></div>
+              </div>
+              <div className="flex gap-5">
+                {[
+                  { name: "facebook", url: "https://www.facebook.com/kpknlbogor", color: "hover:bg-[#1877F2]" },
+                  { name: "instagram", url: "https://www.instagram.com/kpknl.bogor", color: "hover:bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]" },
+                  { name: "tiktok", url: "https://www.tiktok.com/@kpknl.bogor", color: "hover:bg-black" },
+                  { name: "whatsapp", url: "https://wa.me/6282323040445", color: "hover:bg-[#25D366]" },
+                ].map((item, index) => (
+                  <a
+                    key={index}
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`group w-14 h-14 flex items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 text-white transition-all duration-300 ${item.color} hover:shadow-2xl hover:-translate-y-2 active:scale-90`}
+                  >
+                    <i className={`fa-brands fa-${item.name} text-2xl group-hover:scale-110 transition-transform`} />
+                  </a>
+                ))}
+              </div>
+              <p className="text-xs md:text-sm text-blue-100 font-black tracking-widest uppercase text-left md:text-right leading-loose">
+                Kantor Pelayanan Kekayaan Negara dan Lelang Bogor <br /> 
+                <span className="text-cyan-300">@kpknlbogor</span>
+              </p>
+            </div>
+          </div>
+        </footer>
+      </section>
+    </div> 
   );
 }

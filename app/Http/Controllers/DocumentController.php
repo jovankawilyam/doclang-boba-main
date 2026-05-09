@@ -19,6 +19,7 @@ class DocumentController extends Controller
                 'proses' => Document::where('category', $cat)->where('status_proses', 'proses')->count(),
                 'siap_diambil' => Document::where('category', $cat)->where('status_proses', 'siap_diambil')->count(),
                 'selesai' => Document::where('category', $cat)->where('status_proses', 'selesai')->count(),
+                'tidak_valid' => Document::where('category', $cat)->where('status_proses', 'tidak_valid')->count(),
             ];
         }
 
@@ -54,7 +55,7 @@ class DocumentController extends Controller
     {
         $validated = $request->validate([
             'nomor_pengajuan' => ['required', 'string', 'unique:documents,nomor_pengajuan'],
-            'status_proses' => 'required|in:proses,siap_diambil,selesai',
+            'status_proses' => 'required|in:proses,siap_diambil,selesai,tidak_valid',
             'catatan' => 'nullable|string',
             'category' => 'required|in:kuitansi,kutipan_rl,validasi_pph',
         ]);
@@ -69,7 +70,7 @@ class DocumentController extends Controller
     public function update(Request $request, Document $document)
     {
         $validated = $request->validate([
-            'status_proses' => 'sometimes|required|in:proses,siap_diambil,selesai',
+            'status_proses' => 'sometimes|required|in:proses,siap_diambil,selesai,tidak_valid',
             'catatan' => 'nullable|string',
         ]);
 

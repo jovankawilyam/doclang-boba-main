@@ -32,7 +32,7 @@ class DocumentRLController extends Controller
         $validated = $request->validate([
             // Expect formatted nomor_pengajuan like '146/K-RL/2026'
             'nomor_pengajuan' => ['required', 'string', 'unique:documents,nomor_pengajuan', 'regex:/^\\d+\/K-RL\/2026$/'],
-            'status_proses' => 'required|in:proses,siap_diambil,selesai',
+            'status_proses' => 'required|in:proses,siap_diambil,selesai,tidak_valid',
             'catatan' => 'nullable|string',
         ]);
 
@@ -52,7 +52,7 @@ class DocumentRLController extends Controller
         }
 
         $validated = $request->validate([
-            'status_proses' => 'sometimes|required|in:proses,siap_diambil,selesai',
+            'status_proses' => 'sometimes|required|in:proses,siap_diambil,selesai,tidak_valid',
             'catatan' => 'nullable|string',
         ]);
 
