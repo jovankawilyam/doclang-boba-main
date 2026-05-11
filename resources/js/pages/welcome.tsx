@@ -174,6 +174,9 @@ export default function Welcome({
             <a href="#validasiPPh" className="text-sm text-gray-600 hover:text-indigo-600 font-extrabold">
               Validasi PPh
             </a>
+             <Link href="/form" className="text-sm text-gray-600 hover:text-indigo-600 font-extrabold">
+              Doclang Boba
+            </Link>
             <Link href="/persyaratan" className="text-sm text-gray-600 hover:text-indigo-600 font-extrabold">
               Persyaratan
             </Link>
@@ -202,8 +205,14 @@ export default function Welcome({
               <Link href="/persyaratan" className="text-sm text-gray-600 hover:text-indigo-600 font-extrabold mt-4">
                 Persyaratan
               </Link>
+              
+             <Link href="/form" className="text-sm text-gray-600 hover:text-indigo-600 font-extrabold mt-4">
+              Doclang Boba
+            </Link>
+            
             </div>
 
+            
             <a href="#kutipan" className="block text-sm text-card">
               Kutipan RL
             </a>
@@ -211,6 +220,8 @@ export default function Welcome({
             <a href="#validasiPPh" className="block text-sm text-card">
               Validasi PPh
             </a>
+
+
             {auth?.user ? (
               <Link href={dashboard()}>
                 <Button className="w-full rounded-full">Dashboard</Button>
@@ -271,10 +282,10 @@ export default function Welcome({
         <p className="text-base md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed mb-10 px-2">
           Masukkan nomor pengajuan untuk memantau progres kuitansi, kutipan RL, hingga validasi PPh secara <span className="text-slate-900 dark:text-black font-semibold">real-time.</span>
         </p>
-
-
-
       </section>
+
+
+
 
       {/* Dashboard Statistik (Read-only) */}
 
@@ -292,125 +303,125 @@ export default function Welcome({
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 
       {/* 1. KUITANSI (BIRU) */}
-      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20">
-        <h3 className="text-4xl font-extrabold text-white text-center mb-6">kuitansi</h3>
+      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border-4 border-blue-500">
+        <h3 className="text-4xl font-extrabold text-white text-center mb-6">Kuitansi</h3>
         
         <div className="space-y-3">
           {/* Baris Atas: Total (Kiri) dan Group Kanan */}
           <div className="flex gap-3 items-stretch">
             {/* Box Total (Tinggi Penuh) */}
-            <div className="w-1/3 bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-white/20">
-              <span className="text-xs text-blue-100 font-medium">Total</span>
-              <span className="text-4xl font-black text-white">{statistics?.kuitansi?.total || 0}</span>
+            <div className="w-1/3 bg-white rounded-xl p-4 flex flex-col justify-center items-center text-center border-4 border-blue-500">
+              <span className="text-xs text-blue-900 font-medium">Total</span>
+              <span className="text-4xl font-black text-blue-900">{statistics?.kuitansi?.total || 0}</span>
             </div>
             
             {/* Group Kanan */}
             <div className="w-2/3 space-y-3">
               {/* Siap Diambil (Lebar Penuh) */}
-              <div className="bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-white/20">
-                <span className="text-xs text-blue-100 font-medium">Siap Diambil</span>
-                <span className="text-3xl font-black text-white">{statistics?.kuitansi?.siap_diambil || 0}</span>
+              <div className="bg-white rounded-xl p-4 flex flex-col justify-center items-center text-center border-4 border-blue-500">
+                <span className="text-xs text-blue-900 font-medium">Siap Diambil</span>
+                <span className="text-3xl font-black text-blue-900">{statistics?.kuitansi?.siap_diambil || 0}</span>
               </div>
               {/* Proses & Selesai (Dua Kolom) */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-white/20">
-                  <span className="text-xs text-blue-100 font-medium">Proses</span>
-                  <span className="text-3xl font-black text-white">{statistics?.kuitansi?.proses || 0}</span>
+                <div className="bg-white rounded-xl p-4 flex flex-col justify-center items-center text-center border-4 border-blue-500">
+                  <span className="text-xs text-blue-900 font-medium">Proses</span>
+                  <span className="text-3xl font-black text-blue-900">{statistics?.kuitansi?.proses || 0}</span>
                 </div>
-                <div className="bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-white/20">
-                  <span className="text-xs text-blue-100 font-medium">Selesai</span>
-                  <span className="text-3xl font-black text-white">{statistics?.kuitansi?.selesai || 0}</span>
+                <div className="bg-white rounded-xl p-4 flex flex-col justify-center items-center text-center border-4 border-blue-500">
+                  <span className="text-xs text-blue-900 font-medium">Selesai</span>
+                  <span className="text-3xl font-black text-blue-900">{statistics?.kuitansi?.selesai || 0}</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Baris Bawah: Tidak Valid */}
-          <div className="bg-white/20 rounded-xl p-4 flex justify-between items-center border border-white/20">
-            <span className="text-lg text-blue-100 font-medium">Tidak Valid</span>
-            <span className="text-3xl font-black text-white">{statistics?.kuitansi?.tidak_valid || 0}</span>
+          <div className="bg-white rounded-xl p-4 flex justify-between items-center border-4 border-blue-500">
+            <span className="text-lg text-blue-900 font-medium">Tidak Valid</span>
+            <span className="text-3xl font-black text-blue-900">{statistics?.kuitansi?.tidak_valid || 0}</span>
           </div>
         </div>
       </div>
 
       {/* 2. KUTIPAN RL (ORANYE) */}
-      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20">
-        <h3 className="text-4xl font-extrabold text-white text-center mb-6">kutipan RL</h3>
+      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border-4 border-orange-500">
+        <h3 className="text-4xl font-extrabold text-white text-center mb-6">Kutipan RL</h3>
         
         <div className="space-y-3">
           <div className="flex gap-3 items-stretch">
             {/* Box Total */}
-            <div className="w-1/3 bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-orange-500/40">
-              <span className="text-xs text-orange-100 font-medium">Total</span>
-              <span className="text-4xl font-black text-white">{statistics?.kutipan_rl?.total || 0}</span>
+            <div className="w-1/3 bg-white rounded-xl p-4 flex flex-col justify-center items-center text-center border-4 border-orange-500">
+              <span className="text-xs text-orange-900 font-medium">Total</span>
+              <span className="text-4xl font-black text-orange-900">{statistics?.kutipan_rl?.total || 0}</span>
             </div>
             
             {/* Group Kanan */}
             <div className="w-2/3 space-y-3">
               {/* Siap Diambil */}
-              <div className="bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-orange-500/40">
-                <span className="text-xs text-orange-100 font-medium">Siap Diambil</span>
-                <span className="text-3xl font-black text-white">{statistics?.kutipan_rl?.siap_diambil || 0}</span>
+              <div className="bg-white rounded-xl p-4 flex flex-col justify-center items-center text-center border-4 border-orange-500">
+                <span className="text-xs text-orange-900 font-medium">Siap Diambil</span>
+                <span className="text-3xl font-black text-orange-900">{statistics?.kutipan_rl?.siap_diambil || 0}</span>
               </div>
               {/* Proses & Selesai */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-orange-500/40">
-                  <span className="text-xs text-orange-100 font-medium">Proses</span>
-                  <span className="text-3xl font-black text-white">{statistics?.kutipan_rl?.proses || 0}</span>
+                <div className="bg-white rounded-xl p-4 flex flex-col justify-center items-center text-center border-4 border-orange-500">
+                  <span className="text-xs text-orange-900 font-medium">Proses</span>
+                  <span className="text-3xl font-black text-orange-900">{statistics?.kutipan_rl?.proses || 0}</span>
                 </div>
-                <div className="bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-orange-500/40">
-                  <span className="text-xs text-orange-100 font-medium">Selesai</span>
-                  <span className="text-3xl font-black text-white">{statistics?.kutipan_rl?.selesai || 0}</span>
+                <div className="bg-white rounded-xl p-4 flex flex-col justify-center items-center text-center border-4 border-orange-500">
+                  <span className="text-xs text-orange-900 font-medium">Selesai</span>
+                  <span className="text-3xl font-black text-orange-900">{statistics?.kutipan_rl?.selesai || 0}</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Tidak Valid */}
-          <div className="bg-white/20 rounded-xl p-4 flex justify-between items-center border border-orange-500/40">
-            <span className="text-lg text-orange-100 font-medium">Tidak Valid</span>
-            <span className="text-3xl font-black text-white">{statistics?.kutipan_rl?.tidak_valid || 0}</span>
+          <div className="bg-white rounded-xl p-4 flex justify-between items-center border-4 border-orange-500">
+            <span className="text-lg text-orange-900 font-medium">Tidak Valid</span>
+            <span className="text-3xl font-black text-orange-900">{statistics?.kutipan_rl?.tidak_valid || 0}</span>
           </div>
         </div>
       </div>
 
       {/* 3. VALIDASI PPH (HIJAU) */}
-      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20">
-        <h3 className="text-4xl font-extrabold text-white text-center mb-6">validasi PPh</h3>
+      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border-4 border-green-500">
+        <h3 className="text-4xl font-extrabold text-white text-center mb-6">Validasi PPh</h3>
         
         <div className="space-y-3">
           <div className="flex gap-3 items-stretch">
             {/* Box Total */}
-            <div className="w-1/3 bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-emerald-500/40">
-              <span className="text-xs text-emerald-100 font-medium">Total</span>
-              <span className="text-4xl font-black text-white">{statistics?.validasi_pph?.total || 0}</span>
+            <div className="w-1/3 bg-white rounded-xl p-4 flex flex-col justify-center items-center text-center border-4 border-green-500">
+              <span className="text-xs text-emerald-900 font-medium">Total</span>
+              <span className="text-4xl font-black text-emerald-900">{statistics?.validasi_pph?.total || 0}</span>
             </div>
             
             {/* Group Kanan */}
             <div className="w-2/3 space-y-3">
               {/* Siap Diambil */}
-              <div className="bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-emerald-500/40">
-                <span className="text-xs text-emerald-100 font-medium">Siap Diambil</span>
-                <span className="text-3xl font-black text-white">{statistics?.validasi_pph?.siap_diambil || 0}</span>
+              <div className="bg-white rounded-xl p-4 flex flex-col justify-center items-center text-center border-4 border-green-500">
+                <span className="text-xs text-emerald-900 font-medium">Siap Diambil</span>
+                <span className="text-3xl font-black text-emerald-900">{statistics?.validasi_pph?.siap_diambil || 0}</span>
               </div>
               {/* Proses & Selesai */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-emerald-500/40">
-                  <span className="text-xs text-emerald-100 font-medium">Proses</span>
-                  <span className="text-3xl font-black text-white">{statistics?.validasi_pph?.proses || 0}</span>
+                <div className="bg-white rounded-xl p-4 flex flex-col justify-center items-center text-center border-4 border-green-500">
+                  <span className="text-xs text-emerald-900 font-medium">Proses</span>
+                  <span className="text-3xl font-black text-emerald-900">{statistics?.validasi_pph?.proses || 0}</span>
                 </div>
-                <div className="bg-white/20 rounded-xl p-4 flex flex-col justify-center items-center text-center border border-emerald-500/40">
-                  <span className="text-xs text-emerald-100 font-medium">Selesai</span>
-                  <span className="text-3xl font-black text-white">{statistics?.validasi_pph?.selesai || 0}</span>
+                <div className="bg-white rounded-xl p-4 flex flex-col justify-center items-center text-center border-4 border-green-500">
+                  <span className="text-xs text-emerald-900 font-medium">Selesai</span>
+                  <span className="text-3xl font-black text-emerald-900">{statistics?.validasi_pph?.selesai || 0}</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Tidak Valid */}
-          <div className="bg-white/20 rounded-xl p-4 flex justify-between items-center border border-emerald-500/40">
-            <span className="text-lg text-emerald-100 font-medium">Tidak Valid</span>
-            <span className="text-3xl font-black text-white">{statistics?.validasi_pph?.tidak_valid || 0}</span>
+          <div className="bg-white rounded-xl p-4 flex justify-between items-center border-4 border-green-500">
+            <span className="text-lg text-emerald-900 font-medium">Tidak Valid</span>
+            <span className="text-3xl font-black text-emerald-900">{statistics?.validasi_pph?.tidak_valid || 0}</span>
           </div>
         </div>
       </div>

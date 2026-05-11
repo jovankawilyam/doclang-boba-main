@@ -49,6 +49,9 @@ Route::get('/', function (Request $request) {
 Route::get('/persyaratan', function () {
     return Inertia::render('persyaratan');
 });
+Route::get('/form', function () {
+    return Inertia::render('form');
+});
 
 /*
 |--------------------------------------------------------------------------
