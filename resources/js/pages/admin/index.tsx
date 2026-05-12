@@ -7,13 +7,12 @@ import {
     PowerOff,
     Trash2,
     Search,
-    ChevronRight,
     CheckCircle,
     XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
@@ -46,11 +45,15 @@ interface Props {
 }
 
 export default function AdminIndex({ admins, stats }: Props) {
-    const { props } = usePage<{ auth: { user: { id: number } }; flash: { success?: string; error?: string } }>();
+    const { props } = usePage<{
+        auth: { user: { id: number } };
+        flash: { success?: string; error?: string };
+    }>();
     const flash = props.flash ?? {};
     const auth = props.auth;
     const [search, setSearch] = useState('');
     const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+    const [processingId, setProcessingId] = useState<number | null>(null);
 
     const filtered = admins.filter(
         (a) =>
@@ -59,14 +62,23 @@ export default function AdminIndex({ admins, stats }: Props) {
     );
 
     const handleToggle = (id: number) => {
-        router.patch(`/admin/${id}/toggle-status`, {}, { preserveScroll: true });
+        setProcessingId(id);
+        router.patch(
+            `/admin/${id}/toggle-status`,
+            {},
+            { preserveScroll: true, onFinish: () => setProcessingId(null) },
+        );
     };
 
     const handleDelete = (id: number) => {
         if (confirmDelete === id) {
-            router.delete(`/admin/${id}`, { 
+            setProcessingId(id);
+            router.delete(`/admin/${id}`, {
                 preserveScroll: true,
-                onFinish: () => setConfirmDelete(null)
+                onFinish: () => {
+                    setConfirmDelete(null);
+                    setProcessingId(null);
+                },
             });
         } else {
             setConfirmDelete(id);
@@ -78,12 +90,15 @@ export default function AdminIndex({ admins, stats }: Props) {
             <Head title="Manajemen Admin" />
 
             <div className="flex flex-col gap-6 p-6">
-
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight">Manajemen Admin</h1>
-                        <p className="text-muted-foreground">Kelola akun admin dan hak akses sistem</p>
+                        <h1 className="text-2xl font-bold tracking-tight">
+                            Manajemen Admin
+                        </h1>
+                        <p className="text-muted-foreground">
+                            Kelola akun admin dan hak akses sistem
+                        </p>
                     </div>
                     <Link href="/admin/create">
                         <Button className="gap-2">
@@ -115,8 +130,12 @@ export default function AdminIndex({ admins, stats }: Props) {
                                 <Shield className="h-6 w-6 text-purple-600" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">Super Admin</p>
-                                <p className="text-3xl font-bold">{stats.super_admin}</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Super Admin
+                                </p>
+                                <p className="text-3xl font-bold">
+                                    {stats.super_admin}
+                                </p>
                             </div>
                         </CardContent>
                     </Card>
@@ -126,8 +145,12 @@ export default function AdminIndex({ admins, stats }: Props) {
                                 <Users className="h-6 w-6 text-blue-600" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">Admin</p>
-                                <p className="text-3xl font-bold">{stats.admin}</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Admin
+                                </p>
+                                <p className="text-3xl font-bold">
+                                    {stats.admin}
+                                </p>
                             </div>
                         </CardContent>
                     </Card>
@@ -137,8 +160,12 @@ export default function AdminIndex({ admins, stats }: Props) {
                                 <Users className="h-6 w-6 text-green-600" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">Total Admin</p>
-                                <p className="text-3xl font-bold">{stats.total}</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Total Admin
+                                </p>
+                                <p className="text-3xl font-bold">
+                                    {stats.total}
+                                </p>
                             </div>
                         </CardContent>
                     </Card>
@@ -153,7 +180,7 @@ export default function AdminIndex({ admins, stats }: Props) {
                                 Daftar Admin
                             </CardTitle>
                             <div className="relative w-64">
-                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                 <Input
                                     placeholder="Cari nama atau email..."
                                     className="pl-9"
@@ -168,50 +195,107 @@ export default function AdminIndex({ admins, stats }: Props) {
                             <table className="w-full">
                                 <thead>
                                     <tr className="border-b text-left text-xs text-muted-foreground">
-                                        <th className="pb-3 font-medium">Nama</th>
-                                        <th className="pb-3 font-medium">Email</th>
-                                        <th className="pb-3 font-medium">Role</th>
-                                        <th className="pb-3 font-medium">Status</th>
-                                        <th className="pb-3 font-medium">Bergabung</th>
-                                        <th className="pb-3 font-medium text-right">Aksi</th>
+                                        <th className="pb-3 font-medium">
+                                            Nama
+                                        </th>
+                                        <th className="pb-3 font-medium">
+                                            Email
+                                        </th>
+                                        <th className="pb-3 font-medium">
+                                            Role
+                                        </th>
+                                        <th className="pb-3 font-medium">
+                                            Status
+                                        </th>
+                                        <th className="pb-3 font-medium">
+                                            Bergabung
+                                        </th>
+                                        <th className="pb-3 text-right font-medium">
+                                            Aksi
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {filtered.length === 0 ? (
                                         <tr>
-                                            <td colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
+                                            <td
+                                                colSpan={6}
+                                                className="py-10 text-center text-sm text-muted-foreground"
+                                            >
                                                 Tidak ada admin yang ditemukan.
                                             </td>
                                         </tr>
                                     ) : (
                                         filtered.map((admin) => (
-                                            <tr key={admin.id} className="border-b last:border-0">
-                                                <td className="py-4 text-sm font-medium">{admin.name}</td>
-                                                <td className="py-4 text-sm text-muted-foreground">{admin.email}</td>
+                                            <tr
+                                                key={admin.id}
+                                                className="border-b last:border-0"
+                                            >
+                                                <td className="py-4 text-sm font-medium">
+                                                    {admin.name}
+                                                </td>
+                                                <td className="py-4 text-sm text-muted-foreground">
+                                                    {admin.email}
+                                                </td>
                                                 <td className="py-4 text-sm">
-                                                    <Badge variant={admin.role === 'super_admin' ? 'default' : 'secondary'}>
-                                                        {admin.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+                                                    <Badge
+                                                        variant={
+                                                            admin.role ===
+                                                            'super_admin'
+                                                                ? 'default'
+                                                                : 'secondary'
+                                                        }
+                                                    >
+                                                        {admin.role ===
+                                                        'super_admin'
+                                                            ? 'Super Admin'
+                                                            : 'Admin'}
                                                     </Badge>
                                                 </td>
                                                 <td className="py-4 text-sm">
-                                                    <Badge variant={admin.is_active ? 'default' : 'destructive'}>
-                                                        {admin.is_active ? 'Aktif' : 'Nonaktif'}
+                                                    <Badge
+                                                        variant={
+                                                            admin.is_active
+                                                                ? 'default'
+                                                                : 'destructive'
+                                                        }
+                                                    >
+                                                        {admin.is_active
+                                                            ? 'Aktif'
+                                                            : 'Nonaktif'}
                                                     </Badge>
                                                 </td>
                                                 <td className="py-4 text-sm text-muted-foreground">
-                                                    {new Date(admin.created_at).toLocaleDateString('id-ID', {
-                                                        day: 'numeric',
-                                                        month: 'short',
-                                                        year: 'numeric',
-                                                    })}
+                                                    {new Date(
+                                                        admin.created_at,
+                                                    ).toLocaleDateString(
+                                                        'id-ID',
+                                                        {
+                                                            day: 'numeric',
+                                                            month: 'short',
+                                                            year: 'numeric',
+                                                        },
+                                                    )}
                                                 </td>
                                                 <td className="py-4">
                                                     <div className="flex items-center justify-end gap-2">
                                                         <Button
-                                                            variant={admin.is_active ? 'outline' : 'outline'}
+                                                            variant={
+                                                                admin.is_active
+                                                                    ? 'outline'
+                                                                    : 'outline'
+                                                            }
                                                             size="sm"
                                                             className="h-8 gap-1"
-                                                            onClick={() => handleToggle(admin.id)}
+                                                            disabled={
+                                                                processingId ===
+                                                                admin.id
+                                                            }
+                                                            onClick={() =>
+                                                                handleToggle(
+                                                                    admin.id,
+                                                                )
+                                                            }
                                                         >
                                                             {admin.is_active ? (
                                                                 <>
@@ -225,15 +309,32 @@ export default function AdminIndex({ admins, stats }: Props) {
                                                                 </>
                                                             )}
                                                         </Button>
-                                                        {admin.id !== auth.user.id && (
+                                                        {admin.id !==
+                                                            auth.user.id && (
                                                             <Button
-                                                                variant={confirmDelete === admin.id ? 'destructive' : 'ghost'}
+                                                                variant={
+                                                                    confirmDelete ===
+                                                                    admin.id
+                                                                        ? 'destructive'
+                                                                        : 'ghost'
+                                                                }
                                                                 size="sm"
                                                                 className="h-8 gap-1"
-                                                                onClick={() => handleDelete(admin.id)}
+                                                                disabled={
+                                                                    processingId ===
+                                                                    admin.id
+                                                                }
+                                                                onClick={() =>
+                                                                    handleDelete(
+                                                                        admin.id,
+                                                                    )
+                                                                }
                                                             >
                                                                 <Trash2 className="h-3 w-3" />
-                                                                {confirmDelete === admin.id ? 'Konfirmasi?' : 'Hapus'}
+                                                                {confirmDelete ===
+                                                                admin.id
+                                                                    ? 'Konfirmasi?'
+                                                                    : 'Hapus'}
                                                             </Button>
                                                         )}
                                                     </div>
@@ -246,15 +347,19 @@ export default function AdminIndex({ admins, stats }: Props) {
                         </div>
                         {confirmDelete !== null && (
                             <div className="mt-3 flex items-center justify-end gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-400">
-                                Klik tombol "Konfirmasi?" sekali lagi untuk menghapus admin ini secara permanen.
-                                <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(null)}>
+                                Klik tombol "Konfirmasi?" sekali lagi untuk
+                                menghapus admin ini secara permanen.
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setConfirmDelete(null)}
+                                >
                                     Batal
                                 </Button>
                             </div>
                         )}
                     </CardContent>
                 </Card>
-
             </div>
         </AppLayout>
     );

@@ -9,6 +9,7 @@ import {
     InputOTPGroup,
     InputOTPSlot,
 } from '@/components/ui/input-otp';
+import { Spinner } from '@/components/ui/spinner';
 import { OTP_MAX_LENGTH } from '@/hooks/use-two-factor-auth';
 import AuthLayout from '@/layouts/auth-layout';
 import { store } from '@/routes/two-factor/login';
@@ -105,10 +106,12 @@ export default function TwoFactorChallenge() {
 
                             <Button
                                 type="submit"
-                                className="mt-2 w-full font-semibold shadow-sm transition-all duration-300 ease-in-out hover:shadow-md hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                                className="mt-2 w-full font-semibold shadow-sm transition-all duration-300 ease-in-out hover:opacity-90 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
                                 disabled={processing}
                             >
-                                {processing ? <Spinner className="mr-2 h-4 w-4" /> : null}
+                                {processing ? (
+                                    <Spinner className="mr-2 h-4 w-4" />
+                                ) : null}
                                 Continue
                             </Button>
 

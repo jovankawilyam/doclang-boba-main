@@ -2,12 +2,12 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DocumentController;
-use App\Models\User;
 use App\Models\Document;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Laravel\Fortify\Features;
 use Inertia\Inertia;
+use Laravel\Fortify\Features;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,17 +21,17 @@ Route::get('/', function (Request $request) {
 
     // 1. Cari Kuitansi
     $document = ($search && $target_category === 'kuitansi')
-        ? Document::where('nomor_pengajuan', $search)->where('category', 'kuitansi')->first() 
+        ? Document::where('nomor_pengajuan', $search)->where('category', 'kuitansi')->first()
         : null;
 
     // 2. Cari Kutipan RL
     $document_rl = ($search && $target_category === 'kutipan_rl')
-        ? Document::where('nomor_pengajuan', $search)->where('category', 'kutipan_rl')->first() 
+        ? Document::where('nomor_pengajuan', $search)->where('category', 'kutipan_rl')->first()
         : null;
 
     // 3. Cari Validasi PPh
     $document_validasi = ($search && $target_category === 'validasi_pph')
-        ? Document::where('nomor_pengajuan', $search)->where('category', 'validasi_pph')->first() 
+        ? Document::where('nomor_pengajuan', $search)->where('category', 'validasi_pph')->first()
         : null;
 
     return Inertia::render('welcome', [
@@ -60,9 +60,10 @@ Route::get('/form', function () {
 */
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    
+
     // Dashboard Utama
     Route::get('/dashboard', function () {
+        $documentStats = DocumentController::getStatistics();
         $admins = User::whereIn('role', ['super_admin', 'admin'])
             ->orderByRaw("CASE WHEN role = 'super_admin' THEN 0 ELSE 1 END")
             ->orderBy('name')
@@ -72,22 +73,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'admins' => $admins,
             'stats' => [
                 'super_admin' => User::where('role', 'super_admin')->count(),
-                'admin'       => User::where('role', 'admin')->count(),
-                'total'       => User::whereIn('role', ['super_admin', 'admin'])->count(),
+                'admin' => User::where('role', 'admin')->count(),
+                'total' => User::whereIn('role', ['super_admin', 'admin'])->count(),
             ],
-            'statistics' => App\Http\Controllers\DocumentController::getStatistics(),
-            'docStats' => [
-                'total' => Document::where('category', 'kuitansi')->count(),
-                'siap_diambil' => Document::where('category', 'kuitansi')->where('status_proses', 'siap_diambil')->count(),
-            ],
-            'docStatsKutipan' => [
-                'total' => Document::where('category', 'kutipan_rl')->count(),
-                'siap_diambil' => Document::where('category', 'kutipan_rl')->where('status_proses', 'siap_diambil')->count(),
-            ],
-            'docStatsValidasi' => [
-                'total' => Document::where('category', 'validasi_pph')->count(),
-                'siap_diambil' => Document::where('category', 'validasi_pph')->where('status_proses', 'siap_diambil')->count(),
-            ],
+            'statistics' => $documentStats,
+            'docStats' => $documentStats['kuitansi'],
+            'docStatsKutipan' => $documentStats['kutipan_rl'],
+            'docStatsValidasi' => $documentStats['validasi_pph'],
         ]);
     })->name('dashboard');
 
@@ -95,9 +87,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['superadmin'])->group(function () {
         Route::resource('admin', AdminController::class);
         Route::patch('/admin/{user}/toggle-status', [AdminController::class, 'toggleStatus'])->name('admin.toggle-status');
-        
+
         // Redirect link lama agar tidak broken
-        Route::get('/manajemen', fn() => redirect('/admin'));
+        Route::get('/manajemen', fn () => redirect('/admin'));
     });
 
     /*
@@ -105,7 +97,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     | Document Management (Unified Controller)
     |--------------------------------------------------------------------------
     */
-    
+
     // 1. Menu Navigasi (Halaman List)
     Route::get('/documents/kuitansi', [DocumentController::class, 'index'])->defaults('category', 'kuitansi')->name('documents.kuitansi');
     Route::get('/documents/rl', [DocumentController::class, 'index'])->defaults('category', 'kutipan_rl')->name('documents.rl');
