@@ -124,14 +124,14 @@ export default function Dashboard({
             value: totals.total,
             helper: `${formatNumber(todayDocumentTotal)} dokumen masuk hari ini`,
             icon: FileText,
-            tone: 'bg-blue-100 text-blue-700',
+            tone: 'border-blue-200/30 bg-blue-400/20 text-blue-50',
         },
         {
             label: 'Dokumen Selesai',
             value: totals.selesai,
             helper: `${completionRate}% dari total dokumen`,
             icon: FileCheck2,
-            tone: 'bg-emerald-100 text-emerald-700',
+            tone: 'border-emerald-200/30 bg-emerald-400/20 text-emerald-50',
         },
         {
             label: 'Status Sistem',
@@ -139,7 +139,7 @@ export default function Dashboard({
             suffix: '%',
             helper: `${formatNumber(activeAdmins || stats?.total)} admin aktif`,
             icon: Server,
-            tone: 'bg-cyan-100 text-cyan-700',
+            tone: 'border-cyan-200/30 bg-cyan-400/20 text-cyan-50',
         },
     ];
 
@@ -247,22 +247,22 @@ function TopStatCard({
     tone: string;
 }) {
     return (
-        <Card className="rounded-3xl border-0 bg-white shadow-xl shadow-blue-950/10">
+        <Card className="rounded-3xl border border-white/20 bg-white/10 shadow-2xl shadow-blue-950/20 backdrop-blur-xl">
             <CardContent className="flex items-start justify-between gap-5 p-6">
                 <div>
-                    <p className="text-sm font-medium text-slate-500">
-                        {label}
-                    </p>
-                    <p className="mt-3 text-3xl font-bold tracking-tight text-slate-950">
+                    <p className="text-sm font-medium text-blue-100">{label}</p>
+                    <p className="mt-3 text-3xl font-bold tracking-tight text-white">
                         {formatNumber(value)}
                         {suffix}
                     </p>
-                    <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                    <p className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-cyan-50 backdrop-blur-lg">
                         <TrendingUp className="h-3.5 w-3.5" />
                         {helper}
                     </p>
                 </div>
-                <div className={`rounded-2xl p-3 ${tone}`}>
+                <div
+                    className={`rounded-2xl border p-3 shadow-[0_0_24px_rgba(125,211,252,0.25)] ${tone}`}
+                >
                     <Icon className="h-6 w-6" />
                 </div>
             </CardContent>

@@ -62,10 +62,10 @@ function TableRow({
 
     return (
         <tr className="transition-colors hover:bg-slate-50 dark:hover:bg-zinc-800/50">
-            <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-slate-100">
+            <td className="px-4 py-4 text-sm font-medium text-slate-900 sm:px-6 dark:text-slate-100">
                 {title}
             </td>
-            <td className="px-6 py-4 text-sm">
+            <td className="px-4 py-4 text-sm sm:px-6">
                 <span
                     className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${style.badge}`}
                 >
@@ -605,10 +605,10 @@ export default function Welcome({
             </section>{' '}
             {/* Tutup Section Statistik */}
             {/* Kuitansi */}
-            <main className="mx-6 mt-10 rounded-3xl">
+            <main className="mx-auto mt-10 w-full max-w-7xl px-4 md:px-6">
                 <section
                     id="kuitansi"
-                    className="mt-20 w-full scroll-mt-40 rounded-3xl border border-slate-100 bg-white p-8 shadow-xl dark:border-zinc-800 dark:bg-[#1E56A0]"
+                    className="mt-20 w-full scroll-mt-40 rounded-3xl border border-slate-100 bg-white p-5 shadow-xl md:p-8 dark:border-zinc-800 dark:bg-[#1E56A0]"
                 >
                     <div className="flex flex-col items-center justify-between gap-10 md:flex-row md:items-center">
                         <div className="flex w-full flex-col items-center">
@@ -623,7 +623,7 @@ export default function Welcome({
                                     Masukkan Nomor Pengajuan Anda untuk melihat
                                     status pemrosesan dokumen secara real-time.
                                 </p>
-                                <Card className="overflow-hidden rounded-2xl border-slate-200 shadow-2xl shadow-indigo-500/10 dark:border-slate-800">
+                                <Card className="mx-auto w-full max-w-lg overflow-hidden rounded-2xl border-slate-200 shadow-2xl shadow-indigo-500/10 dark:border-slate-800">
                                     <CardContent className="p-2">
                                         <form
                                             onSubmit={handleSearch}
@@ -660,18 +660,18 @@ export default function Welcome({
                             </div>
 
                             {search && (
-                                <div className="flex animate-in flex-col items-center delay-150 duration-500 fill-mode-both fade-in slide-in-from-bottom-12">
+                                <div className="flex w-full max-w-lg animate-in flex-col items-center px-4 delay-150 duration-500 fill-mode-both fade-in slide-in-from-bottom-12 sm:px-0">
                                     {document ? (
-                                        <div className="rounded-3xl border border-slate-100 bg-white p-8 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
-                                            <div className="mb-8 flex items-center gap-4 border-b border-slate-100 pb-6 dark:border-zinc-800">
+                                        <div className="w-full rounded-3xl border border-slate-100 bg-white p-5 shadow-xl sm:p-8 dark:border-zinc-800 dark:bg-zinc-900">
+                                            <div className="mb-6 flex flex-col gap-4 border-b border-slate-100 pb-6 text-left sm:flex-row sm:items-center dark:border-zinc-800">
                                                 <div className="rounded-2xl bg-indigo-50 p-4 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">
                                                     <FileText className="h-8 w-8" />
                                                 </div>
-                                                <div>
-                                                    <p className="mb-1 text-sm font-medium text-slate-500 dark:text-slate-400">
+                                                <div className="min-w-0">
+                                                    <p className="mb-1 text-sm font-medium text-slate-500 dark:text-slate-200">
                                                         Hasil Pencarian untuk:
                                                     </p>
-                                                    <h2 className="font-mono text-2xl font-bold">
+                                                    <h2 className="font-mono text-xl font-bold break-words text-slate-950 sm:text-2xl dark:text-white">
                                                         {
                                                             document.nomor_pengajuan
                                                         }
@@ -680,14 +680,14 @@ export default function Welcome({
                                             </div>
                                             <div className="overflow-hidden rounded-2xl border border-slate-100 dark:border-zinc-800">
                                                 <div className="overflow-x-auto">
-                                                    <table className="w-full min-w-[450px] text-left text-sm">
+                                                    <table className="w-full text-left text-sm">
                                                         <thead className="border-b border-slate-100 bg-slate-50 dark:border-zinc-800 dark:bg-zinc-800/50">
                                                             <tr>
-                                                                <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">
+                                                                <th className="px-4 py-4 font-semibold text-slate-700 sm:px-6 dark:text-slate-200">
                                                                     Jenis
                                                                     Dokumen
                                                                 </th>
-                                                                <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">
+                                                                <th className="px-4 py-4 font-semibold text-slate-700 sm:px-6 dark:text-slate-200">
                                                                     Status
                                                                 </th>
                                                             </tr>
@@ -705,7 +705,7 @@ export default function Welcome({
                                             </div>
                                             {document.catatan && (
                                                 <div className="mt-6 rounded-xl border border-slate-100 bg-slate-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
-                                                    <p className="mb-1 text-sm font-medium text-slate-500">
+                                                    <p className="mb-1 text-sm font-medium text-slate-500 dark:text-slate-200">
                                                         Catatan Petugas:
                                                     </p>
                                                     <p className="text-slate-700 italic dark:text-slate-300">
@@ -715,7 +715,7 @@ export default function Welcome({
                                             )}
                                         </div>
                                     ) : (
-                                        <div className="rounded-3xl border border-slate-100 bg-white p-12 text-center shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
+                                        <div className="w-full rounded-3xl border border-slate-100 bg-white p-6 text-center shadow-xl sm:p-12 dark:border-zinc-800 dark:bg-zinc-900">
                                             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 dark:bg-zinc-800">
                                                 <Search className="h-10 w-10 text-slate-400" />
                                             </div>
@@ -749,7 +749,7 @@ export default function Welcome({
                 {/* Kutipan RL */}
                 <section
                     id="kutipan"
-                    className="mt-20 w-full scroll-mt-40 rounded-3xl border border-slate-100 bg-white p-8 shadow-xl dark:border-zinc-800 dark:bg-[#1E56A0]"
+                    className="mt-20 w-full scroll-mt-40 rounded-3xl border border-slate-100 bg-white p-5 shadow-xl md:p-8 dark:border-zinc-800 dark:bg-[#1E56A0]"
                 >
                     <div className="flex flex-col items-center justify-between gap-10 md:flex-row md:items-center">
                         <div className="flex w-full justify-center md:w-1/2">
@@ -772,7 +772,7 @@ export default function Welcome({
                                     Masukkan Nomor Pengajuan Anda untuk melihat
                                     status pemrosesan dokumen secara real-time.
                                 </p>
-                                <Card className="overflow-hidden rounded-2xl border-slate-200 shadow-2xl shadow-indigo-500/10 dark:border-slate-800">
+                                <Card className="mx-auto w-full max-w-lg overflow-hidden rounded-2xl border-slate-200 shadow-2xl shadow-indigo-500/10 dark:border-slate-800">
                                     <CardContent className="p-2">
                                         <form
                                             onSubmit={handleSearchRL}
@@ -809,18 +809,18 @@ export default function Welcome({
                             </div>
 
                             {search_rl && (
-                                <div className="w-full max-w-3xl animate-in delay-150 duration-500 fill-mode-both fade-in slide-in-from-bottom-12">
+                                <div className="w-full max-w-lg animate-in px-4 delay-150 duration-500 fill-mode-both fade-in slide-in-from-bottom-12 sm:px-0">
                                     {document_rl ? (
-                                        <div className="rounded-3xl border border-slate-100 bg-white p-8 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
-                                            <div className="mb-8 flex items-center gap-4 border-b border-slate-100 pb-6 dark:border-zinc-800">
+                                        <div className="w-full rounded-3xl border border-slate-100 bg-white p-5 shadow-xl sm:p-8 dark:border-zinc-800 dark:bg-zinc-900">
+                                            <div className="mb-6 flex flex-col gap-4 border-b border-slate-100 pb-6 text-left sm:flex-row sm:items-center dark:border-zinc-800">
                                                 <div className="rounded-2xl bg-indigo-50 p-4 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">
                                                     <FileText className="h-8 w-8" />
                                                 </div>
-                                                <div>
-                                                    <p className="mb-1 text-sm font-medium text-slate-500 dark:text-slate-400">
+                                                <div className="min-w-0">
+                                                    <p className="mb-1 text-sm font-medium text-slate-500 dark:text-slate-200">
                                                         Hasil Pencarian untuk:
                                                     </p>
-                                                    <h2 className="font-mono text-2xl font-bold">
+                                                    <h2 className="font-mono text-xl font-bold break-words text-slate-950 sm:text-2xl dark:text-white">
                                                         {
                                                             document_rl.nomor_pengajuan
                                                         }
@@ -829,14 +829,14 @@ export default function Welcome({
                                             </div>
                                             <div className="overflow-hidden rounded-2xl border border-slate-100 dark:border-zinc-800">
                                                 <div className="overflow-x-auto">
-                                                    <table className="w-full min-w-[450px] text-left text-sm">
+                                                    <table className="w-full text-left text-sm">
                                                         <thead className="border-b border-slate-100 bg-slate-50 dark:border-zinc-800 dark:bg-zinc-800/50">
                                                             <tr>
-                                                                <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">
+                                                                <th className="px-4 py-4 font-semibold text-slate-700 sm:px-6 dark:text-slate-200">
                                                                     Jenis
                                                                     Dokumen
                                                                 </th>
-                                                                <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">
+                                                                <th className="px-4 py-4 font-semibold text-slate-700 sm:px-6 dark:text-slate-200">
                                                                     Status
                                                                 </th>
                                                             </tr>
@@ -854,7 +854,7 @@ export default function Welcome({
                                             </div>
                                             {document_rl.catatan && (
                                                 <div className="mt-6 rounded-xl border border-slate-100 bg-slate-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
-                                                    <p className="mb-1 text-sm font-medium text-slate-500">
+                                                    <p className="mb-1 text-sm font-medium text-slate-500 dark:text-slate-200">
                                                         Catatan Petugas:
                                                     </p>
                                                     <p className="text-slate-700 italic dark:text-slate-300">
@@ -864,7 +864,7 @@ export default function Welcome({
                                             )}
                                         </div>
                                     ) : (
-                                        <div className="rounded-3xl border border-slate-100 bg-white p-12 text-center shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
+                                        <div className="w-full rounded-3xl border border-slate-100 bg-white p-6 text-center shadow-xl sm:p-12 dark:border-zinc-800 dark:bg-zinc-900">
                                             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 dark:bg-zinc-800">
                                                 <Search className="h-10 w-10 text-slate-400" />
                                             </div>
@@ -890,7 +890,7 @@ export default function Welcome({
                 {/* Validasi PPh */}
                 <section
                     id="validasiPPh"
-                    className="mt-20 w-full scroll-mt-40 rounded-3xl border border-slate-100 bg-white p-8 shadow-xl dark:border-zinc-800 dark:bg-[#1E56A0]"
+                    className="mt-20 w-full scroll-mt-40 rounded-3xl border border-slate-100 bg-white p-5 shadow-xl md:p-8 dark:border-zinc-800 dark:bg-[#1E56A0]"
                 >
                     <div className="flex flex-col items-center justify-between gap-10 md:flex-row md:items-center">
                         <div className="flex w-full flex-col items-center">
@@ -905,7 +905,7 @@ export default function Welcome({
                                     Masukkan Nomor Pengajuan Anda untuk melihat
                                     status pemrosesan dokumen secara real-time.
                                 </p>
-                                <Card className="overflow-hidden rounded-2xl border-slate-200 shadow-2xl shadow-indigo-500/10 dark:border-slate-800">
+                                <Card className="mx-auto w-full max-w-lg overflow-hidden rounded-2xl border-slate-200 shadow-2xl shadow-indigo-500/10 dark:border-slate-800">
                                     <CardContent className="p-2">
                                         <form
                                             onSubmit={handleSearchValidasi}
@@ -942,18 +942,18 @@ export default function Welcome({
                             </div>
 
                             {search_validasi && (
-                                <div className="w-full max-w-3xl animate-in delay-150 duration-500 fill-mode-both fade-in slide-in-from-bottom-12">
+                                <div className="w-full max-w-lg animate-in px-4 delay-150 duration-500 fill-mode-both fade-in slide-in-from-bottom-12 sm:px-0">
                                     {document_validasi ? (
-                                        <div className="rounded-3xl border border-slate-100 bg-white p-8 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
-                                            <div className="mb-8 flex items-center gap-4 border-b border-slate-100 pb-6 dark:border-zinc-800">
+                                        <div className="w-full rounded-3xl border border-slate-100 bg-white p-5 shadow-xl sm:p-8 dark:border-zinc-800 dark:bg-zinc-900">
+                                            <div className="mb-6 flex flex-col gap-4 border-b border-slate-100 pb-6 text-left sm:flex-row sm:items-center dark:border-zinc-800">
                                                 <div className="rounded-2xl bg-indigo-50 p-4 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">
                                                     <FileText className="h-8 w-8" />
                                                 </div>
-                                                <div>
-                                                    <p className="mb-1 text-sm font-medium text-slate-500 dark:text-slate-400">
+                                                <div className="min-w-0">
+                                                    <p className="mb-1 text-sm font-medium text-slate-500 dark:text-slate-200">
                                                         Hasil Pencarian untuk:
                                                     </p>
-                                                    <h2 className="font-mono text-2xl font-bold">
+                                                    <h2 className="font-mono text-xl font-bold break-words text-slate-950 sm:text-2xl dark:text-white">
                                                         {
                                                             document_validasi.nomor_pengajuan
                                                         }
@@ -962,14 +962,14 @@ export default function Welcome({
                                             </div>
                                             <div className="overflow-hidden rounded-2xl border border-slate-100 dark:border-zinc-800">
                                                 <div className="overflow-x-auto">
-                                                    <table className="w-full min-w-[450px] text-left text-sm">
+                                                    <table className="w-full text-left text-sm">
                                                         <thead className="border-b border-slate-100 bg-slate-50 dark:border-zinc-800 dark:bg-zinc-800/50">
                                                             <tr>
-                                                                <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">
+                                                                <th className="px-4 py-4 font-semibold text-slate-700 sm:px-6 dark:text-slate-200">
                                                                     Jenis
                                                                     Dokumen
                                                                 </th>
-                                                                <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">
+                                                                <th className="px-4 py-4 font-semibold text-slate-700 sm:px-6 dark:text-slate-200">
                                                                     Status
                                                                 </th>
                                                             </tr>
@@ -987,7 +987,7 @@ export default function Welcome({
                                             </div>
                                             {document_validasi.catatan && (
                                                 <div className="mt-6 rounded-xl border border-slate-100 bg-slate-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
-                                                    <p className="mb-1 text-sm font-medium text-slate-500">
+                                                    <p className="mb-1 text-sm font-medium text-slate-500 dark:text-slate-200">
                                                         Catatan Petugas:
                                                     </p>
                                                     <p className="text-slate-700 italic dark:text-slate-300">
@@ -1001,7 +1001,7 @@ export default function Welcome({
                                             )}
                                         </div>
                                     ) : (
-                                        <div className="rounded-3xl border border-slate-100 bg-white p-12 text-center shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
+                                        <div className="w-full rounded-3xl border border-slate-100 bg-white p-6 text-center shadow-xl sm:p-12 dark:border-zinc-800 dark:bg-zinc-900">
                                             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 dark:bg-zinc-800">
                                                 <Search className="h-10 w-10 text-slate-400" />
                                             </div>

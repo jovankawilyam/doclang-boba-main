@@ -9,6 +9,7 @@ import {
     Search,
     CheckCircle,
     XCircle,
+    Loader2,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -72,6 +73,7 @@ export default function AdminIndex({ admins, stats }: Props) {
     const flash = props.flash ?? {};
     const auth = props.auth;
     const [search, setSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
     const [confirmModalOpen, setConfirmModalOpen] = useState(false);
     const [selectedAdmin, setSelectedAdmin] = useState<Admin | null>(null);
     const [deleteProcessing, setDeleteProcessing] = useState(false);
@@ -79,8 +81,11 @@ export default function AdminIndex({ admins, stats }: Props) {
 
     const filtered = admins.filter(
         (a) =>
-            a.name.toLowerCase().includes(search.toLowerCase()) ||
-            a.email.toLowerCase().includes(search.toLowerCase()),
+            (statusFilter === 'all' ||
+                (statusFilter === 'active' && a.is_active) ||
+                (statusFilter === 'inactive' && !a.is_active)) &&
+            (a.name.toLowerCase().includes(search.toLowerCase()) ||
+                a.email.toLowerCase().includes(search.toLowerCase())),
     );
 
     const handleToggle = (id: number) => {
@@ -111,7 +116,12 @@ export default function AdminIndex({ admins, stats }: Props) {
 
         router.delete(`/admin/${selectedAdmin.id}`, {
             preserveScroll: true,
-            onSuccess: () => closeDeleteModal(),
+            onSuccess: () => {
+                closeDeleteModal();
+                router.reload({
+                    only: ['admins', 'stats'],
+                });
+            },
             onFinish: () => {
                 setDeleteProcessing(false);
                 setProcessingId(null);
@@ -208,19 +218,34 @@ export default function AdminIndex({ admins, stats }: Props) {
                 {/* Table */}
                 <Card className="rounded-3xl border border-white/20 bg-white/10 shadow-2xl backdrop-blur-xl">
                     <CardHeader className="border-b border-white/15 px-6 py-5">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                             <CardTitle className="flex items-center gap-2 text-lg font-semibold text-white">
                                 <Users className="h-5 w-5" />
                                 Daftar Admin
                             </CardTitle>
-                            <div className="relative w-64">
-                                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-blue-100" />
-                                <Input
-                                    placeholder="Cari nama atau email..."
-                                    className="border-white/20 bg-white/10 pl-9 text-white placeholder:text-blue-100"
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                />
+                            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+                                <div className="relative w-full sm:w-64">
+                                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-blue-100" />
+                                    <Input
+                                        placeholder="Cari nama atau email..."
+                                        className="border-white/20 bg-white/10 pl-9 text-white placeholder:text-blue-100"
+                                        value={search}
+                                        onChange={(e) =>
+                                            setSearch(e.target.value)
+                                        }
+                                    />
+                                </div>
+                                <select
+                                    value={statusFilter}
+                                    onChange={(e) =>
+                                        setStatusFilter(e.target.value)
+                                    }
+                                    className="h-10 rounded-md border border-white/20 bg-white/10 px-3 text-sm font-medium text-white shadow-lg backdrop-blur-lg transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+                                >
+                                    <option value="all">Semua Status</option>
+                                    <option value="active">Aktif</option>
+                                    <option value="inactive">Nonaktif</option>
+                                </select>
                             </div>
                         </div>
                     </CardHeader>
@@ -430,7 +455,11 @@ export default function AdminIndex({ admins, stats }: Props) {
                                 variant="destructive"
                                 disabled={deleteProcessing}
                                 onClick={confirmDeleteAdmin}
+                                className="gap-2"
                             >
+                                {deleteProcessing && (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                )}
                                 {deleteProcessing
                                     ? 'Menghapus...'
                                     : 'Konfirmasi Hapus'}

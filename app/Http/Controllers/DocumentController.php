@@ -28,13 +28,14 @@ class DocumentController extends Controller
         $rows = DB::table('documents')
             ->select('category', 'status_proses', DB::raw('count(*) as total'))
             ->whereIn('category', $categories)
-            ->whereIn('status_proses', $statuses)
             ->groupBy('category', 'status_proses')
             ->get();
 
         foreach ($rows as $row) {
             $total = (int) $row->total;
-            $stats[$row->category][$row->status_proses] = $total;
+            if (in_array($row->status_proses, $statuses, true)) {
+                $stats[$row->category][$row->status_proses] = $total;
+            }
             $stats[$row->category]['total'] += $total;
         }
 

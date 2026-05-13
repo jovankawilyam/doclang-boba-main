@@ -108,7 +108,7 @@ class AdminController extends Controller
         }
     }
 
-    private function authorizeSuperAdminRole(string $role): void
+    private function authorizeSuperAdminRole(?string $role): void
     {
         if ($role === 'super_admin' && auth()->user()?->role !== 'super_admin') {
             abort(403, 'Hanya super admin yang dapat mengelola role super admin.');
