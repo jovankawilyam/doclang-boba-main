@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,9 +16,6 @@ use Inertia\Response;
 
 class AdminController extends Controller
 {
-    /**
-     * Tampilkan daftar semua admin.
-     */
     public function index(): Response
     {
         $admins = User::whereIn('role', ['super_admin', 'admin'])
@@ -32,17 +32,11 @@ class AdminController extends Controller
         return Inertia::render('admin/index', compact('admins', 'stats'));
     }
 
-    /**
-     * Form tambah admin baru.
-     */
     public function create(): Response
     {
         return Inertia::render('admin/create');
     }
 
-    /**
-     * Simpan admin baru ke database.
-     */
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -52,9 +46,7 @@ class AdminController extends Controller
             'role' => ['required', 'in:admin,super_admin'],
         ]);
 
-        if ($validated['role'] === 'super_admin' && auth()->user()?->role !== 'super_admin') {
-            abort(403, 'Hanya super admin yang dapat membuat super admin baru.');
-        }
+        $this->authorizeSuperAdminRole($validated['role']);
 
         User::create([
             'name' => $validated['name'],
@@ -68,15 +60,13 @@ class AdminController extends Controller
             ->with('success', 'Admin berhasil ditambahkan!');
     }
 
-    /**
-     * Toggle status aktif/nonaktif admin.
-     */
     public function toggleStatus(User $user): RedirectResponse
     {
-        // Tidak bisa menonaktifkan diri sendiri
         if ($user->id === auth()->id()) {
             return back()->with('error', 'Tidak dapat mengubah status akun Anda sendiri.');
         }
+
+        $this->authorizeSuperAdminRole($user->role);
 
         $isActive = ! $user->is_active;
         $user->update(['is_active' => $isActive]);
@@ -92,28 +82,36 @@ class AdminController extends Controller
         return back()->with('success', "Admin {$user->name} berhasil {$status}.");
     }
 
-    /**
-     * Hapus admin bila tidak terkait data lain.
-     */
     public function destroy(User $user): RedirectResponse
     {
         if ($user->id === auth()->id()) {
             return back()->with('error', 'Tidak dapat menghapus akun Anda sendiri.');
         }
 
+        $this->authorizeSuperAdminRole($user->role);
+
         try {
             $user->delete();
 
             return back()->with('success', "Admin {$user->name} berhasil dihapus.");
-        } catch (\Illuminate\Database\QueryException $e) {
-            $errorCode = $e->errorInfo[1];
-            if ($errorCode == 1451) {
-                return back()->with('error', 'Gagal menghapus admin karena masih ada data yang terkait (misal: dokumen). Disarankan menggunakan SoftDeletes.');
+        } catch (QueryException $e) {
+            $sqlState = $e->errorInfo[0] ?? null;
+            $driverCode = (int) ($e->errorInfo[1] ?? 0);
+
+            if ($sqlState === '23000' || in_array($driverCode, [1451, 787], true)) {
+                return back()->with('error', "Gagal menghapus admin {$user->name} karena masih memiliki data dokumen terkait.");
             }
 
             return back()->with('error', 'Gagal menghapus admin: Terjadi kesalahan database.');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal menghapus admin: Terjadi kesalahan.');
+        }
+    }
+
+    private function authorizeSuperAdminRole(string $role): void
+    {
+        if ($role === 'super_admin' && auth()->user()?->role !== 'super_admin') {
+            abort(403, 'Hanya super admin yang dapat mengelola role super admin.');
         }
     }
 }

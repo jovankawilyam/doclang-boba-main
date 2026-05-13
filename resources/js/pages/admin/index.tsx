@@ -11,9 +11,18 @@ import {
     XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
@@ -44,6 +53,17 @@ interface Props {
     stats: Stats;
 }
 
+const formatStat = (value: number | undefined) =>
+    new Intl.NumberFormat('id-ID').format(value ?? 0);
+
+const getInitials = (name: string) =>
+    name
+        .split(' ')
+        .map((part) => part[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase();
+
 export default function AdminIndex({ admins, stats }: Props) {
     const { props } = usePage<{
         auth: { user: { id: number } };
@@ -52,7 +72,9 @@ export default function AdminIndex({ admins, stats }: Props) {
     const flash = props.flash ?? {};
     const auth = props.auth;
     const [search, setSearch] = useState('');
-    const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+    const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+    const [selectedAdmin, setSelectedAdmin] = useState<Admin | null>(null);
+    const [deleteProcessing, setDeleteProcessing] = useState(false);
     const [processingId, setProcessingId] = useState<number | null>(null);
 
     const filtered = admins.filter(
@@ -70,19 +92,31 @@ export default function AdminIndex({ admins, stats }: Props) {
         );
     };
 
-    const handleDelete = (id: number) => {
-        if (confirmDelete === id) {
-            setProcessingId(id);
-            router.delete(`/admin/${id}`, {
-                preserveScroll: true,
-                onFinish: () => {
-                    setConfirmDelete(null);
-                    setProcessingId(null);
-                },
-            });
-        } else {
-            setConfirmDelete(id);
-        }
+    const openDeleteModal = (admin: Admin) => {
+        setSelectedAdmin(admin);
+        setConfirmModalOpen(true);
+    };
+
+    const closeDeleteModal = () => {
+        setConfirmModalOpen(false);
+        setSelectedAdmin(null);
+        setDeleteProcessing(false);
+    };
+
+    const confirmDeleteAdmin = () => {
+        if (!selectedAdmin) return;
+
+        setDeleteProcessing(true);
+        setProcessingId(selectedAdmin.id);
+
+        router.delete(`/admin/${selectedAdmin.id}`, {
+            preserveScroll: true,
+            onSuccess: () => closeDeleteModal(),
+            onFinish: () => {
+                setDeleteProcessing(false);
+                setProcessingId(null);
+            },
+        });
     };
 
     return (
@@ -90,18 +124,20 @@ export default function AdminIndex({ admins, stats }: Props) {
             <Head title="Manajemen Admin" />
 
             <div className="flex flex-col gap-6 p-6">
-                {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between border-b border-white/20 pb-5">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight">
+                        <p className="text-sm font-semibold tracking-wide text-cyan-100 uppercase">
+                            Administrasi Sistem
+                        </p>
+                        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-white">
                             Manajemen Admin
                         </h1>
-                        <p className="text-muted-foreground">
+                        <p className="text-sm font-medium text-blue-100">
                             Kelola akun admin dan hak akses sistem
                         </p>
                     </div>
                     <Link href="/admin/create">
-                        <Button className="gap-2">
+                        <Button className="gap-2 border border-white/20 bg-white/15 text-white shadow-lg backdrop-blur-lg hover:bg-white/25">
                             <UserPlus className="h-4 w-4" />
                             Tambah Admin
                         </Button>
@@ -110,13 +146,13 @@ export default function AdminIndex({ admins, stats }: Props) {
 
                 {/* Flash Messages */}
                 {flash.success && (
-                    <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-400">
+                    <div className="flex items-center gap-2 rounded-lg border border-emerald-300/40 bg-emerald-400/15 px-4 py-3 text-sm text-emerald-100 backdrop-blur-lg">
                         <CheckCircle className="h-4 w-4 shrink-0" />
                         {flash.success}
                     </div>
                 )}
                 {flash.error && (
-                    <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+                    <div className="flex items-center gap-2 rounded-lg border border-rose-300/40 bg-rose-400/15 px-4 py-3 text-sm text-rose-100 backdrop-blur-lg">
                         <XCircle className="h-4 w-4 shrink-0" />
                         {flash.error}
                     </div>
@@ -124,47 +160,45 @@ export default function AdminIndex({ admins, stats }: Props) {
 
                 {/* Stats */}
                 <div className="grid gap-4 md:grid-cols-3">
-                    <Card>
+                    <Card className="rounded-3xl border border-white/20 bg-white/10 shadow-2xl backdrop-blur-xl">
                         <CardContent className="flex items-center gap-4 p-6">
-                            <div className="rounded-xl bg-purple-100 p-3 dark:bg-purple-900/30">
-                                <Shield className="h-6 w-6 text-purple-600" />
+                            <div className="rounded-lg border border-white/20 bg-white/15 p-3 shadow-[0_0_22px_rgba(125,211,252,0.35)]">
+                                <Shield className="h-6 w-6 text-cyan-100 drop-shadow-[0_0_10px_rgba(103,232,249,0.8)]" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm text-blue-100">
                                     Super Admin
                                 </p>
                                 <p className="text-3xl font-bold">
-                                    {stats.super_admin}
+                                    {formatStat(stats.super_admin)}
                                 </p>
                             </div>
                         </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="rounded-3xl border border-white/20 bg-white/10 shadow-2xl backdrop-blur-xl">
                         <CardContent className="flex items-center gap-4 p-6">
-                            <div className="rounded-xl bg-blue-100 p-3 dark:bg-blue-900/30">
-                                <Users className="h-6 w-6 text-blue-600" />
+                            <div className="rounded-lg border border-white/20 bg-white/15 p-3 shadow-[0_0_22px_rgba(125,211,252,0.35)]">
+                                <Users className="h-6 w-6 text-cyan-100 drop-shadow-[0_0_10px_rgba(103,232,249,0.8)]" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">
-                                    Admin
-                                </p>
+                                <p className="text-sm text-blue-100">Admin</p>
                                 <p className="text-3xl font-bold">
-                                    {stats.admin}
+                                    {formatStat(stats.admin)}
                                 </p>
                             </div>
                         </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="rounded-3xl border border-white/20 bg-white/10 shadow-2xl backdrop-blur-xl">
                         <CardContent className="flex items-center gap-4 p-6">
-                            <div className="rounded-xl bg-green-100 p-3 dark:bg-green-900/30">
-                                <Users className="h-6 w-6 text-green-600" />
+                            <div className="rounded-lg border border-white/20 bg-white/15 p-3 shadow-[0_0_22px_rgba(125,211,252,0.35)]">
+                                <Users className="h-6 w-6 text-cyan-100 drop-shadow-[0_0_10px_rgba(103,232,249,0.8)]" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm text-blue-100">
                                     Total Admin
                                 </p>
                                 <p className="text-3xl font-bold">
-                                    {stats.total}
+                                    {formatStat(stats.total)}
                                 </p>
                             </div>
                         </CardContent>
@@ -172,55 +206,55 @@ export default function AdminIndex({ admins, stats }: Props) {
                 </div>
 
                 {/* Table */}
-                <Card>
-                    <CardHeader>
+                <Card className="rounded-3xl border border-white/20 bg-white/10 shadow-2xl backdrop-blur-xl">
+                    <CardHeader className="border-b border-white/15 px-6 py-5">
                         <div className="flex items-center justify-between">
-                            <CardTitle className="flex items-center gap-2">
+                            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-white">
                                 <Users className="h-5 w-5" />
                                 Daftar Admin
                             </CardTitle>
                             <div className="relative w-64">
-                                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-blue-100" />
                                 <Input
                                     placeholder="Cari nama atau email..."
-                                    className="pl-9"
+                                    className="border-white/20 bg-white/10 pl-9 text-white placeholder:text-blue-100"
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                 />
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-0">
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead>
-                                    <tr className="border-b text-left text-xs text-muted-foreground">
-                                        <th className="pb-3 font-medium">
+                                <thead className="sticky top-0 border-b border-white/20 bg-white/10 text-left text-xs text-blue-50 uppercase backdrop-blur-md">
+                                    <tr>
+                                        <th className="px-6 py-4 font-semibold">
                                             Nama
                                         </th>
-                                        <th className="pb-3 font-medium">
+                                        <th className="px-6 py-4 font-semibold">
                                             Email
                                         </th>
-                                        <th className="pb-3 font-medium">
+                                        <th className="px-6 py-4 font-semibold">
                                             Role
                                         </th>
-                                        <th className="pb-3 font-medium">
+                                        <th className="px-6 py-4 font-semibold">
                                             Status
                                         </th>
-                                        <th className="pb-3 font-medium">
+                                        <th className="px-6 py-4 font-semibold">
                                             Bergabung
                                         </th>
-                                        <th className="pb-3 text-right font-medium">
+                                        <th className="px-6 py-4 text-right font-semibold">
                                             Aksi
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody className="divide-y divide-white/10">
                                     {filtered.length === 0 ? (
                                         <tr>
                                             <td
                                                 colSpan={6}
-                                                className="py-10 text-center text-sm text-muted-foreground"
+                                                className="px-6 py-10 text-center text-sm text-blue-100"
                                             >
                                                 Tidak ada admin yang ditemukan.
                                             </td>
@@ -229,22 +263,35 @@ export default function AdminIndex({ admins, stats }: Props) {
                                         filtered.map((admin) => (
                                             <tr
                                                 key={admin.id}
-                                                className="border-b last:border-0"
+                                                className="last:border-0 hover:bg-white/10"
                                             >
-                                                <td className="py-4 text-sm font-medium">
-                                                    {admin.name}
+                                                <td className="px-6 py-4 text-sm font-medium">
+                                                    <div className="flex items-center gap-3">
+                                                        <Avatar className="h-10 w-10 border border-white/20">
+                                                            <AvatarFallback className="bg-white/15 text-xs font-semibold text-white">
+                                                                {getInitials(
+                                                                    admin.name,
+                                                                )}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                        <div>
+                                                            <p className="font-semibold text-white">
+                                                                {admin.name}
+                                                            </p>
+                                                            <p className="text-xs text-blue-100">
+                                                                ID Admin #
+                                                                {admin.id}
+                                                            </p>
+                                                        </div>
+                                                    </div>
                                                 </td>
-                                                <td className="py-4 text-sm text-muted-foreground">
+                                                <td className="px-6 py-4 text-sm text-blue-100">
                                                     {admin.email}
                                                 </td>
-                                                <td className="py-4 text-sm">
+                                                <td className="px-6 py-4 text-sm">
                                                     <Badge
-                                                        variant={
-                                                            admin.role ===
-                                                            'super_admin'
-                                                                ? 'default'
-                                                                : 'secondary'
-                                                        }
+                                                        variant="outline"
+                                                        className="rounded-full border-white/20 bg-white/10 text-blue-50"
                                                     >
                                                         {admin.role ===
                                                         'super_admin'
@@ -252,20 +299,21 @@ export default function AdminIndex({ admins, stats }: Props) {
                                                             : 'Admin'}
                                                     </Badge>
                                                 </td>
-                                                <td className="py-4 text-sm">
+                                                <td className="px-6 py-4 text-sm">
                                                     <Badge
-                                                        variant={
+                                                        variant="outline"
+                                                        className={
                                                             admin.is_active
-                                                                ? 'default'
-                                                                : 'destructive'
+                                                                ? 'rounded-full border-emerald-300/40 bg-emerald-500/20 px-3 py-1 text-xs font-semibold tracking-wide text-emerald-200'
+                                                                : 'rounded-full border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold tracking-wide text-blue-100'
                                                         }
                                                     >
                                                         {admin.is_active
-                                                            ? 'Aktif'
-                                                            : 'Nonaktif'}
+                                                            ? 'ACTIVE'
+                                                            : 'INACTIVE'}
                                                     </Badge>
                                                 </td>
-                                                <td className="py-4 text-sm text-muted-foreground">
+                                                <td className="px-6 py-4 text-sm text-blue-100">
                                                     {new Date(
                                                         admin.created_at,
                                                     ).toLocaleDateString(
@@ -277,7 +325,7 @@ export default function AdminIndex({ admins, stats }: Props) {
                                                         },
                                                     )}
                                                 </td>
-                                                <td className="py-4">
+                                                <td className="px-6 py-4">
                                                     <div className="flex items-center justify-end gap-2">
                                                         <Button
                                                             variant={
@@ -286,10 +334,12 @@ export default function AdminIndex({ admins, stats }: Props) {
                                                                     : 'outline'
                                                             }
                                                             size="sm"
-                                                            className="h-8 gap-1"
+                                                            className="h-8 gap-1 border-white/20 bg-white/10 text-blue-50 hover:bg-white/20 hover:text-white"
                                                             disabled={
                                                                 processingId ===
-                                                                admin.id
+                                                                    admin.id ||
+                                                                admin.id ===
+                                                                    auth.user.id
                                                             }
                                                             onClick={() =>
                                                                 handleToggle(
@@ -300,41 +350,40 @@ export default function AdminIndex({ admins, stats }: Props) {
                                                             {admin.is_active ? (
                                                                 <>
                                                                     <PowerOff className="h-3 w-3" />
-                                                                    Nonaktifkan
+                                                                    {processingId ===
+                                                                    admin.id
+                                                                        ? 'Memproses...'
+                                                                        : 'Nonaktifkan'}
                                                                 </>
                                                             ) : (
                                                                 <>
                                                                     <Power className="h-3 w-3" />
-                                                                    Aktifkan
+                                                                    {processingId ===
+                                                                    admin.id
+                                                                        ? 'Memproses...'
+                                                                        : 'Aktifkan'}
                                                                 </>
                                                             )}
                                                         </Button>
                                                         {admin.id !==
                                                             auth.user.id && (
                                                             <Button
-                                                                variant={
-                                                                    confirmDelete ===
-                                                                    admin.id
-                                                                        ? 'destructive'
-                                                                        : 'ghost'
-                                                                }
+                                                                variant="ghost"
                                                                 size="sm"
-                                                                className="h-8 gap-1"
+                                                                className="h-8 gap-1 text-rose-100 hover:bg-rose-400/20 hover:text-white"
                                                                 disabled={
+                                                                    deleteProcessing ||
                                                                     processingId ===
-                                                                    admin.id
+                                                                        admin.id
                                                                 }
                                                                 onClick={() =>
-                                                                    handleDelete(
-                                                                        admin.id,
+                                                                    openDeleteModal(
+                                                                        admin,
                                                                     )
                                                                 }
                                                             >
                                                                 <Trash2 className="h-3 w-3" />
-                                                                {confirmDelete ===
-                                                                admin.id
-                                                                    ? 'Konfirmasi?'
-                                                                    : 'Hapus'}
+                                                                Hapus
                                                             </Button>
                                                         )}
                                                     </div>
@@ -345,21 +394,50 @@ export default function AdminIndex({ admins, stats }: Props) {
                                 </tbody>
                             </table>
                         </div>
-                        {confirmDelete !== null && (
-                            <div className="mt-3 flex items-center justify-end gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-400">
-                                Klik tombol "Konfirmasi?" sekali lagi untuk
-                                menghapus admin ini secara permanen.
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setConfirmDelete(null)}
-                                >
-                                    Batal
-                                </Button>
-                            </div>
-                        )}
                     </CardContent>
                 </Card>
+
+                <Dialog
+                    open={confirmModalOpen}
+                    onOpenChange={(open) => {
+                        if (!open && !deleteProcessing) closeDeleteModal();
+                    }}
+                >
+                    <DialogContent className="border border-white/20 bg-blue-950/80 text-white shadow-2xl backdrop-blur-xl">
+                        <DialogHeader>
+                            <DialogTitle>Hapus Admin</DialogTitle>
+                            <DialogDescription className="text-blue-100">
+                                Admin{' '}
+                                <span className="font-semibold text-white">
+                                    {selectedAdmin?.name}
+                                </span>{' '}
+                                akan dihapus dari sistem. Aksi ini tidak dapat
+                                dibatalkan.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="border-white/20 bg-white/10 text-blue-50 hover:bg-white/20 hover:text-white"
+                                disabled={deleteProcessing}
+                                onClick={closeDeleteModal}
+                            >
+                                Batal
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                disabled={deleteProcessing}
+                                onClick={confirmDeleteAdmin}
+                            >
+                                {deleteProcessing
+                                    ? 'Menghapus...'
+                                    : 'Konfirmasi Hapus'}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </AppLayout>
     );

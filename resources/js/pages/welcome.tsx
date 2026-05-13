@@ -18,7 +18,7 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 interface DocumentItem {
     id: number;
     nomor_pengajuan: string;
-    status_proses: 'siap_diambil' | 'proses' | 'selesai';
+    status_proses: 'proses' | 'siap_diambil' | 'selesai' | 'tidak_valid';
     catatan: string | null;
 }
 
@@ -33,7 +33,7 @@ function TableRow({
         switch (s) {
             case 'selesai':
                 return {
-                    badge: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-900',
+                    badge: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900',
                     icon: <CheckCircle2 className="mr-1.5 h-4 w-4" />,
                     label: 'Selesai',
                 };

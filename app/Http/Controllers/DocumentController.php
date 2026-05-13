@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Document;
@@ -12,9 +14,6 @@ use Inertia\Response;
 
 class DocumentController extends Controller
 {
-    /**
-     * Ambil statistik dokumen per kategori dan status dengan satu query agregat.
-     */
     public static function getStatistics(): array
     {
         $categories = ['kuitansi', 'kutipan_rl', 'validasi_pph'];
@@ -27,7 +26,7 @@ class DocumentController extends Controller
         }
 
         $rows = DB::table('documents')
-            ->selectRaw('category, status_proses, count(*) as total')
+            ->select('category', 'status_proses', DB::raw('count(*) as total'))
             ->whereIn('category', $categories)
             ->whereIn('status_proses', $statuses)
             ->groupBy('category', 'status_proses')
@@ -42,9 +41,6 @@ class DocumentController extends Controller
         return $stats;
     }
 
-    /**
-     * Tampilkan daftar dokumen dengan pencarian dan filter status.
-     */
     public function index(Request $request, string $category = 'kuitansi'): Response
     {
         $search = $request->input('search');
@@ -74,9 +70,6 @@ class DocumentController extends Controller
         ]);
     }
 
-    /**
-     * Simpan dokumen baru dan sanitasi catatan sebelum masuk database.
-     */
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -98,9 +91,6 @@ class DocumentController extends Controller
         return redirect()->back()->with('success', 'Dokumen pengajuan berhasil ditambahkan.');
     }
 
-    /**
-     * Perbarui status atau catatan dokumen.
-     */
     public function update(Request $request, Document $document): RedirectResponse
     {
         $validated = $request->validate([
@@ -117,9 +107,6 @@ class DocumentController extends Controller
         return redirect()->back()->with('success', 'Status dokumen berhasil diperbarui.');
     }
 
-    /**
-     * Hapus dokumen pengajuan.
-     */
     public function destroy(Document $document): RedirectResponse
     {
         $document->delete();

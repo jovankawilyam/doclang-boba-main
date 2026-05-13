@@ -322,7 +322,7 @@ const FormPage = () => {
                                             <label className="cursor-pointer rounded-xl border border-dashed border-indigo-300 bg-white p-4">
                                                 <Upload className="mx-auto mb-1 h-4 w-4 text-indigo-400" />
                                                 <span className="text-[10px] font-black text-slate-500">
-                                                    ID Pemberi Kuasa (PDF/IMG
+                                                    Dokumen Identitas Pemberi Kuasa (PDF/IMG
                                                     15MB)
                                                 </span>
                                                 <input

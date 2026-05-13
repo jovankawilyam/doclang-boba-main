@@ -80,6 +80,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'docStats' => $documentStats['kuitansi'],
             'docStatsKutipan' => $documentStats['kutipan_rl'],
             'docStatsValidasi' => $documentStats['validasi_pph'],
+            'todayDocumentTotal' => Document::whereDate('created_at', today())->count(),
         ]);
     })->name('dashboard');
 
