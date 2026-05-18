@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\PermohonanController;
 use App\Models\Document;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -52,6 +53,7 @@ Route::get('/persyaratan', function () {
 Route::get('/form', function () {
     return Inertia::render('form');
 });
+Route::post('/permohonan/store', [PermohonanController::class, 'store'])->name('permohonan.store');
 
 /*
 |--------------------------------------------------------------------------
@@ -108,6 +110,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
     Route::patch('/documents/{document}', [DocumentController::class, 'update'])->name('documents.update');
     Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
+
+    Route::patch('/permohonan/{permohonan}', [PermohonanController::class, 'update'])->name('permohonan.update');
+    Route::delete('/permohonan/{permohonan}', [PermohonanController::class, 'destroy'])->name('permohonan.destroy');
 
 });
 

@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'whatsapp' => [
+        'sender_number' => env('WA_SENDER_NUMBER', '081911883609'),
+    ],
+
+    'fonnte' => [
+        'token' => env('FONNTE_TOKEN'),
+        'endpoint' => env('FONNTE_ENDPOINT', 'https://api.fonnte.com/send'),
+    ],
+
 ];

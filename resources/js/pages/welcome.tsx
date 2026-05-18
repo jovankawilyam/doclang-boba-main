@@ -180,14 +180,16 @@ export default function Welcome({
             >
                 <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-9 md:px-8">
                     <div className="flex items-center gap-3">
-                        <img
-                            src="/images/image.png"
-                            alt="Logo"
-                            className="h-15 w-auto object-contain md:h-15"
-                        />
-                        <a href="#welcome"></a>
-                        <div className="hidden flex-col leading-tight md:flex"></div>
-                    </div>
+    <a href="/" className="cursor-pointer">
+        <img
+            src="/images/image.png"
+            alt="Logo"
+            className="h-15 w-auto object-contain md:h-15"
+        />
+    </a>
+    
+    <div className="hidden flex-col leading-tight md:flex"></div>
+</div>
 
                     <div className="hidden items-center gap-10 md:flex">
                         <a

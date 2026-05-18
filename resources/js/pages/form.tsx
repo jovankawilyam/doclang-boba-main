@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import {
     ChevronLeft,
     Send,
@@ -12,6 +12,21 @@ import React, { useState } from 'react';
 
 const FormPage = () => {
     const [step, setStep] = useState(1);
+    // Tambahkan 3 baris ini untuk mendeteksi scroll
+    const [showNavbar, setShowNavbar] = React.useState(true);
+    const [lastScrollY, setLastScrollY] = React.useState(0);
+    React.useEffect(() => {
+        const controlNavbar = () => {
+            if (window.scrollY > lastScrollY && window.scrollY > 50) {
+                setShowNavbar(false); // Sembunyikan saat scroll ke bawah
+            } else {
+                setShowNavbar(true); // Munculkan saat scroll ke atas
+            }
+            setLastScrollY(window.scrollY);
+        };
+        window.addEventListener('scroll', controlNavbar);
+        return () => window.removeEventListener('scroll', controlNavbar);
+    }, [lastScrollY]);
     const [userRole, setUserRole] = useState<'pemenang' | 'kuasa' | ''>('');
     const [errors, setErrors] = useState<string[]>([]);
 
@@ -23,6 +38,7 @@ const FormPage = () => {
         nomorIdentitas: '',
         alamatPemohon: '',
         nomorWa: '',
+        nomor_wa_pemohon: '',
         // Data Pemberi Kuasa (Hanya jika pilih Kuasa)
         namaPemberiKuasa: '',
         jenisIdentitasPemberi: 'KTP',
@@ -33,6 +49,9 @@ const FormPage = () => {
         kodeLot: '',
         jenisLayanan: '',
         tanggalPelunasan: '',
+        buktiPelunasan: null as File | null,
+        dokumenIdentitasPemberiKuasa: null as File | null,
+        suratKuasa: null as File | null,
     });
 
     const handleChange = (
@@ -40,7 +59,39 @@ const FormPage = () => {
             HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
         >,
     ) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value,
+            ...(e.target.name === 'nomorWa'
+                ? { nomor_wa_pemohon: e.target.value }
+                : {}),
+        });
+    };
+
+    const handleFileChange = (
+        e: React.ChangeEvent<HTMLInputElement>,
+        field: 'buktiPelunasan' | 'dokumenIdentitasPemberiKuasa' | 'suratKuasa',
+    ) => {
+        setFormData({
+            ...formData,
+            [field]: e.target.files?.[0] ?? null,
+        });
+    };
+
+    const normalizeJenisLayanan = (jenisLayanan: string) => {
+        if (jenisLayanan.includes('Kuitansi')) {
+            return 'Pemberian Kuitansi Pembayaran';
+        }
+
+        if (jenisLayanan.includes('Kutipan Risalah Lelang')) {
+            return 'Pemberian Kutipan Risalah Lelang';
+        }
+
+        if (jenisLayanan.includes('Validasi PPh')) {
+            return 'Validasi PPh';
+        }
+
+        return jenisLayanan;
     };
 
     const validateStep1 = () => {
@@ -72,7 +123,37 @@ const FormPage = () => {
             errs.push('Tanggal Pelunasan wajib diisi');
 
         setErrors(errs);
-        if (errs.length === 0) alert('Data berhasil dikirim!');
+        if (errs.length === 0) {
+            const payload = new FormData();
+            payload.append('nama_pemohon', formData.namaPemohon);
+            payload.append(
+                'nomor_wa_pemohon',
+                formData.nomor_wa_pemohon || formData.nomorWa,
+            );
+            payload.append('kode_lot_lelang', formData.kodeLot);
+            payload.append(
+                'jenis_layanan',
+                normalizeJenisLayanan(formData.jenisLayanan),
+            );
+            payload.append('tanggal_dokumen', formData.tanggalPelunasan);
+
+            if (formData.buktiPelunasan) {
+                payload.append('bukti_pelunasan', formData.buktiPelunasan);
+            }
+
+            router.post('/permohonan/store', payload, {
+                forceFormData: true,
+                preserveScroll: true,
+                onError: (backendErrors) => {
+                    setErrors(Object.values(backendErrors));
+                    window.scrollTo(0, 0);
+                },
+                onSuccess: () => {
+                    setErrors([]);
+                    setStep(1);
+                },
+            });
+        }
     };
 
     return (
@@ -80,8 +161,12 @@ const FormPage = () => {
             <Head title="Form Doclang Boba" />
 
             {/* NAVBAR */}
-            <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white px-6 py-6 shadow-sm">
-                <div className="mx-auto flex max-w-7xl items-center gap-4">
+            <nav
+                className={`sticky top-0 z-50 border-b border-gray-200 bg-white px-6 py-6 shadow-sm transition-transform duration-300 ${
+                    showNavbar ? 'translate-y-0' : '-translate-y-full'
+                }`}
+            >
+                <div className="mx-auto flex max-w-7xl items-center gap-4 bg-white">
                     <Link
                         href="/"
                         className="rounded-full p-2 transition-colors hover:bg-gray-100"
@@ -252,8 +337,9 @@ const FormPage = () => {
                                 </div>
                                 <button
                                     onClick={() => setStep(1)}
-                                    className="font-bold text-slate-400 transition-colors hover:text-indigo-600"
+                                    className="flex w-full items-center justify-center gap-2 text-center text-xs text-indigo-600 transition-colors hover:text-indigo-600"
                                 >
+                                    <ChevronLeft className="h-6 w-6 text-gray-600" />
                                     Kembali ke Identitas Pemohon
                                 </button>
                             </div>
@@ -322,12 +408,18 @@ const FormPage = () => {
                                             <label className="cursor-pointer rounded-xl border border-dashed border-indigo-300 bg-white p-4">
                                                 <Upload className="mx-auto mb-1 h-4 w-4 text-indigo-400" />
                                                 <span className="text-[10px] font-black text-slate-500">
-                                                    Dokumen Identitas Pemberi Kuasa (PDF/IMG
-                                                    15MB)
+                                                    Dokumen Identitas Pemberi
+                                                    Kuasa (PDF/IMG 15MB)
                                                 </span>
                                                 <input
                                                     type="file"
                                                     className="hidden"
+                                                    onChange={(e) =>
+                                                        handleFileChange(
+                                                            e,
+                                                            'dokumenIdentitasPemberiKuasa',
+                                                        )
+                                                    }
                                                 />
                                             </label>
                                             <label className="cursor-pointer rounded-xl border border-dashed border-indigo-300 bg-white p-4">
@@ -338,6 +430,12 @@ const FormPage = () => {
                                                 <input
                                                     type="file"
                                                     className="hidden"
+                                                    onChange={(e) =>
+                                                        handleFileChange(
+                                                            e,
+                                                            'suratKuasa',
+                                                        )
+                                                    }
                                                 />
                                             </label>
                                         </div>
@@ -388,7 +486,16 @@ const FormPage = () => {
                                             Upload Bukti Pelunasan (PDF/IMG Max
                                             15MB)
                                         </p>
-                                        <input type="file" className="hidden" />
+                                        <input
+                                            type="file"
+                                            className="hidden"
+                                            onChange={(e) =>
+                                                handleFileChange(
+                                                    e,
+                                                    'buktiPelunasan',
+                                                )
+                                            }
+                                        />
                                     </label>
                                 </div>
 

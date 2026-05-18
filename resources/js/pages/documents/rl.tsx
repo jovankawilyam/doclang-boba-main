@@ -45,11 +45,27 @@ const statusOptions = [
 const formatStat = (value: number | undefined) =>
     new Intl.NumberFormat('id-ID').format(value ?? 0);
 
+const formatDate = (value?: string | null) =>
+    value
+        ? new Intl.DateTimeFormat('id-ID', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+          }).format(new Date(value))
+        : '-';
+
 interface DocumentItem {
     id: number;
-    nomor_pengajuan: string;
+    id_pengajuan: string;
+    tanggal_masuk_pengambilan_dokumen: string | null;
+    kode_lot_lelang: string;
+    nama_pemohon: string;
+    nomor_wa_pemohon: string;
+    nomor_dokumen: string | null;
+    tanggal_dokumen: string | null;
+    bukti_pelunasan_path: string | null;
     status_proses: string;
-    catatan: string | null;
+    catatan_tidak_valid: string | null;
 }
 
 export default function DocumentsRLIndex({ documents, filters }: any) {
@@ -100,24 +116,34 @@ export default function DocumentsRLIndex({ documents, filters }: any) {
         field: string,
         value: string,
     ) => {
+        const payload: Record<string, string> = {
+            [field]: value,
+        };
+
+        if (value === 'tidak_valid') {
+            const catatanTidakValid = window.prompt(
+                'Masukkan alasan data tidak valid:',
+            );
+
+            if (!catatanTidakValid?.trim()) {
+                return;
+            }
+
+            payload.catatan_tidak_valid = catatanTidakValid.trim();
+        }
+
         setUpdatingId(docId);
-        router.patch(
-            `/documents/${docId}`,
-            {
-                [field]: value,
-            },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                onFinish: () => setUpdatingId(null),
-            },
-        );
+        router.patch(`/permohonan/${docId}`, payload, {
+            preserveScroll: true,
+            preserveState: true,
+            onFinish: () => setUpdatingId(null),
+        });
     };
 
     const handleDelete = (docId: number) => {
         if (confirm('Apakah Anda yakin ingin menghapus pengajuan ini?')) {
             setDeletingId(docId);
-            router.delete(`/documents/${docId}`, {
+            router.delete(`/permohonan/${docId}`, {
                 preserveScroll: true,
                 preserveState: true,
                 onFinish: () => setDeletingId(null),
@@ -167,6 +193,9 @@ export default function DocumentsRLIndex({ documents, filters }: any) {
                 return 'bg-amber-500/20 text-amber-200 border-amber-300/40';
         }
     };
+
+    const getStorageUrl = (path: string | null) =>
+        path ? `/storage/${path}` : null;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -308,18 +337,20 @@ export default function DocumentsRLIndex({ documents, filters }: any) {
                         <Table>
                             <TableHeader>
                                 <TableRow className="hover:bg-transparent">
-                                    <TableHead>No. Pengajuan</TableHead>
+                                    <TableHead>ID Pengajuan</TableHead>
+                                    <TableHead>Kode Lot</TableHead>
+                                    <TableHead>Pemohon</TableHead>
+                                    <TableHead>Berkas Dokumen</TableHead>
+                                    <TableHead>Detail Dokumen Resmi</TableHead>
                                     <TableHead>Status Proses</TableHead>
-                                    <TableHead className="text-right">
-                                        Aksi
-                                    </TableHead>
+                                    <TableHead>Catatan</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {documents.data.length === 0 ? (
                                     <TableRow>
                                         <TableCell
-                                            colSpan={3}
+                                            colSpan={7}
                                             className="p-12 text-center"
                                         >
                                             <div className="flex flex-col items-center justify-center space-y-3 text-blue-100">
@@ -340,7 +371,62 @@ export default function DocumentsRLIndex({ documents, filters }: any) {
                                             className="group"
                                         >
                                             <TableCell className="font-semibold text-white">
-                                                {doc.nomor_pengajuan}
+                                                <div className="flex flex-col">
+                                                    <span>
+                                                        {doc.id_pengajuan}
+                                                    </span>
+                                                    <span className="text-xs font-medium text-blue-100">
+                                                        {formatDate(
+                                                            doc.tanggal_masuk_pengambilan_dokumen,
+                                                        )}
+                                                    </span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-blue-50">
+                                                {doc.kode_lot_lelang}
+                                            </TableCell>
+                                            <TableCell className="text-blue-50">
+                                                <div className="flex flex-col">
+                                                    <span className="font-semibold text-white">
+                                                        {doc.nama_pemohon}
+                                                    </span>
+                                                    <span className="text-xs text-blue-100">
+                                                        {doc.nomor_wa_pemohon}
+                                                    </span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-blue-50">
+                                                {getStorageUrl(
+                                                    doc.bukti_pelunasan_path,
+                                                ) ? (
+                                                    <a
+                                                        href={
+                                                            getStorageUrl(
+                                                                doc.bukti_pelunasan_path,
+                                                            ) ?? '#'
+                                                        }
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-white transition-all duration-300 hover:bg-white/20"
+                                                    >
+                                                        Unduh Berkas
+                                                    </a>
+                                                ) : (
+                                                    '-'
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-blue-50">
+                                                <div className="flex flex-col">
+                                                    <span>
+                                                        {doc.nomor_dokumen ??
+                                                            '-'}
+                                                    </span>
+                                                    <span className="text-xs text-blue-100">
+                                                        {formatDate(
+                                                            doc.tanggal_dokumen,
+                                                        )}
+                                                    </span>
+                                                </div>
                                             </TableCell>
                                             <TableCell>
                                                 <Tooltip>
@@ -392,32 +478,12 @@ export default function DocumentsRLIndex({ documents, filters }: any) {
                                                     </TooltipContent>
                                                 </Tooltip>
                                             </TableCell>
-                                            <TableCell className="text-right">
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            disabled={
-                                                                deletingId ===
-                                                                    doc.id ||
-                                                                updatingId ===
-                                                                    doc.id
-                                                            }
-                                                            className="h-9 w-9 rounded-full text-rose-100 opacity-0 transition-all duration-300 group-hover:opacity-100 hover:bg-rose-400/20 hover:text-white"
-                                                            onClick={() =>
-                                                                handleDelete(
-                                                                    doc.id,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        Hapus dokumen
-                                                    </TooltipContent>
-                                                </Tooltip>
+                                            <TableCell className="max-w-56 text-sm text-blue-50">
+                                                {doc.status_proses ===
+                                                'tidak_valid'
+                                                    ? (doc.catatan_tidak_valid ??
+                                                      '-')
+                                                    : '-'}
                                             </TableCell>
                                         </TableRow>
                                     ))
