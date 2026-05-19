@@ -402,7 +402,7 @@ export default function Welcome({
                             href="/form"
                             className="text-base font-extrabold text-slate-600 hover:text-[#123C69] dark:text-slate-600 dark:hover:text-blue-700"
                         >
-                            Doclang Boba
+                            Formulir
                         </Link>
                         <Link
                             href="/persyaratan"
@@ -454,7 +454,7 @@ export default function Welcome({
                             href="/form"
                             className="block rounded-xl bg-[#F4F7FB] px-4 py-3 text-base font-black text-slate-700 dark:bg-[#F4F7FB] dark:text-slate-700"
                         >
-                            Doclang Boba
+                            Formulir
                         </Link>
                         {auth?.user ? (
                             <Link href={dashboard()}>

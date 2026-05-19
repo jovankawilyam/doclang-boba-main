@@ -588,7 +588,7 @@ const FormPage = () => {
                         <ChevronLeft className="h-5 w-5" />
                     </Link>
                     <span className="text-sm font-black tracking-widest text-indigo-700 uppercase">
-                        Doclang Boba Form
+                        Kembali ke Doclang Boba
                     </span>
                 </div>
             </nav>
