@@ -13,6 +13,7 @@ return new class extends Migration
             $table->string('kode_lot_lelang');
             $table->string('id_pengajuan')->unique();
             $table->date('tanggal_masuk_pengambilan_dokumen');
+            $table->string('peran_pemohon')->default('pemenang');
             $table->string('nama_pemohon');
             $table->string('nomor_wa_pemohon');
             $table->enum('jenis_layanan', [
@@ -22,6 +23,9 @@ return new class extends Migration
             ]);
             $table->string('nomor_dokumen')->nullable();
             $table->date('tanggal_dokumen')->nullable();
+            $table->string('dokumen_identitas_pemohon_path')->nullable();
+            $table->string('dokumen_identitas_pemberi_kuasa_path')->nullable();
+            $table->string('surat_kuasa_path')->nullable();
             $table->string('bukti_pelunasan_path')->nullable();
             $table->enum('status_proses', ['proses', 'siap_diambil', 'selesai', 'tidak_valid'])->default('proses');
             $table->text('catatan_tidak_valid')->nullable();

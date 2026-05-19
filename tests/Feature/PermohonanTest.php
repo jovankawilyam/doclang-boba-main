@@ -13,11 +13,13 @@ test('public users can submit a doclang request and queue whatsapp notification'
     Storage::fake('public');
 
     $response = $this->post(route('permohonan.store'), [
+        'peran_pemohon' => 'pemenang',
         'nama_pemohon' => 'Budi Santoso',
         'nomor_wa_pemohon' => '081234567890',
         'kode_lot_lelang' => 'BGR-LOT-001',
         'jenis_layanan' => 'Validasi PPh',
         'tanggal_dokumen' => '2026-05-18',
+        'dokumen_identitas_pemohon' => UploadedFile::fake()->create('ktp.pdf', 512, 'application/pdf'),
         'bukti_pelunasan' => UploadedFile::fake()->image('pph.png'),
     ]);
 
@@ -27,10 +29,55 @@ test('public users can submit a doclang request and queue whatsapp notification'
     $permohonan = DoclangProses::firstOrFail();
 
     expect($permohonan->id_pengajuan)->toStartWith('REQ-BOGOR-');
+    expect($permohonan->peran_pemohon)->toBe('pemenang');
     expect($permohonan->status_proses)->toBe('proses');
 
+    Storage::disk('public')->assertExists($permohonan->dokumen_identitas_pemohon_path);
     Storage::disk('public')->assertExists($permohonan->bukti_pelunasan_path);
     Queue::assertPushed(SendWhatsAppNotification::class);
+});
+
+test('public users can submit a doclang request as json form data for fetch clients', function () {
+    Queue::fake();
+    Storage::fake('public');
+
+    $response = $this->post(route('permohonan.store'), [
+        'peran_pemohon' => 'pemenang',
+        'nama_pemohon' => 'Dina Pratiwi',
+        'nomor_wa_pemohon' => '081234567891',
+        'kode_lot_lelang' => 'BGR-LOT-010',
+        'jenis_layanan' => 'Pemberian Kuitansi Pembayaran',
+        'tanggal_dokumen' => '2026-05-18',
+        'dokumen_identitas_pemohon' => UploadedFile::fake()->create('ktp.pdf', 512, 'application/pdf'),
+    ], [
+        'Accept' => 'application/json',
+        'X-Requested-With' => 'XMLHttpRequest',
+    ]);
+
+    $response
+        ->assertOk()
+        ->assertJsonStructure(['message', 'id_pengajuan']);
+
+    $permohonan = DoclangProses::firstOrFail();
+
+    expect($permohonan->dokumen_identitas_pemohon_path)->not->toBeNull();
+    Storage::disk('public')->assertExists($permohonan->dokumen_identitas_pemohon_path);
+});
+
+test('public request rejects identity document larger than ten megabytes', function () {
+    Storage::fake('public');
+
+    $response = $this->post(route('permohonan.store'), [
+        'peran_pemohon' => 'pemenang',
+        'nama_pemohon' => 'Budi Santoso',
+        'nomor_wa_pemohon' => '081234567890',
+        'kode_lot_lelang' => 'BGR-LOT-001',
+        'jenis_layanan' => 'Pemberian Kuitansi Pembayaran',
+        'tanggal_dokumen' => '2026-05-18',
+        'dokumen_identitas_pemohon' => UploadedFile::fake()->create('ktp.pdf', 10241, 'application/pdf'),
+    ]);
+
+    $response->assertSessionHasErrors('dokumen_identitas_pemohon');
 });
 
 test('admin rejection requires reason and queues rejection whatsapp notification', function () {

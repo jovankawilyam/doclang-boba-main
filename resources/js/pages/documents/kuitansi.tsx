@@ -62,10 +62,14 @@ interface DocumentItem {
     id_pengajuan: string;
     tanggal_masuk_pengambilan_dokumen: string | null;
     kode_lot_lelang: string;
+    peran_pemohon: string | null;
     nama_pemohon: string;
     nomor_wa_pemohon: string;
     nomor_dokumen: string | null;
     tanggal_dokumen: string | null;
+    dokumen_identitas_pemohon_path: string | null;
+    dokumen_identitas_pemberi_kuasa_path: string | null;
+    surat_kuasa_path: string | null;
     bukti_pelunasan_path: string | null;
     status_proses: string;
     catatan_tidak_valid: string | null;

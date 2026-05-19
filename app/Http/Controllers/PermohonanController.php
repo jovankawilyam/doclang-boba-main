@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Jobs\SendWhatsAppNotification;
 use App\Models\DoclangProses;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,13 +20,16 @@ class PermohonanController extends Controller
         'Validasi PPh',
     ];
 
-    public function store(Request $request): RedirectResponse
+    private const DOKUMEN_RULES = ['file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'];
+
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $request->merge([
             'jenis_layanan' => $this->normalizeJenisLayanan((string) $request->input('jenis_layanan')),
         ]);
 
         $validated = $request->validate([
+            'peran_pemohon' => ['required', Rule::in(['pemenang', 'kuasa'])],
             'nama_pemohon' => ['required', 'string', 'max:255'],
             'nomor_wa_pemohon' => ['required', 'string', 'max:30', 'regex:/^[0-9+\-\s()]+$/'],
             'kode_lot_lelang' => ['required', 'string', 'max:255'],
@@ -33,35 +37,58 @@ class PermohonanController extends Controller
             'jenis_layanan' => ['required', 'string'],
             'nomor_dokumen' => ['nullable', 'string', 'max:255'],
             'tanggal_dokumen' => ['nullable', 'date'],
+            'dokumen_identitas_pemohon' => ['required', ...self::DOKUMEN_RULES],
             'bukti_pelunasan' => [
                 Rule::requiredIf($request->input('jenis_layanan') === 'Validasi PPh'),
-                'file',
-                'mimes:pdf,jpg,jpeg,png,webp',
-                'max:15360',
+                ...self::DOKUMEN_RULES,
+            ],
+            'dokumen_identitas_pemberi_kuasa' => [
+                Rule::requiredIf($request->input('peran_pemohon') === 'kuasa'),
+                ...self::DOKUMEN_RULES,
+            ],
+            'surat_kuasa' => [
+                Rule::requiredIf($request->input('peran_pemohon') === 'kuasa'),
+                ...self::DOKUMEN_RULES,
             ],
         ], [
             'nomor_wa_pemohon.regex' => 'Nomor WhatsApp hanya boleh berisi angka dan tanda +.',
+            'dokumen_identitas_pemohon.required' => 'Dokumen identitas pemohon wajib diunggah.',
+            'dokumen_identitas_pemohon.mimes' => 'Dokumen identitas pemohon harus berupa PDF, JPG, JPEG, atau PNG.',
+            'dokumen_identitas_pemohon.max' => 'Ukuran dokumen identitas pemohon maksimal 10 MB.',
             'bukti_pelunasan.mimes' => 'Bukti pelunasan harus berupa PDF atau gambar.',
-            'bukti_pelunasan.max' => 'Ukuran bukti pelunasan maksimal 15 MB.',
+            'bukti_pelunasan.max' => 'Ukuran bukti pelunasan maksimal 10 MB.',
+            'dokumen_identitas_pemberi_kuasa.required' => 'Dokumen identitas pemberi kuasa wajib diunggah.',
+            'dokumen_identitas_pemberi_kuasa.mimes' => 'Dokumen identitas pemberi kuasa harus berupa PDF, JPG, JPEG, atau PNG.',
+            'dokumen_identitas_pemberi_kuasa.max' => 'Ukuran dokumen identitas pemberi kuasa maksimal 10 MB.',
+            'surat_kuasa.required' => 'Surat kuasa wajib diunggah.',
+            'surat_kuasa.mimes' => 'Surat kuasa harus berupa PDF, JPG, JPEG, atau PNG.',
+            'surat_kuasa.max' => 'Ukuran surat kuasa maksimal 10 MB.',
         ]);
 
         validator($validated, [
             'jenis_layanan' => ['required', Rule::in(self::JENIS_LAYANAN)],
         ])->validate();
 
-        $path = $request->file('bukti_pelunasan')?->store('doclang/bukti-pelunasan', 'public');
+        $buktiPelunasanPath = $request->file('bukti_pelunasan')?->store('doclang/bukti-pelunasan', 'public');
+        $dokumenIdentitasPemohonPath = $request->file('dokumen_identitas_pemohon')?->store('doclang/identitas-pemohon', 'public');
+        $dokumenIdentitasPemberiKuasaPath = $request->file('dokumen_identitas_pemberi_kuasa')?->store('doclang/identitas-pemberi-kuasa', 'public');
+        $suratKuasaPath = $request->file('surat_kuasa')?->store('doclang/surat-kuasa', 'public');
 
-        $permohonan = DB::transaction(function () use ($validated, $path): DoclangProses {
+        $permohonan = DB::transaction(function () use ($buktiPelunasanPath, $dokumenIdentitasPemohonPath, $dokumenIdentitasPemberiKuasaPath, $suratKuasaPath, $validated): DoclangProses {
             $permohonan = DoclangProses::create([
                 'kode_lot_lelang' => strip_tags($validated['kode_lot_lelang']),
                 'id_pengajuan' => $this->generateIdPengajuan(),
                 'tanggal_masuk_pengambilan_dokumen' => $validated['tanggal_masuk_pengambilan_dokumen'] ?? now()->toDateString(),
+                'peran_pemohon' => $validated['peran_pemohon'],
                 'nama_pemohon' => strip_tags($validated['nama_pemohon']),
                 'nomor_wa_pemohon' => $validated['nomor_wa_pemohon'],
                 'jenis_layanan' => $validated['jenis_layanan'],
                 'nomor_dokumen' => isset($validated['nomor_dokumen']) ? strip_tags($validated['nomor_dokumen']) : null,
                 'tanggal_dokumen' => $validated['tanggal_dokumen'] ?? null,
-                'bukti_pelunasan_path' => $path,
+                'dokumen_identitas_pemohon_path' => $dokumenIdentitasPemohonPath,
+                'dokumen_identitas_pemberi_kuasa_path' => $dokumenIdentitasPemberiKuasaPath,
+                'surat_kuasa_path' => $suratKuasaPath,
+                'bukti_pelunasan_path' => $buktiPelunasanPath,
                 'status_proses' => 'proses',
             ]);
 
@@ -72,6 +99,13 @@ class PermohonanController extends Controller
 
             return $permohonan;
         });
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Permohonan berhasil dikirim. Data telah tersimpan untuk Dashboard Admin.',
+                'id_pengajuan' => $permohonan->id_pengajuan,
+            ]);
+        }
 
         return redirect()
             ->back()
