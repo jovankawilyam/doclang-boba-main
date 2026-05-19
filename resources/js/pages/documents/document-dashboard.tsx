@@ -54,6 +54,17 @@ export interface DocumentItem {
     nomor_wa_pemberi_kuasa: string | null;
     jenis_layanan: 'kuitansi' | 'risalah_lelang' | 'validasi_pph';
     tanggal_pelunasan: string | null;
+    jenis_objek_risalah: string | null;
+    bukti_validasi_sspd_bphtb_path: string | null;
+    kuitansi_pembayaran_harga_lelang_path: string | null;
+    nomor_kuitansi_pembayaran_harga_lelang: string | null;
+    nomor_objek_pajak: string | null;
+    slip_setor_pbb_atau_bphtb_path: string | null;
+    alamat_objek_lelang: string | null;
+    ntpn: string | null;
+    slip_setor_pph_path: string | null;
+    npwp_pemenang_lelang: string | null;
+    npwp_pemenang_lelang_path: string | null;
     nomor_dokumen: string | null;
     tanggal_dokumen: string | null;
     dokumen_identitas_pemohon_path: string | null;
@@ -107,6 +118,11 @@ const serviceLabels = {
     kuitansi: 'Kuitansi Pembayaran',
     risalah_lelang: 'Kutipan Risalah Lelang',
     validasi_pph: 'Validasi PPh',
+};
+
+const rlObjectLabels: Record<string, string> = {
+    tanah_bangunan: 'Tanah/Bangunan',
+    kendaraan: 'Kendaraan',
 };
 
 const formatStat = (value: number | undefined) =>
@@ -337,6 +353,35 @@ function DetailModal({
                             label="Tanggal Dokumen Resmi"
                             value={formatDate(document.tanggal_dokumen)}
                         />
+                        <DetailField
+                            label="Jenis Objek RL"
+                            value={
+                                document.jenis_objek_risalah
+                                    ? (rlObjectLabels[
+                                          document.jenis_objek_risalah
+                                      ] ?? document.jenis_objek_risalah)
+                                    : null
+                            }
+                        />
+                        <DetailField
+                            label="No. Kuitansi Pembayaran"
+                            value={
+                                document.nomor_kuitansi_pembayaran_harga_lelang
+                            }
+                        />
+                        <DetailField
+                            label="NOP"
+                            value={document.nomor_objek_pajak}
+                        />
+                        <DetailField label="NTPN" value={document.ntpn} />
+                        <DetailField
+                            label="NPWP Pemenang"
+                            value={document.npwp_pemenang_lelang}
+                        />
+                        <DetailField
+                            label="Alamat Objek"
+                            value={document.alamat_objek_lelang}
+                        />
                     </DetailSection>
 
                     <div className="space-y-3">
@@ -374,6 +419,46 @@ function DetailModal({
                                     document.id,
                                     'bukti-pelunasan',
                                     document.bukti_pelunasan_path,
+                                )}
+                            />
+                            <FileButton
+                                label="Bukti Validasi SSPD BPHTB"
+                                href={getFileUrl(
+                                    document.id,
+                                    'bukti-validasi-sspd-bphtb',
+                                    document.bukti_validasi_sspd_bphtb_path,
+                                )}
+                            />
+                            <FileButton
+                                label="Kuitansi Pembayaran"
+                                href={getFileUrl(
+                                    document.id,
+                                    'kuitansi-pembayaran-harga-lelang',
+                                    document.kuitansi_pembayaran_harga_lelang_path,
+                                )}
+                            />
+                            <FileButton
+                                label="Slip Setor PBB/BPHTB"
+                                href={getFileUrl(
+                                    document.id,
+                                    'slip-setor-pbb-atau-bphtb',
+                                    document.slip_setor_pbb_atau_bphtb_path,
+                                )}
+                            />
+                            <FileButton
+                                label="Slip Setor PPh"
+                                href={getFileUrl(
+                                    document.id,
+                                    'slip-setor-pph',
+                                    document.slip_setor_pph_path,
+                                )}
+                            />
+                            <FileButton
+                                label="NPWP Pemenang"
+                                href={getFileUrl(
+                                    document.id,
+                                    'npwp-pemenang-lelang',
+                                    document.npwp_pemenang_lelang_path,
                                 )}
                             />
                         </div>

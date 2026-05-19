@@ -42,7 +42,7 @@ class PermohonanController extends Controller
             'peran_pemohon' => ['required', Rule::in(['pemenang', 'kuasa'])],
             'email_pemohon' => ['required', 'email', 'max:255'],
             'jenis_identitas_pemohon' => ['required', Rule::in(['KTP', 'SIM', 'NPWP'])],
-            'nomor_identitas_pemohon' => ['required', 'string', 'max:255'],
+            'nomor_identitas_pemohon' => ['required', 'string', 'max:255', 'regex:/^[0-9]+$/'],
             'alamat_pemohon' => ['required', 'string', 'max:5000'],
             'nama_pemohon' => ['required', 'string', 'max:255'],
             'nomor_wa_pemohon' => ['required', 'string', 'max:30', 'regex:/^[0-9+\-\s()]+$/'],
@@ -80,11 +80,55 @@ class PermohonanController extends Controller
             'tanggal_masuk_pengambilan_dokumen' => ['nullable', 'date'],
             'jenis_layanan' => ['required', 'string'],
             'tanggal_pelunasan' => ['required', 'date'],
+            'jenis_objek_risalah' => [
+                'nullable',
+                Rule::in(['tanah_bangunan', 'kendaraan']),
+            ],
+            'nomor_kuitansi_pembayaran_harga_lelang' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'nomor_objek_pajak' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'alamat_objek_lelang' => [
+                'nullable',
+                'string',
+                'max:5000',
+            ],
+            'ntpn' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'npwp_pemenang_lelang' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[0-9]+$/',
+            ],
             'nomor_dokumen' => ['nullable', 'string', 'max:255'],
             'tanggal_dokumen' => ['nullable', 'date'],
             'dokumen_identitas_pemohon' => ['required', ...self::DOKUMEN_RULES],
             'bukti_pelunasan' => [
-                Rule::requiredIf($request->input('jenis_layanan') === 'validasi_pph'),
+                ...self::DOKUMEN_RULES,
+            ],
+            'bukti_validasi_sspd_bphtb' => [
+                ...self::DOKUMEN_RULES,
+            ],
+            'kuitansi_pembayaran_harga_lelang' => [
+                ...self::DOKUMEN_RULES,
+            ],
+            'slip_setor_pbb_atau_bphtb' => [
+                ...self::DOKUMEN_RULES,
+            ],
+            'slip_setor_pph' => [
+                ...self::DOKUMEN_RULES,
+            ],
+            'npwp_pemenang_lelang_file' => [
                 ...self::DOKUMEN_RULES,
             ],
             'dokumen_identitas_pemberi_kuasa' => [
@@ -96,7 +140,9 @@ class PermohonanController extends Controller
                 ...self::DOKUMEN_RULES,
             ],
         ], [
+            'nomor_identitas_pemohon.regex' => 'Nomor Identitas Pemohon wajib berisi angka saja.',
             'nomor_wa_pemohon.regex' => 'Nomor WhatsApp hanya boleh berisi angka dan tanda +.',
+            'npwp_pemenang_lelang.regex' => 'NPWP Pemenang Lelang wajib berisi angka saja.',
             'dokumen_identitas_pemohon.required' => 'Dokumen identitas pemohon wajib diunggah.',
             'dokumen_identitas_pemohon.mimes' => 'Dokumen identitas pemohon harus berupa PDF, JPG, JPEG, atau PNG.',
             'dokumen_identitas_pemohon.max' => 'Ukuran dokumen identitas pemohon maksimal 10 MB.',
@@ -115,11 +161,16 @@ class PermohonanController extends Controller
         ])->validate();
 
         $buktiPelunasanPath = $request->file('bukti_pelunasan')?->store('doclang/bukti-pelunasan', 'local');
+        $buktiValidasiSspdBphtbPath = $request->file('bukti_validasi_sspd_bphtb')?->store('doclang/bukti-validasi-sspd-bphtb', 'local');
+        $kuitansiPembayaranHargaLelangPath = $request->file('kuitansi_pembayaran_harga_lelang')?->store('doclang/kuitansi-pembayaran-harga-lelang', 'local');
+        $slipSetorPbbAtauBphtbPath = $request->file('slip_setor_pbb_atau_bphtb')?->store('doclang/slip-setor-pbb-atau-bphtb', 'local');
+        $slipSetorPphPath = $request->file('slip_setor_pph')?->store('doclang/slip-setor-pph', 'local');
+        $npwpPemenangLelangPath = $request->file('npwp_pemenang_lelang_file')?->store('doclang/npwp-pemenang-lelang', 'local');
         $dokumenIdentitasPemohonPath = $request->file('dokumen_identitas_pemohon')?->store('doclang/identitas-pemohon', 'local');
         $dokumenIdentitasPemberiKuasaPath = $request->file('dokumen_identitas_pemberi_kuasa')?->store('doclang/identitas-pemberi-kuasa', 'local');
         $suratKuasaPath = $request->file('surat_kuasa')?->store('doclang/surat-kuasa', 'local');
 
-        $permohonan = DB::transaction(function () use ($buktiPelunasanPath, $dokumenIdentitasPemohonPath, $dokumenIdentitasPemberiKuasaPath, $suratKuasaPath, $validated): DoclangProses {
+        $permohonan = DB::transaction(function () use ($buktiPelunasanPath, $buktiValidasiSspdBphtbPath, $dokumenIdentitasPemohonPath, $dokumenIdentitasPemberiKuasaPath, $kuitansiPembayaranHargaLelangPath, $npwpPemenangLelangPath, $slipSetorPbbAtauBphtbPath, $slipSetorPphPath, $suratKuasaPath, $validated): DoclangProses {
             $permohonan = DoclangProses::create([
                 'kode_lot_lelang' => strip_tags($validated['kode_lot_lelang']),
                 'id_pengajuan' => $this->generateIdPengajuan($validated['jenis_layanan']),
@@ -138,16 +189,27 @@ class PermohonanController extends Controller
                 'nomor_wa_pemberi_kuasa' => $validated['nomor_wa_pemberi_kuasa'] ?? null,
                 'jenis_layanan' => $validated['jenis_layanan'],
                 'tanggal_pelunasan' => $validated['tanggal_pelunasan'],
+                'jenis_objek_risalah' => $validated['jenis_objek_risalah'] ?? null,
+                'nomor_kuitansi_pembayaran_harga_lelang' => isset($validated['nomor_kuitansi_pembayaran_harga_lelang']) ? strip_tags($validated['nomor_kuitansi_pembayaran_harga_lelang']) : null,
+                'nomor_objek_pajak' => isset($validated['nomor_objek_pajak']) ? strip_tags($validated['nomor_objek_pajak']) : null,
+                'alamat_objek_lelang' => isset($validated['alamat_objek_lelang']) ? strip_tags($validated['alamat_objek_lelang']) : null,
+                'ntpn' => isset($validated['ntpn']) ? strip_tags($validated['ntpn']) : null,
+                'npwp_pemenang_lelang' => isset($validated['npwp_pemenang_lelang']) ? strip_tags($validated['npwp_pemenang_lelang']) : null,
                 'nomor_dokumen' => isset($validated['nomor_dokumen']) ? strip_tags($validated['nomor_dokumen']) : null,
                 'tanggal_dokumen' => $validated['tanggal_dokumen'] ?? null,
                 'dokumen_identitas_pemohon_path' => $dokumenIdentitasPemohonPath,
                 'dokumen_identitas_pemberi_kuasa_path' => $dokumenIdentitasPemberiKuasaPath,
                 'surat_kuasa_path' => $suratKuasaPath,
                 'bukti_pelunasan_path' => $buktiPelunasanPath,
+                'bukti_validasi_sspd_bphtb_path' => $buktiValidasiSspdBphtbPath,
+                'kuitansi_pembayaran_harga_lelang_path' => $kuitansiPembayaranHargaLelangPath,
+                'slip_setor_pbb_atau_bphtb_path' => $slipSetorPbbAtauBphtbPath,
+                'slip_setor_pph_path' => $slipSetorPphPath,
+                'npwp_pemenang_lelang_path' => $npwpPemenangLelangPath,
                 'status_proses' => 'proses',
             ]);
 
-            $message = "Permohonan Doclang Boba berhasil diterima.\n\nNomor Tiket: {$permohonan->id_pengajuan}\nLayanan: ".self::JENIS_LAYANAN_LABEL[$permohonan->jenis_layanan]."\nStatus: proses\n\nSimpan nomor tiket ini untuk pengecekan layanan KPKNL Bogor.";
+            $message = "Permohonan Doclang Boba berhasil diterima.\n\nToken Permohonan: {$permohonan->id_pengajuan}\nLayanan: ".self::JENIS_LAYANAN_LABEL[$permohonan->jenis_layanan]."\nStatus: proses\n\nSimpan token ini untuk pengecekan layanan KPKNL Bogor.";
 
             foreach ($this->whatsappTargets($permohonan) as $targetNumber) {
                 SendWhatsAppNotification::dispatch($targetNumber, $message);
@@ -158,14 +220,15 @@ class PermohonanController extends Controller
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message' => 'Permohonan berhasil dikirim. Data telah tersimpan untuk Dashboard Admin.',
+                'message' => 'Permohonan berhasil dikirim.',
                 'id_pengajuan' => $permohonan->id_pengajuan,
+                'token' => $permohonan->id_pengajuan,
             ]);
         }
 
         return redirect()
             ->back()
-            ->with('success', "Permohonan berhasil dikirim. Nomor tiket: {$permohonan->id_pengajuan}");
+            ->with('success', "Permohonan berhasil dikirim. Token permohonan: {$permohonan->id_pengajuan}");
     }
 
     public function update(Request $request, DoclangProses $permohonan): RedirectResponse
@@ -243,6 +306,11 @@ class PermohonanController extends Controller
             'identitas-pemberi-kuasa' => 'dokumen_identitas_pemberi_kuasa_path',
             'surat-kuasa' => 'surat_kuasa_path',
             'bukti-pelunasan' => 'bukti_pelunasan_path',
+            'bukti-validasi-sspd-bphtb' => 'bukti_validasi_sspd_bphtb_path',
+            'kuitansi-pembayaran-harga-lelang' => 'kuitansi_pembayaran_harga_lelang_path',
+            'slip-setor-pbb-atau-bphtb' => 'slip_setor_pbb_atau_bphtb_path',
+            'slip-setor-pph' => 'slip_setor_pph_path',
+            'npwp-pemenang-lelang' => 'npwp_pemenang_lelang_path',
         ];
 
         abort_unless(array_key_exists($field, $columns), 404);

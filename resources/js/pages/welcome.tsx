@@ -318,7 +318,7 @@ export default function Welcome({
                 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-200 dark:bg-amber-50 dark:text-amber-800',
         },
         {
-            label: 'Siap',
+            label: 'Siap Diambil',
             value: activeStats.siap_diambil,
             icon: Inbox,
             className:
@@ -381,7 +381,7 @@ export default function Welcome({
                 className={`sticky top-0 z-50 w-full border-b border-[#D8E0EC] bg-white/95 shadow-sm backdrop-blur transition-transform duration-300 dark:border-slate-200 dark:bg-white/95 ${
                     showNav ? 'translate-y-0' : '-translate-y-full'
                 }`}
-            >
+                >
                 <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-8">
                     <a href="/" className="cursor-pointer">
                         <img
@@ -410,6 +410,22 @@ export default function Welcome({
                         >
                             Persyaratan
                         </Link>
+                        <a
+                            href="https://sites.google.com/view/kpknlbogor-standarpelayanan?usp=sharing"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-base font-extrabold text-slate-600 hover:text-[#123C69] dark:text-slate-600 dark:hover:text-blue-700"
+                        >
+                            Standar Pelayanan
+                        </a>
+                        <a
+                            href="https://sites.google.com/view/kpknlbogor-tariflayanan?usp=sharing"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-base font-extrabold text-slate-600 hover:text-[#123C69] dark:text-slate-600 dark:hover:text-blue-700"
+                        >
+                            Tarif Layanan
+                        </a>
                         {auth?.user ? (
                             <Link href={dashboard()}>
                                 <Button className="rounded-full px-5">
@@ -435,8 +451,15 @@ export default function Welcome({
                     </button>
                 </div>
 
-                {open && (
-                    <div className="space-y-3 border-t border-[#D8E0EC] bg-white px-6 py-5 shadow-sm md:hidden dark:border-slate-200 dark:bg-white">
+                {/* MENU MOBILE DENGAN ANIMASI */}
+                <div 
+                    className={`overflow-hidden transition-all duration-300 ease-in-out md:hidden border-[#D8E0EC] bg-white px-6 shadow-sm dark:border-slate-200 dark:bg-white ${
+                        open 
+                            ? 'max-h-[450px] opacity-100 py-5 border-t scale-100' 
+                            : 'max-h-0 opacity-0 py-0 border-t-0 scale-95 pointer-events-none'
+                    }`}
+                >
+                    <div className="space-y-3">
                         <a
                             href="#tracking"
                             onClick={() => setOpen(false)}
@@ -456,6 +479,24 @@ export default function Welcome({
                         >
                             Formulir
                         </Link>
+                        <a
+                            href="https://sites.google.com/view/kpknlbogor-standarpelayanan?usp=sharing"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => setOpen(false)}
+                            className="block rounded-xl bg-[#F4F7FB] px-4 py-3 text-base font-black text-slate-700 dark:bg-[#F4F7FB] dark:text-slate-700"
+                        >
+                            Standar Pelayanan
+                        </a>
+                        <a
+                            href="https://sites.google.com/view/kpknlbogor-tariflayanan?usp=sharing"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => setOpen(false)}
+                            className="block rounded-xl bg-[#F4F7FB] px-4 py-3 text-base font-black text-slate-700 dark:bg-[#F4F7FB] dark:text-slate-700"
+                        >
+                            Tarif Layanan
+                        </a>
                         {auth?.user ? (
                             <Link href={dashboard()}>
                                 <Button className="w-full rounded-full">
@@ -470,7 +511,7 @@ export default function Welcome({
                             </Link>
                         )}
                     </div>
-                )}
+                </div>
             </nav>
 
             <section className="w-full">
@@ -590,7 +631,7 @@ export default function Welcome({
                                     <p className="text-xs font-black tracking-widest text-slate-500 uppercase dark:text-slate-500">
                                         Total
                                     </p>
-                                    <p className="text-5xl font-black text-slate-950 dark:text-slate-950">
+                                    <p className="text-5xl font-black text-qslate-50 dark:text-slate-950">
                                         {formatStat(activeStats.total)}
                                     </p>
                                 </div>
