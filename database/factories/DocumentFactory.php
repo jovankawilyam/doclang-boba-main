@@ -19,11 +19,11 @@ class DocumentFactory extends Factory
         $statuses = ['proses', 'siap_diambil', 'selesai'];
 
         return [
-            'nomor_pengajuan' => $this->faker->unique()->numberBetween(10, 999) . '/KPHL/2026',
+            'nomor_pengajuan' => $this->faker->unique()->numberBetween(10, 999).'/KPHL/2026',
             'status_proses' => $this->faker->randomElement($statuses),
             'catatan' => $this->faker->optional(0.3)->sentence(),
             // Mostly 'kuitansi', sometimes 'kutipan_rl'
-            'category' => (rand(1,5) === 1) ? 'kutipan_rl' : 'kuitansi',
+            'category' => (rand(1, 5) === 1) ? 'kutipan_rl' : 'kuitansi',
             'created_by' => \App\Models\User::inRandomOrder()->first()?->id ?? 1,
         ];
     }

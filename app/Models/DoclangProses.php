@@ -15,9 +15,19 @@ class DoclangProses extends Model
         'id_pengajuan',
         'tanggal_masuk_pengambilan_dokumen',
         'peran_pemohon',
+        'email_pemohon',
+        'jenis_identitas_pemohon',
+        'nomor_identitas_pemohon',
+        'alamat_pemohon',
         'nama_pemohon',
         'nomor_wa_pemohon',
+        'nama_pemberi_kuasa',
+        'jenis_identitas_pemberi_kuasa',
+        'nomor_identitas_pemberi_kuasa',
+        'alamat_pemberi_kuasa',
+        'nomor_wa_pemberi_kuasa',
         'jenis_layanan',
+        'tanggal_pelunasan',
         'nomor_dokumen',
         'tanggal_dokumen',
         'dokumen_identitas_pemohon_path',
@@ -26,13 +36,16 @@ class DoclangProses extends Model
         'bukti_pelunasan_path',
         'status_proses',
         'catatan_tidak_valid',
+        'invalid_whatsapp_sent_at',
     ];
 
     protected function casts(): array
     {
         return [
             'tanggal_masuk_pengambilan_dokumen' => 'date',
+            'tanggal_pelunasan' => 'date',
             'tanggal_dokumen' => 'date',
+            'invalid_whatsapp_sent_at' => 'datetime',
         ];
     }
 

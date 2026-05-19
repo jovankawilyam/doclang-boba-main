@@ -19,7 +19,10 @@ export default function ConfirmPassword() {
                 {({ processing, errors }) => (
                     <div className="space-y-6">
                         <div className="grid gap-2">
-                            <Label htmlFor="password" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                            <Label
+                                htmlFor="password"
+                                className="text-sm font-semibold text-slate-700 dark:text-slate-300"
+                            >
                                 Password
                             </Label>
                             <Input
@@ -37,11 +40,13 @@ export default function ConfirmPassword() {
 
                         <div className="flex items-center">
                             <Button
-                                className="w-full font-semibold shadow-sm transition-all duration-300 ease-in-out hover:shadow-md hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                                className="w-full font-semibold shadow-sm transition-all duration-300 ease-in-out hover:opacity-90 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
                                 disabled={processing}
                                 data-test="confirm-password-button"
                             >
-                                {processing && <Spinner className="mr-2 h-4 w-4" />}
+                                {processing && (
+                                    <Spinner className="mr-2 h-4 w-4" />
+                                )}
                                 Confirm password
                             </Button>
                         </div>

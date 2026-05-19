@@ -3,7 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\PermohonanController;
-use App\Models\Document;
+use App\Models\DoclangProses;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -19,20 +19,26 @@ use Laravel\Fortify\Features;
 Route::get('/', function (Request $request) {
     $search = $request->input('search');
     $target_category = $request->input('category');
+    $serviceMap = [
+        'kuitansi' => 'kuitansi',
+        'kutipan_rl' => 'risalah_lelang',
+        'risalah_lelang' => 'risalah_lelang',
+        'validasi_pph' => 'validasi_pph',
+    ];
 
     // 1. Cari Kuitansi
     $document = ($search && $target_category === 'kuitansi')
-        ? Document::where('nomor_pengajuan', $search)->where('category', 'kuitansi')->first()
+        ? DocumentController::findPublicTrackingDocument($search, $serviceMap['kuitansi'])
         : null;
 
     // 2. Cari Kutipan RL
-    $document_rl = ($search && $target_category === 'kutipan_rl')
-        ? Document::where('nomor_pengajuan', $search)->where('category', 'kutipan_rl')->first()
+    $document_rl = ($search && in_array($target_category, ['kutipan_rl', 'risalah_lelang'], true))
+        ? DocumentController::findPublicTrackingDocument($search, $serviceMap['risalah_lelang'])
         : null;
 
     // 3. Cari Validasi PPh
     $document_validasi = ($search && $target_category === 'validasi_pph')
-        ? Document::where('nomor_pengajuan', $search)->where('category', 'validasi_pph')->first()
+        ? DocumentController::findPublicTrackingDocument($search, $serviceMap['validasi_pph'])
         : null;
 
     return Inertia::render('welcome', [
@@ -41,7 +47,7 @@ Route::get('/', function (Request $request) {
         'document' => $document,
         'search' => $target_category === 'kuitansi' ? $search : null,
         'document_rl' => $document_rl,
-        'search_rl' => $target_category === 'kutipan_rl' ? $search : null,
+        'search_rl' => in_array($target_category, ['kutipan_rl', 'risalah_lelang'], true) ? $search : null,
         'document_validasi' => $document_validasi,
         'search_validasi' => $target_category === 'validasi_pph' ? $search : null,
     ]);
@@ -82,7 +88,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'docStats' => $documentStats['kuitansi'],
             'docStatsKutipan' => $documentStats['kutipan_rl'],
             'docStatsValidasi' => $documentStats['validasi_pph'],
-            'todayDocumentTotal' => Document::whereDate('created_at', today())->count(),
+            'todayDocumentTotal' => DoclangProses::whereDate('created_at', today())->count(),
         ]);
     })->name('dashboard');
 
@@ -103,7 +109,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // 1. Menu Navigasi (Halaman List)
     Route::get('/documents/kuitansi', [DocumentController::class, 'index'])->defaults('category', 'kuitansi')->name('documents.kuitansi');
-    Route::get('/documents/rl', [DocumentController::class, 'index'])->defaults('category', 'kutipan_rl')->name('documents.rl');
+    Route::get('/documents/rl', [DocumentController::class, 'index'])->defaults('category', 'risalah_lelang')->name('documents.rl');
     Route::get('/documents/validasi-pph', [DocumentController::class, 'index'])->defaults('category', 'validasi_pph')->name('documents.validasi-pph');
 
     // 2. Action (Satu pintu untuk Create, Update, Delete)
@@ -113,6 +119,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::patch('/permohonan/{permohonan}', [PermohonanController::class, 'update'])->name('permohonan.update');
     Route::delete('/permohonan/{permohonan}', [PermohonanController::class, 'destroy'])->name('permohonan.destroy');
+    Route::post('/permohonan/{permohonan}/send-invalid-notification', [PermohonanController::class, 'sendInvalidNotification'])->name('permohonan.send-invalid-notification');
+    Route::get('/permohonan/{permohonan}/file/{field}', [PermohonanController::class, 'downloadFile'])->name('permohonan.file');
 
 });
 

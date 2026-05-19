@@ -30,7 +30,7 @@ export default function Login({
         >
             <Head title="Log in" />
 
-            <Card className="shadow-lg rounded-2xl border-slate-200/60 dark:border-slate-800">
+            <Card className="rounded-2xl border-slate-200/60 shadow-lg dark:border-slate-800">
                 <CardContent className="p-6 md:p-8">
                     <Form
                         {...store.form()}
@@ -41,7 +41,10 @@ export default function Login({
                             <>
                                 <div className="space-y-5">
                                     <div className="space-y-2">
-                                        <Label htmlFor="email" className="font-medium text-slate-700 dark:text-slate-300">
+                                        <Label
+                                            htmlFor="email"
+                                            className="font-medium text-slate-700 dark:text-slate-300"
+                                        >
                                             Email address
                                         </Label>
                                         <Input
@@ -53,20 +56,23 @@ export default function Login({
                                             tabIndex={1}
                                             autoComplete="email"
                                             placeholder="email@example.com"
-                                            className="transition-all duration-200 border-slate-300 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 dark:border-slate-700"
+                                            className="border-slate-300 transition-all duration-200 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 dark:border-slate-700"
                                         />
                                         <InputError message={errors.email} />
                                     </div>
 
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <Label htmlFor="password" className="font-medium text-slate-700 dark:text-slate-300">
+                                            <Label
+                                                htmlFor="password"
+                                                className="font-medium text-slate-700 dark:text-slate-300"
+                                            >
                                                 Password
                                             </Label>
                                             {canResetPassword && (
                                                 <TextLink
                                                     href={request()}
-                                                    className="text-xs font-semibold text-primary hover:text-primary/80 hover:underline transition-colors"
+                                                    className="text-xs font-semibold text-primary transition-colors hover:text-primary/80 hover:underline"
                                                     tabIndex={5}
                                                 >
                                                     Forgot password?
@@ -81,7 +87,7 @@ export default function Login({
                                             tabIndex={2}
                                             autoComplete="current-password"
                                             placeholder="••••••••"
-                                            className="transition-all duration-200 border-slate-300 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 dark:border-slate-700"
+                                            className="border-slate-300 transition-all duration-200 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 dark:border-slate-700"
                                         />
                                         <InputError message={errors.password} />
                                     </div>
@@ -91,21 +97,26 @@ export default function Login({
                                             id="remember"
                                             name="remember"
                                             tabIndex={3}
-                                            className="border-slate-300 dark:border-slate-600 data-[state=checked]:bg-primary"
+                                            className="border-slate-300 data-[state=checked]:bg-primary dark:border-slate-600"
                                         />
-                                        <Label htmlFor="remember" className="text-sm font-medium text-slate-600 cursor-pointer dark:text-slate-400">
+                                        <Label
+                                            htmlFor="remember"
+                                            className="cursor-pointer text-sm font-medium text-slate-600 dark:text-slate-400"
+                                        >
                                             Remember me
                                         </Label>
                                     </div>
 
                                     <Button
                                         type="submit"
-                                        className="w-full font-semibold shadow-sm transition-all duration-300 ease-in-out hover:shadow-md hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                                        className="w-full font-semibold shadow-sm transition-all duration-300 ease-in-out hover:opacity-90 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
                                         tabIndex={4}
                                         disabled={processing}
                                         data-test="login-button"
                                     >
-                                        {processing && <Spinner className="mr-2 h-4 w-4" />}
+                                        {processing && (
+                                            <Spinner className="mr-2 h-4 w-4" />
+                                        )}
                                         Log in
                                     </Button>
                                 </div>
@@ -113,7 +124,11 @@ export default function Login({
                                 {canRegister && (
                                     <div className="mt-6 text-center text-sm font-medium text-muted-foreground">
                                         Don't have an account?{' '}
-                                        <TextLink href={register()} tabIndex={5} className="font-semibold text-primary hover:underline transition-colors">
+                                        <TextLink
+                                            href={register()}
+                                            tabIndex={5}
+                                            className="font-semibold text-primary transition-colors hover:underline"
+                                        >
                                             Sign up
                                         </TextLink>
                                     </div>
@@ -125,7 +140,7 @@ export default function Login({
             </Card>
 
             {status && (
-                <div className="mt-4 text-center text-sm font-medium text-green-600 bg-green-50 p-3 rounded-lg dark:bg-green-900/20 dark:text-green-400">
+                <div className="mt-4 rounded-lg bg-green-50 p-3 text-center text-sm font-medium text-green-600 dark:bg-green-900/20 dark:text-green-400">
                     {status}
                 </div>
             )}

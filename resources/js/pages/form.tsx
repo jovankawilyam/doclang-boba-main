@@ -10,15 +10,8 @@ import {
     UserCheck,
     Users,
 } from 'lucide-react';
-import {
-    type ChangeEvent,
-    type FormEvent,
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 type Step = 1 | 2 | 3;
 type UserRole = 'pemenang' | 'kuasa' | '';
@@ -118,15 +111,15 @@ const getFileMeta = (file: File | null): FileMeta | null => {
 
 const normalizeJenisLayanan = (jenisLayanan: string): string => {
     if (jenisLayanan.includes('Kuitansi')) {
-        return 'Pemberian Kuitansi Pembayaran';
+        return 'kuitansi';
     }
 
     if (jenisLayanan.includes('Kutipan Risalah Lelang')) {
-        return 'Pemberian Kutipan Risalah Lelang';
+        return 'risalah_lelang';
     }
 
     if (jenisLayanan.includes('Validasi PPh')) {
-        return 'Validasi PPh';
+        return 'validasi_pph';
     }
 
     return jenisLayanan;
@@ -138,6 +131,32 @@ const getCsrfToken = (): string => {
             .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
             ?.getAttribute('content') ?? ''
     );
+};
+
+const parseResponse = async (
+    response: Response,
+): Promise<StorePermohonanSuccessResponse | StorePermohonanErrorResponse> => {
+    const contentType = response.headers.get('content-type') ?? '';
+
+    if (contentType.includes('application/json')) {
+        return (await response.json()) as
+            | StorePermohonanSuccessResponse
+            | StorePermohonanErrorResponse;
+    }
+
+    const body = await response.text();
+    const plainText = body
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    return {
+        message:
+            response.status === 404
+                ? 'Endpoint permohonan tidak ditemukan. Buka aplikasi dari http://127.0.0.1:8000/form, bukan dari port Vite.'
+                : plainText ||
+                  'Permohonan gagal dikirim. Server tidak mengirim response JSON.',
+    };
 };
 
 const FormPage = () => {
@@ -330,7 +349,7 @@ const FormPage = () => {
             nextErrors.push('Tanggal Pelunasan wajib diisi.');
         }
         if (
-            normalizeJenisLayanan(formData.jenisLayanan) === 'Validasi PPh' &&
+            normalizeJenisLayanan(formData.jenisLayanan) === 'validasi_pph' &&
             !formData.buktiPelunasan
         ) {
             nextErrors.push(
@@ -378,17 +397,44 @@ const FormPage = () => {
 
             const payload = new FormData();
             payload.append('peran_pemohon', userRole);
+            payload.append('email_pemohon', formData.email.trim());
+            payload.append('jenis_identitas_pemohon', formData.jenisIdentitas);
+            payload.append(
+                'nomor_identitas_pemohon',
+                formData.nomorIdentitas.trim(),
+            );
+            payload.append('alamat_pemohon', formData.alamatPemohon.trim());
             payload.append('nama_pemohon', formData.namaPemohon.trim());
             payload.append(
                 'nomor_wa_pemohon',
                 (formData.nomor_wa_pemohon || formData.nomorWa).trim(),
+            );
+            payload.append(
+                'nama_pemberi_kuasa',
+                formData.namaPemberiKuasa.trim(),
+            );
+            payload.append(
+                'jenis_identitas_pemberi_kuasa',
+                formData.jenisIdentitasPemberi,
+            );
+            payload.append(
+                'nomor_identitas_pemberi_kuasa',
+                formData.nomorIdentitasPemberi.trim(),
+            );
+            payload.append(
+                'alamat_pemberi_kuasa',
+                formData.alamatPemberiKuasa.trim(),
+            );
+            payload.append(
+                'nomor_wa_pemberi_kuasa',
+                formData.nomorWaPemberi.trim(),
             );
             payload.append('kode_lot_lelang', formData.kodeLot.trim());
             payload.append(
                 'jenis_layanan',
                 normalizeJenisLayanan(formData.jenisLayanan),
             );
-            payload.append('tanggal_dokumen', formData.tanggalPelunasan);
+            payload.append('tanggal_pelunasan', formData.tanggalPelunasan);
 
             if (formData.dokumenIdentitasPemohon) {
                 payload.append(
@@ -416,20 +462,6 @@ const FormPage = () => {
             setSuccessMessage('');
 
             try {
-                /*
-                 * Titik integrasi backend/database:
-                 * - Frontend mengirim FormData ke route Laravel `/permohonan/store`.
-                 * - Backend wajib validasi ulang field teks, role, dan file fisik
-                 *   (PDF/JPG/JPEG/PNG, max 10MB) sebelum menyimpan record ke tabel
-                 *   `doclang_proses` dan menyimpan file ke disk publik.
-                 * - Response JSON berisi `id_pengajuan` agar dashboard admin dapat
-                 *   menarik data permohonan terbaru dari database.
-                 *
-                 * Untuk Next.js App Router, pola yang sama bisa diarahkan ke
-                 * `/api/permohonan` dengan handler `POST(request)` yang membaca
-                 * `await request.formData()`, memvalidasi file, upload ke storage,
-                 * lalu insert metadata ke database.
-                 */
                 const response = await fetch('/permohonan/store', {
                     method: 'POST',
                     body: payload,
@@ -443,9 +475,7 @@ const FormPage = () => {
                     },
                 });
 
-                const responseData = (await response.json()) as
-                    | StorePermohonanSuccessResponse
-                    | StorePermohonanErrorResponse;
+                const responseData = await parseResponse(response);
 
                 if (!response.ok) {
                     const backendErrors =
@@ -474,9 +504,11 @@ const FormPage = () => {
                     `${successResponse.message} Nomor tiket: ${successResponse.id_pengajuan}.`,
                 );
                 scrollToTop();
-            } catch {
+            } catch (error) {
                 setErrors([
-                    'Permohonan gagal dikirim karena koneksi bermasalah. Silakan coba lagi.',
+                    error instanceof TypeError
+                        ? 'Permohonan gagal dikirim karena aplikasi tidak dapat menjangkau server Laravel. Pastikan membuka http://127.0.0.1:8000/form.'
+                        : 'Permohonan gagal dikirim karena koneksi bermasalah. Silakan coba lagi.',
                 ]);
                 scrollToTop();
             } finally {
@@ -487,10 +519,19 @@ const FormPage = () => {
             formData.buktiPelunasan,
             formData.dokumenIdentitasPemohon,
             formData.dokumenIdentitasPemberiKuasa,
+            formData.email,
+            formData.alamatPemohon,
+            formData.alamatPemberiKuasa,
+            formData.jenisIdentitas,
+            formData.jenisIdentitasPemberi,
             formData.jenisLayanan,
             formData.kodeLot,
+            formData.namaPemberiKuasa,
             formData.namaPemohon,
+            formData.nomorIdentitas,
+            formData.nomorIdentitasPemberi,
             formData.nomorWa,
+            formData.nomorWaPemberi,
             formData.nomor_wa_pemohon,
             formData.suratKuasa,
             formData.tanggalPelunasan,

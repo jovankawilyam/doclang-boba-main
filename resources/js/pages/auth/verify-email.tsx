@@ -25,9 +25,9 @@ export default function VerifyEmail({ status }: { status?: string }) {
             <Form {...send.form()} className="space-y-6 text-center">
                 {({ processing }) => (
                     <>
-                        <Button 
-                            className="w-full font-semibold shadow-sm transition-all duration-300 ease-in-out hover:shadow-md hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-                            disabled={processing} 
+                        <Button
+                            className="w-full font-semibold shadow-sm transition-all duration-300 ease-in-out hover:opacity-90 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+                            disabled={processing}
                             variant="secondary"
                         >
                             {processing && <Spinner className="mr-2 h-4 w-4" />}

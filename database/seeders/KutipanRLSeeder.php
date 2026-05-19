@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Document;
+use Illuminate\Database\Seeder;
 
 class KutipanRLSeeder extends Seeder
 {

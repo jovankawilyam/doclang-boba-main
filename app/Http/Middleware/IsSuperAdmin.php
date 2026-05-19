@@ -15,7 +15,7 @@ class IsSuperAdmin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->check() || auth()->user()->role !== 'super_admin') {
+        if (! auth()->check() || auth()->user()->role !== 'super_admin') {
             abort(403, 'Akses Ditolak! Hanya Super Admin yang dapat mengakses halaman ini.');
         }
 

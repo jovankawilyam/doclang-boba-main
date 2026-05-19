@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('documents', 'category')) {
+        if (! Schema::hasColumn('documents', 'category')) {
             Schema::table('documents', function (Blueprint $table) {
                 $table->string('category')->default('kuitansi')->after('nomor_pengajuan');
             });

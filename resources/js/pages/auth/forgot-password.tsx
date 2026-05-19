@@ -29,7 +29,10 @@ export default function ForgotPassword({ status }: { status?: string }) {
                     {({ processing, errors }) => (
                         <>
                             <div className="grid gap-2">
-                                <Label htmlFor="email" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                                <Label
+                                    htmlFor="email"
+                                    className="text-sm font-semibold text-slate-700 dark:text-slate-300"
+                                >
                                     Email address
                                 </Label>
                                 <Input
@@ -47,7 +50,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
 
                             <div className="my-6 flex items-center justify-start">
                                 <Button
-                                    className="w-full font-semibold shadow-sm transition-all duration-300 ease-in-out hover:shadow-md hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                                    className="w-full font-semibold shadow-sm transition-all duration-300 ease-in-out hover:opacity-90 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
                                     disabled={processing}
                                     data-test="email-password-reset-link-button"
                                 >
@@ -63,7 +66,10 @@ export default function ForgotPassword({ status }: { status?: string }) {
 
                 <div className="space-x-1 text-center text-sm font-medium text-slate-500 dark:text-slate-400">
                     <span>Or, return to</span>
-                    <TextLink href={login()} className="font-semibold text-primary hover:underline">
+                    <TextLink
+                        href={login()}
+                        className="font-semibold text-primary hover:underline"
+                    >
                         log in
                     </TextLink>
                 </div>
