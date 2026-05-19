@@ -69,8 +69,8 @@ const services: ServiceConfig[] = [
         title: 'Pelacakan Dokumen Kuitansi',
         description: 'Pantau status pengajuan kuitansi pasca lelang.',
         placeholder: 'Contoh: 123/KPHL/2026',
-        accent: 'text-[#123C69] dark:text-[#D8B76A]',
-        ring: 'border-[#C7D2E3] bg-[#F4F7FB] dark:border-[#2B4C73] dark:bg-[#0B1F35]',
+        accent: 'text-[#123C69] dark:text-blue-700',
+        ring: 'border-[#C7D2E3] bg-[#F4F7FB] dark:border-slate-200 dark:bg-white',
     },
     {
         key: 'kutipan_rl',
@@ -79,8 +79,8 @@ const services: ServiceConfig[] = [
         title: 'Pelacakan Kutipan Risalah Lelang',
         description: 'Cek progres penerbitan kutipan risalah lelang.',
         placeholder: 'Contoh: 123/K-RL/2026',
-        accent: 'text-[#123C69] dark:text-[#D8B76A]',
-        ring: 'border-[#C7D2E3] bg-[#F4F7FB] dark:border-[#2B4C73] dark:bg-[#0B1F35]',
+        accent: 'text-[#123C69] dark:text-blue-700',
+        ring: 'border-[#C7D2E3] bg-[#F4F7FB] dark:border-slate-200 dark:bg-white',
     },
     {
         key: 'validasi_pph',
@@ -89,8 +89,8 @@ const services: ServiceConfig[] = [
         title: 'Pelacakan Validasi PPh',
         description: 'Lihat status validasi PPh untuk dokumen lelang.',
         placeholder: 'Contoh: 123/V-PPh/2026',
-        accent: 'text-[#123C69] dark:text-[#D8B76A]',
-        ring: 'border-[#C7D2E3] bg-[#F4F7FB] dark:border-[#2B4C73] dark:bg-[#0B1F35]',
+        accent: 'text-[#123C69] dark:text-blue-700',
+        ring: 'border-[#C7D2E3] bg-[#F4F7FB] dark:border-slate-200 dark:bg-white',
     },
 ];
 
@@ -106,25 +106,25 @@ const getStatusStyles = (status: DocumentItem['status_proses'] | string) => {
     switch (status) {
         case 'selesai':
             return {
-                badge: 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300',
+                badge: 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-200 dark:bg-emerald-50 dark:text-emerald-800',
                 icon: <CheckCircle2 className="mr-1.5 h-4 w-4" />,
                 label: 'Selesai',
             };
         case 'siap_diambil':
             return {
-                badge: 'border-[#C7D2E3] bg-[#EEF3FA] text-[#123C69] dark:border-[#2B4C73] dark:bg-[#0B1F35] dark:text-[#D8B76A]',
+                badge: 'border-[#C7D2E3] bg-[#EEF3FA] text-[#123C69] dark:border-blue-200 dark:bg-blue-50 dark:text-blue-700',
                 icon: <Inbox className="mr-1.5 h-4 w-4" />,
                 label: 'Siap Diambil',
             };
         case 'tidak_valid':
             return {
-                badge: 'border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300',
+                badge: 'border-red-200 bg-red-50 text-red-800 dark:border-red-200 dark:bg-red-50 dark:text-red-800',
                 icon: <XCircle className="mr-1.5 h-4 w-4" />,
                 label: 'Tidak Valid',
             };
         default:
             return {
-                badge: 'border-[#E4D5A4] bg-[#FBF7EA] text-[#7A5A12] dark:border-[#6B5520] dark:bg-[#2A2313] dark:text-[#D8B76A]',
+                badge: 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-200 dark:bg-amber-50 dark:text-amber-800',
                 icon: <Clock className="mr-1.5 h-4 w-4" />,
                 label: 'Dalam Proses',
             };
@@ -146,16 +146,16 @@ function TrackingResult({
 
     if (!document) {
         return (
-            <div className="mx-auto mt-6 max-w-5xl rounded-2xl border border-[#C7D2E3] bg-white p-6 text-center shadow-xl shadow-[#C7D2E3]/50 dark:border-[#18324F] dark:bg-[#0B1F35] dark:shadow-black/20">
-                <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#EEF3FA] dark:bg-[#071625]">
-                    <Search className="h-8 w-8 text-[#123C69] dark:text-[#D8B76A]" />
+            <div className="mx-auto mt-6 max-w-5xl rounded-2xl border border-[#C7D2E3] bg-white p-6 text-center shadow-xl shadow-[#C7D2E3]/50 dark:border-slate-200 dark:bg-white dark:shadow-slate-200/70">
+                <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#EEF3FA] dark:bg-blue-50">
+                    <Search className="h-8 w-8 text-[#123C69] dark:text-blue-700" />
                 </div>
-                <h3 className="mb-3 text-2xl font-black text-slate-950 dark:text-white">
+                <h3 className="mb-3 text-2xl font-black text-slate-950 dark:text-slate-950">
                     Dokumen Tidak Ditemukan
                 </h3>
-                <p className="mx-auto max-w-2xl text-base leading-relaxed text-slate-600 dark:text-slate-300">
+                <p className="mx-auto max-w-2xl text-base leading-relaxed text-slate-600 dark:text-slate-600">
                     Nomor{' '}
-                    <span className="font-mono font-bold text-slate-900 dark:text-white">
+                    <span className="font-mono font-bold text-slate-900 dark:text-slate-900">
                         {searchedValue}
                     </span>{' '}
                     belum terdaftar pada layanan {service.label}. Periksa lagi
@@ -168,18 +168,18 @@ function TrackingResult({
     const statusStyle = getStatusStyles(document.status_proses);
 
     return (
-        <div className="mx-auto mt-6 max-w-5xl overflow-hidden rounded-2xl border border-[#C7D2E3] bg-white shadow-xl shadow-[#C7D2E3]/50 dark:border-[#18324F] dark:bg-[#0B1F35] dark:shadow-black/20">
-            <div className="flex flex-col gap-4 border-b border-[#D8E0EC] p-6 sm:flex-row sm:items-center dark:border-[#18324F]">
+        <div className="mx-auto mt-6 max-w-5xl overflow-hidden rounded-2xl border border-[#C7D2E3] bg-white shadow-xl shadow-[#C7D2E3]/50 dark:border-slate-200 dark:bg-white dark:shadow-slate-200/70">
+            <div className="flex flex-col gap-4 border-b border-[#D8E0EC] p-6 sm:flex-row sm:items-center dark:border-slate-200">
                 <div
                     className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border ${service.ring}`}
                 >
                     <FileText className={`h-7 w-7 ${service.accent}`} />
                 </div>
                 <div className="min-w-0">
-                    <p className="text-sm font-bold tracking-widest text-slate-500 uppercase dark:text-slate-400">
+                    <p className="text-sm font-bold tracking-widest text-slate-500 uppercase dark:text-slate-500">
                         Hasil Pencarian {service.label}
                     </p>
-                    <h2 className="mt-1 font-mono text-2xl font-black break-words text-slate-950 sm:text-3xl dark:text-white">
+                    <h2 className="mt-1 font-mono text-2xl font-black break-words text-slate-950 sm:text-3xl dark:text-slate-950">
                         {document.nomor_pengajuan}
                     </h2>
                 </div>
@@ -187,19 +187,19 @@ function TrackingResult({
 
             <div className="overflow-x-auto">
                 <table className="w-full text-left text-base">
-                    <thead className="border-b border-[#D8E0EC] bg-[#F4F7FB] dark:border-[#18324F] dark:bg-[#071625]">
+                    <thead className="border-b border-[#D8E0EC] bg-[#F4F7FB] dark:border-slate-200 dark:bg-[#F4F7FB]">
                         <tr>
-                            <th className="px-6 py-5 font-bold text-slate-700 dark:text-slate-200">
+                            <th className="px-6 py-5 font-bold text-slate-700 dark:text-slate-700">
                                 Jenis Dokumen
                             </th>
-                            <th className="px-6 py-5 font-bold text-slate-700 dark:text-slate-200">
+                            <th className="px-6 py-5 font-bold text-slate-700 dark:text-slate-700">
                                 Status
                             </th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#D8E0EC] dark:divide-[#18324F]">
-                        <tr className="transition-colors hover:bg-[#F4F7FB] dark:hover:bg-[#071625]">
-                            <td className="px-6 py-5 font-semibold text-slate-900 dark:text-slate-100">
+                    <tbody className="divide-y divide-[#D8E0EC] dark:divide-slate-200">
+                        <tr className="transition-colors hover:bg-[#F4F7FB] dark:hover:bg-[#F4F7FB]">
+                            <td className="px-6 py-5 font-semibold text-slate-900 dark:text-slate-900">
                                 Status Proses Dokumen
                             </td>
                             <td className="px-6 py-5">
@@ -216,11 +216,11 @@ function TrackingResult({
             </div>
 
             {document.catatan && (
-                <div className="border-t border-[#D8E0EC] bg-[#F4F7FB] p-5 dark:border-[#18324F] dark:bg-[#071625]">
-                    <p className="mb-1 text-xs font-bold tracking-widest text-slate-500 uppercase dark:text-slate-400">
+                <div className="border-t border-[#D8E0EC] bg-[#F4F7FB] p-5 dark:border-slate-200 dark:bg-[#F4F7FB]">
+                    <p className="mb-1 text-xs font-bold tracking-widest text-slate-500 uppercase dark:text-slate-500">
                         Catatan Petugas
                     </p>
-                    <p className="text-base leading-relaxed text-slate-700 italic dark:text-slate-300">
+                    <p className="text-base leading-relaxed text-slate-700 italic dark:text-slate-700">
                         "{document.catatan}"
                     </p>
                 </div>
@@ -315,28 +315,28 @@ export default function Welcome({
             value: activeStats.proses,
             icon: Clock,
             className:
-                'border-[#E4D5A4] bg-[#FBF7EA] text-[#7A5A12] dark:border-[#6B5520] dark:bg-[#2A2313] dark:text-[#D8B76A]',
+                'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-200 dark:bg-amber-50 dark:text-amber-800',
         },
         {
             label: 'Siap',
             value: activeStats.siap_diambil,
             icon: Inbox,
             className:
-                'border-[#C7D2E3] bg-[#EEF3FA] text-[#123C69] dark:border-[#2B4C73] dark:bg-[#0B1F35] dark:text-[#D8B76A]',
+                'border-[#C7D2E3] bg-[#EEF3FA] text-[#123C69] dark:border-blue-200 dark:bg-blue-50 dark:text-blue-700',
         },
         {
             label: 'Selesai',
             value: activeStats.selesai,
             icon: CheckCircle2,
             className:
-                'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300',
+                'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-200 dark:bg-emerald-50 dark:text-emerald-800',
         },
         {
             label: 'Tidak Valid',
             value: activeStats.tidak_valid,
             icon: XCircle,
             className:
-                'border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300',
+                'border-red-200 bg-red-50 text-red-800 dark:border-red-200 dark:bg-red-50 dark:text-red-800',
         },
     ];
 
@@ -374,11 +374,11 @@ export default function Welcome({
     };
 
     return (
-        <div className="min-h-screen bg-[#F4F7FB] font-sans text-slate-900 dark:bg-[#071625] dark:text-slate-100">
+        <div className="min-h-screen bg-[#F4F7FB] font-sans text-slate-900 dark:bg-[#F4F7FB] dark:text-slate-900">
             <Head title="Tracking Dokumen Pasca Lelang" />
 
             <nav
-                className={`sticky top-0 z-50 w-full border-b border-[#D8E0EC] bg-white/95 shadow-sm backdrop-blur transition-transform duration-300 dark:border-[#18324F] dark:bg-[#071625]/95 ${
+                className={`sticky top-0 z-50 w-full border-b border-[#D8E0EC] bg-white/95 shadow-sm backdrop-blur transition-transform duration-300 dark:border-slate-200 dark:bg-white/95 ${
                     showNav ? 'translate-y-0' : '-translate-y-full'
                 }`}
             >
@@ -394,19 +394,19 @@ export default function Welcome({
                     <div className="hidden items-center gap-8 md:flex">
                         <a
                             href="#tracking"
-                            className="text-base font-extrabold text-slate-600 hover:text-[#123C69] dark:text-slate-300 dark:hover:text-[#D8B76A]"
+                            className="text-base font-extrabold text-slate-600 hover:text-[#123C69] dark:text-slate-600 dark:hover:text-blue-700"
                         >
                             Lacak Dokumen
                         </a>
                         <Link
                             href="/form"
-                            className="text-base font-extrabold text-slate-600 hover:text-[#123C69] dark:text-slate-300 dark:hover:text-[#D8B76A]"
+                            className="text-base font-extrabold text-slate-600 hover:text-[#123C69] dark:text-slate-600 dark:hover:text-blue-700"
                         >
                             Doclang Boba
                         </Link>
                         <Link
                             href="/persyaratan"
-                            className="text-base font-extrabold text-slate-600 hover:text-[#123C69] dark:text-slate-300 dark:hover:text-[#D8B76A]"
+                            className="text-base font-extrabold text-slate-600 hover:text-[#123C69] dark:text-slate-600 dark:hover:text-blue-700"
                         >
                             Persyaratan
                         </Link>
@@ -428,7 +428,7 @@ export default function Welcome({
                     <button
                         type="button"
                         aria-label="Buka menu"
-                        className="rounded-lg border border-[#C7D2E3] px-3 py-2 text-2xl text-slate-700 hover:bg-slate-100 md:hidden dark:border-[#18324F] dark:text-slate-200 dark:hover:bg-[#0B1F35]"
+                        className="rounded-lg border border-[#C7D2E3] px-3 py-2 text-2xl text-slate-700 hover:bg-slate-100 md:hidden dark:border-slate-200 dark:text-slate-700 dark:hover:bg-blue-50"
                         onClick={() => setOpen((value) => !value)}
                     >
                         ☰
@@ -436,23 +436,23 @@ export default function Welcome({
                 </div>
 
                 {open && (
-                    <div className="space-y-3 border-t border-[#D8E0EC] bg-white px-6 py-5 shadow-sm md:hidden dark:border-[#18324F] dark:bg-[#071625]">
+                    <div className="space-y-3 border-t border-[#D8E0EC] bg-white px-6 py-5 shadow-sm md:hidden dark:border-slate-200 dark:bg-white">
                         <a
                             href="#tracking"
                             onClick={() => setOpen(false)}
-                            className="block rounded-xl bg-[#F4F7FB] px-4 py-3 text-base font-black text-slate-700 dark:bg-[#0B1F35] dark:text-slate-200"
+                            className="block rounded-xl bg-[#F4F7FB] px-4 py-3 text-base font-black text-slate-700 dark:bg-[#F4F7FB] dark:text-slate-700"
                         >
                             Lacak Dokumen
                         </a>
                         <Link
                             href="/persyaratan"
-                            className="block rounded-xl bg-[#F4F7FB] px-4 py-3 text-base font-black text-slate-700 dark:bg-[#0B1F35] dark:text-slate-200"
+                            className="block rounded-xl bg-[#F4F7FB] px-4 py-3 text-base font-black text-slate-700 dark:bg-[#F4F7FB] dark:text-slate-700"
                         >
                             Persyaratan
                         </Link>
                         <Link
                             href="/form"
-                            className="block rounded-xl bg-[#F4F7FB] px-4 py-3 text-base font-black text-slate-700 dark:bg-[#0B1F35] dark:text-slate-200"
+                            className="block rounded-xl bg-[#F4F7FB] px-4 py-3 text-base font-black text-slate-700 dark:bg-[#F4F7FB] dark:text-slate-700"
                         >
                             Doclang Boba
                         </Link>
@@ -480,7 +480,7 @@ export default function Welcome({
                         alt="slider"
                         className="h-[360px] w-full object-cover object-[center_10%] transition-all duration-700 md:h-[590px]"
                     />
-                    <div className="absolute inset-0 bg-[#071625]/35" />
+                    <div className="absolute inset-0 bg-black/20" />
                     <button
                         type="button"
                         onClick={prevSlide}
@@ -506,7 +506,7 @@ export default function Welcome({
                             onClick={() => setCurrent(index)}
                             className={`h-3 w-3 rounded-full transition ${
                                 current === index
-                                    ? 'bg-[#123C69] dark:bg-[#D8B76A]'
+                                    ? 'bg-blue-700 dark:bg-blue-700'
                                     : 'bg-slate-300'
                             }`}
                         />
@@ -515,23 +515,23 @@ export default function Welcome({
             </section>
 
             <section className="mx-auto mt-10 flex w-full max-w-5xl flex-col items-center px-4 text-center md:mt-14">
-                <div className="mb-5 flex items-center gap-2 rounded-full border border-[#D8B76A]/40 bg-[#FBF7EA] px-5 py-2 dark:border-[#D8B76A]/50 dark:bg-[#2A2313]">
-                    <Search className="h-4 w-4 text-[#123C69] dark:text-[#D8B76A]" />
-                    <span className="text-xs font-bold tracking-widest text-[#123C69] uppercase md:text-sm dark:text-[#D8B76A]">
+                <div className="mb-5 flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-5 py-2 dark:border-blue-100 dark:bg-blue-50">
+                    <Search className="h-4 w-4 text-blue-700 dark:text-blue-700" />
+                    <span className="text-xs font-bold tracking-widest text-blue-700 uppercase md:text-sm dark:text-blue-700">
                         Monitoring Layanan Pasca Lelang
                     </span>
                 </div>
 
-                <h1 className="mb-5 text-4xl leading-[1.12] font-black tracking-tight text-[#071625] md:text-7xl dark:text-white">
+                <h1 className="mb-5 text-4xl leading-[1.12] font-black tracking-tight text-slate-950 md:text-7xl dark:text-slate-950">
                     Lacak Status <br />
-                    <span className="text-[#123C69] dark:text-[#D8B76A]">
+                    <span className="text-blue-700 dark:text-blue-700">
                         Dokumen Anda
                     </span>
                 </h1>
 
-                <p className="mx-auto max-w-3xl px-2 text-lg leading-relaxed text-slate-700 md:text-2xl dark:text-slate-300">
+                <p className="mx-auto max-w-3xl px-2 text-lg leading-relaxed text-slate-700 md:text-2xl dark:text-slate-700">
                     Pilih jenis layanan, masukkan nomor tiket, lalu tekan tombol
-                    <span className="font-black text-[#123C69] dark:text-[#D8B76A]">
+                    <span className="font-black text-blue-700 dark:text-blue-700">
                         {' '}
                         Lacak Sekarang
                     </span>
@@ -543,9 +543,9 @@ export default function Welcome({
                 id="tracking"
                 className="mx-auto mt-10 w-full max-w-7xl px-4 md:px-8"
             >
-                <section className="rounded-3xl border border-[#C7D2E3] bg-white p-4 shadow-2xl shadow-[#C7D2E3]/50 md:p-6 dark:border-[#18324F] dark:bg-[#0B1F35] dark:shadow-black/30">
-                    <div className="mb-4 rounded-2xl border border-[#D8E0EC] bg-[#F8FAFC] p-4 dark:border-[#18324F] dark:bg-[#071625]/70">
-                        <p className="mb-3 text-base font-black text-[#071625] dark:text-white">
+                <section className="rounded-3xl border border-[#C7D2E3] bg-white p-4 shadow-2xl shadow-[#C7D2E3]/50 md:p-6 dark:border-slate-200 dark:bg-white dark:shadow-slate-200/70">
+                    <div className="mb-4 rounded-2xl border border-[#D8E0EC] bg-[#F8FAFC] p-4 dark:border-slate-200 dark:bg-[#F8FAFC]">
+                        <p className="mb-3 text-base font-black text-slate-950 dark:text-slate-950">
                             1. Pilih jenis layanan
                         </p>
                         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -560,8 +560,8 @@ export default function Welcome({
                                         aria-pressed={selected}
                                         className={`rounded-xl border px-4 py-4 text-base font-black transition sm:text-sm md:text-base ${
                                             selected
-                                                ? 'border-[#123C69] bg-[#123C69] text-white shadow-sm dark:border-[#D8B76A] dark:bg-[#D8B76A] dark:text-[#071625]'
-                                                : 'border-[#C7D2E3] bg-white text-slate-700 hover:border-[#123C69] hover:bg-[#EEF3FA] dark:border-[#18324F] dark:bg-[#0B1F35] dark:text-slate-200 dark:hover:border-[#D8B76A]'
+                                                ? 'border-blue-700 bg-blue-700 text-white shadow-sm dark:border-blue-700 dark:bg-blue-700 dark:text-white'
+                                                : 'border-[#C7D2E3] bg-white text-slate-700 hover:border-blue-700 hover:bg-blue-50 dark:border-slate-200 dark:bg-white dark:text-slate-700 dark:hover:border-blue-700'
                                         }`}
                                     >
                                         {service.shortLabel}
@@ -577,8 +577,8 @@ export default function Welcome({
                         >
                             <div className="mb-4 flex items-center justify-between gap-3">
                                 <div>
-                                    <p className="text-base font-black text-[#071625] dark:text-white">
-                                     Lihat ringkasan status
+                                    <p className="text-base font-black text-slate-950 dark:text-slate-950">
+                                        2. Lihat ringkasan status
                                     </p>
                                     <h2
                                         className={`mt-1 text-3xl font-black ${activeConfig.accent}`}
@@ -586,11 +586,11 @@ export default function Welcome({
                                         {activeConfig.label}
                                     </h2>
                                 </div>
-                                <div className="rounded-2xl border border-[#D8E0EC] bg-white px-5 py-3 text-right shadow-sm dark:border-[#18324F] dark:bg-[#071625]">
-                                    <p className="text-xs font-black tracking-widest text-slate-500 uppercase dark:text-slate-400">
+                                <div className="rounded-2xl border border-[#D8E0EC] bg-white px-5 py-3 text-right shadow-sm dark:border-slate-200 dark:bg-white">
+                                    <p className="text-xs font-black tracking-widest text-slate-500 uppercase dark:text-slate-500">
                                         Total
                                     </p>
-                                    <p className="text-5xl font-black text-slate-950 dark:text-white">
+                                    <p className="text-5xl font-black text-slate-950 dark:text-slate-950">
                                         {formatStat(activeStats.total)}
                                     </p>
                                 </div>
@@ -603,7 +603,7 @@ export default function Welcome({
                                     return (
                                         <div
                                             key={item.label}
-                                            className={`rounded-xl border bg-white/90 p-4 shadow-sm backdrop-blur dark:bg-[#071625]/80 ${item.className}`}
+                                            className={`rounded-xl border bg-white/90 p-4 shadow-sm backdrop-blur dark:bg-white ${item.className}`}
                                         >
                                             <div className="mb-2 flex items-center justify-between gap-2">
                                                 <span className="text-sm font-black uppercase">
@@ -620,15 +620,15 @@ export default function Welcome({
                             </div>
                         </div>
 
-                        <div className="rounded-2xl border border-[#C7D2E3] bg-[#F8FAFC] p-5 md:p-6 dark:border-[#18324F] dark:bg-[#071625]/70">
+                        <div className="rounded-2xl border border-[#C7D2E3] bg-[#F8FAFC] p-5 md:p-6 dark:border-slate-200 dark:bg-[#F8FAFC]">
                             <div className="mb-5">
-                                <p className="text-base font-black text-[#123C69] dark:text-[#D8B76A]">
+                                <p className="text-base font-black text-blue-700 dark:text-blue-700">
                                     3. Masukkan nomor tiket
                                 </p>
-                                <h2 className="mt-2 text-3xl font-black text-slate-950 md:text-4xl dark:text-white">
+                                <h2 className="mt-2 text-3xl font-black text-slate-950 md:text-4xl dark:text-slate-950">
                                     {activeConfig.title}
                                 </h2>
-                                <p className="mt-3 text-lg leading-relaxed text-slate-700 dark:text-slate-300">
+                                <p className="mt-3 text-lg leading-relaxed text-slate-700 dark:text-slate-700">
                                     {activeConfig.description}
                                 </p>
                             </div>
@@ -639,17 +639,17 @@ export default function Welcome({
                             >
                                 <label
                                     htmlFor="tracking-number"
-                                    className="text-base font-black text-slate-800 dark:text-slate-100"
+                                    className="text-base font-black text-slate-800 dark:text-slate-800"
                                 >
                                     Nomor tiket / nomor pengajuan
                                 </label>
-                                <div className="relative flex-1 rounded-xl bg-white shadow-sm dark:bg-[#0B1F35]">
+                                <div className="relative flex-1 rounded-xl bg-white shadow-sm dark:bg-white">
                                     <Search className="absolute top-1/2 left-4 h-6 w-6 -translate-y-1/2 text-slate-400" />
                                     <Input
                                         id="tracking-number"
                                         type="text"
                                         placeholder={activeConfig.placeholder}
-                                        className="h-16 border-[#C7D2E3] bg-transparent pr-4 pl-14 text-lg font-semibold shadow-none focus-visible:ring-[#D8B76A]/40 dark:border-[#18324F] dark:text-white"
+                                        className="h-16 border-[#C7D2E3] bg-transparent pr-4 pl-14 text-lg font-semibold shadow-none focus-visible:ring-blue-200 dark:border-slate-200 dark:text-slate-900"
                                         value={query}
                                         onChange={(event) =>
                                             setQuery(event.target.value)
@@ -660,13 +660,13 @@ export default function Welcome({
                                 <Button
                                     type="submit"
                                     disabled={processing}
-                                    className="h-16 rounded-xl bg-[#123C69] px-7 text-lg font-black text-white transition hover:bg-[#0B2A4A] hover:shadow-lg hover:shadow-[#123C69]/20 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-[#D8B76A] dark:text-[#071625] dark:hover:bg-[#C5A052]"
+                                    className="h-16 rounded-xl bg-blue-700 px-7 text-lg font-black text-white transition hover:bg-blue-800 hover:shadow-lg hover:shadow-blue-700/20 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-blue-700 dark:text-white dark:hover:bg-blue-800"
                                 >
                                     {processing
                                         ? 'Mencari...'
                                         : 'Lacak Sekarang'}
                                 </Button>
-                                <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+                                <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-600">
                                     Pastikan jenis layanan di atas sudah sesuai
                                     dengan tiket Anda.
                                 </p>
@@ -683,22 +683,22 @@ export default function Welcome({
             </main>
 
             <section className="mt-20">
-                <div className="w-full border-b border-white/10 bg-[#071625] px-6 py-10 text-center text-gray-100 md:px-12">
+                <div className="w-full border-b border-blue-700 bg-blue-500 px-6 py-10 text-center text-white md:px-12">
                     <p className="mx-auto max-w-7xl text-base leading-relaxed font-medium md:text-xl">
                         Bahwa dalam rangka mewujudkan Zona Integritas menuju
                         Wilayah Bebas dari Korupsi,
-                        <strong className="font-extrabold text-white">
+                        <strong className="font-extrabold text-slate-950">
                             {' '}
                             KPKNL Bogor berkomitmen untuk meningkatkan kualitas
                             pelayanan{' '}
                         </strong>
                         dengan prinsip utama{' '}
-                        <strong className="text-[#D8B76A]">BAGeUR</strong>{' '}
+                        <strong className="text-blue-700">BAGeUR</strong>{' '}
                         (Bersih, Amanah, Gesit, Unggul dan Ramah)
                     </p>
                 </div>
 
-                <footer className="w-full bg-[#123C69] py-16 text-white">
+                <footer className="w-full bg-blue-800 py-16 text-white">
                     <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 md:grid-cols-2 md:px-8">
                         <div className="flex flex-col gap-8">
                             <div className="flex items-center gap-6">
@@ -726,10 +726,10 @@ export default function Welcome({
 
                         <div className="flex flex-col items-start gap-8 md:items-end">
                             <div className="flex flex-col items-start md:items-end">
-                                <p className="mb-2 text-lg font-black tracking-widest text-[#D8B76A] uppercase">
+                                <p className="mb-2 text-lg font-black tracking-widest text-blue-100 uppercase">
                                     Ikuti Kami
                                 </p>
-                                <div className="h-1.5 w-16 rounded-full bg-[#D8B76A]" />
+                                <div className="h-1.5 w-16 rounded-full bg-white" />
                             </div>
                             <div className="flex gap-5">
                                 {[
@@ -765,7 +765,7 @@ export default function Welcome({
                             <p className="text-left text-xs leading-loose font-black tracking-widest text-blue-100 uppercase md:text-right md:text-sm">
                                 Kantor Pelayanan Kekayaan Negara dan Lelang
                                 Bogor <br />
-                                <span className="text-[#D8B76A]">
+                                <span className="text-blue-100">
                                     @kpknlbogor
                                 </span>
                             </p>
