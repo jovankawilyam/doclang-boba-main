@@ -6,6 +6,7 @@ use App\Http\Controllers\PermohonanController;
 use App\Models\DoclangProses;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -58,6 +59,24 @@ Route::get('/persyaratan', function () {
 });
 Route::get('/form', function () {
     return Inertia::render('form');
+});
+Route::get('/whatsapp/health', function () {
+    try {
+        $response = Http::acceptJson()
+            ->timeout(3)
+            ->get('http://127.0.0.1:3001/health');
+
+        return response()->json([
+            'online' => $response->ok(),
+            'gateway' => $response->json(),
+        ], $response->ok() ? 200 : 503);
+    } catch (Throwable $exception) {
+        return response()->json([
+            'online' => false,
+            'message' => 'WhatsApp Gateway belum berjalan di port 3001.',
+            'error' => $exception->getMessage(),
+        ], 503);
+    }
 });
 Route::post('/permohonan/store', [PermohonanController::class, 'store'])->name('permohonan.store');
 

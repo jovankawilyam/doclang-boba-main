@@ -8,6 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class SendWhatsAppNotification implements ShouldQueue
 {
@@ -22,12 +23,11 @@ class SendWhatsAppNotification implements ShouldQueue
 
     public function handle(): void
     {
-        $token = config('services.fonnte.token');
-        $endpoint = config('services.fonnte.endpoint');
+        $endpoint = config('services.whatsapp.gateway_url');
         $senderNumber = config('services.whatsapp.sender_number');
 
-        if (! is_string($token) || $token === '') {
-            Log::warning('WhatsApp notification skipped: FONNTE_TOKEN is not configured.', [
+        if (! is_string($endpoint) || trim($endpoint) === '') {
+            Log::warning('WhatsApp notification skipped: WA_GATEWAY_URL is not configured.', [
                 'sender_number' => $senderNumber,
                 'target_number' => $this->targetNumber,
             ]);
@@ -35,24 +35,41 @@ class SendWhatsAppNotification implements ShouldQueue
             return;
         }
 
-        $response = Http::asForm()
-            ->withHeaders(['Authorization' => $token])
-            ->timeout(15)
-            ->post($endpoint, [
-                'target' => $this->normalizeTargetNumber($this->targetNumber),
-                'message' => $this->message,
-                'countryCode' => '62',
-            ]);
+        $payload = [
+            'phone' => $this->normalizeTargetNumber($this->targetNumber),
+            'message' => $this->message,
+        ];
 
-        if ($response->failed()) {
-            Log::error('WhatsApp notification failed.', [
+        try {
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ])
+                ->timeout(15)
+                ->post($endpoint, $payload);
+        } catch (Throwable $exception) {
+            Log::error('WhatsApp Gateway request error.', [
                 'sender_number' => $senderNumber,
                 'target_number' => $this->targetNumber,
+                'endpoint' => $endpoint,
+                'payload' => $payload,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return;
+        }
+
+        if ($response->failed()) {
+            Log::error('WhatsApp Gateway notification failed.', [
+                'sender_number' => $senderNumber,
+                'target_number' => $this->targetNumber,
+                'endpoint' => $endpoint,
+                'payload' => $payload,
                 'status' => $response->status(),
                 'body' => $response->body(),
             ]);
 
-            $response->throw();
+            return;
         }
     }
 
@@ -60,8 +77,12 @@ class SendWhatsAppNotification implements ShouldQueue
     {
         $number = preg_replace('/\D+/', '', $number) ?? '';
 
-        if (str_starts_with($number, '0')) {
-            return '62'.substr($number, 1);
+        if (str_starts_with($number, '08')) {
+            $number = '62'.substr($number, 1);
+        }
+
+        if (str_starts_with($number, '8')) {
+            $number = '62'.$number;
         }
 
         return $number;

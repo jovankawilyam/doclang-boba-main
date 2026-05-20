@@ -6,10 +6,13 @@
         "build": "vite build",
         "build:ssr": "vite build && vite build --ssr",
         "dev": "vite",
+        "dev:wa": "concurrently -c \"#93c5fd,#c4b5fd,#22c55e\" \"php artisan serve\" \"vite\" \"npm --prefix whatsapp-gateway start\" --names=laravel,vite,wa --kill-others",
         "format": "prettier --write resources/",
         "format:check": "prettier --check resources/",
         "lint": "eslint . --fix",
         "lint:check": "eslint .",
+        "wa:install": "npm install --prefix whatsapp-gateway",
+        "wa:start": "npm --prefix whatsapp-gateway start",
         "types:check": "tsc --noEmit"
     },
     "devDependencies": {

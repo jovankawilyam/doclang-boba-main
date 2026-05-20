@@ -37,6 +37,7 @@ return [
 
     'whatsapp' => [
         'sender_number' => env('WA_SENDER_NUMBER', '081911883609'),
+        'gateway_url' => env('WA_GATEWAY_URL', 'http://127.0.0.1:3001/api/send-message'),
     ],
 
     'fonnte' => [

@@ -12,7 +12,7 @@ import {
     Send,
     Upload,
 } from 'lucide-react';
-import type { HTMLAttributes } from 'react';
+import type { ChangeEvent, HTMLAttributes } from 'react';
 import { useState } from 'react';
 import type {
     FieldErrors,
@@ -20,7 +20,7 @@ import type {
     Resolver,
     SubmitHandler,
 } from 'react-hook-form';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 type ApplicantRole = 'pemenang' | 'kuasa';
@@ -79,6 +79,11 @@ type DoclangFormValues = {
 type FileRule = {
     maxBytes: number;
     label: string;
+};
+
+type UploadedFileInfo = {
+    name: string;
+    size: number;
 };
 
 const IDENTITY_MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024;
@@ -460,6 +465,16 @@ const getCsrfToken = (): string => {
     );
 };
 
+const appendCsrfToken = (payload: FormData): void => {
+    const token = getCsrfToken();
+
+    if (token) {
+        // Laravel reads _token from multipart FormData and X-CSRF-TOKEN from headers.
+        // Sending both makes the public upload form resilient to proxy/header quirks.
+        payload.set('_token', token);
+    }
+};
+
 const parseResponse = async (
     response: Response,
 ): Promise<StorePermohonanSuccessResponse | StorePermohonanErrorResponse> => {
@@ -514,6 +529,9 @@ const FormPage = () => {
     const [step, setStep] = useState<1 | 2>(1);
     const [successMessage, setSuccessMessage] = useState<string>('');
     const [serverErrors, setServerErrors] = useState<string[]>([]);
+    const [uploadedFiles, setUploadedFiles] = useState<
+        Partial<Record<FieldPath<DoclangFormValues>, UploadedFileInfo>>
+    >({});
 
     const {
         register,
@@ -521,7 +539,6 @@ const FormPage = () => {
         trigger,
         watch,
         reset,
-        control,
         formState: { errors, isSubmitting },
     } = useForm<DoclangFormValues>({
         resolver: zodResolver(formSchema) as Resolver<DoclangFormValues>,
@@ -667,7 +684,10 @@ const FormPage = () => {
             appendFile(payload, 'bukti_pelunasan', values.bukti_pelunasan_file);
         }
 
+        appendCsrfToken(payload);
+
         try {
+            const csrfToken = getCsrfToken();
             const response = await fetch('/permohonan/store', {
                 method: 'POST',
                 body: payload,
@@ -675,14 +695,20 @@ const FormPage = () => {
                 headers: {
                     Accept: 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    ...(getCsrfToken()
-                        ? { 'X-CSRF-TOKEN': getCsrfToken() }
-                        : {}),
+                    ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
                 },
             });
             const responseData = await parseResponse(response);
 
             if (!response.ok) {
+                if (response.status === 419) {
+                    setServerErrors([
+                        'Sesi formulir kedaluwarsa. Muat ulang halaman lalu kirim kembali permohonan.',
+                    ]);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    return;
+                }
+
                 const backendErrors =
                     'errors' in responseData && responseData.errors
                         ? Object.values(responseData.errors).flat()
@@ -704,6 +730,7 @@ const FormPage = () => {
                 responseData as StorePermohonanSuccessResponse;
 
             reset(defaultValues);
+            setUploadedFiles({});
             setStep(1);
             setSuccessMessage(
                 `${successResponse.message} Token permohonan: ${successResponse.token ?? successResponse.id_pengajuan}. Token juga dikirim lewat WhatsApp.`,
@@ -737,21 +764,61 @@ const FormPage = () => {
         note: string;
     }) => {
         const message = fieldErrorMessage(errors, name);
-        const selectedFile = getSelectedFile(useWatch({ control, name }));
+        const selectedFile = uploadedFiles[name];
+        const fileRegistration = register(name);
+        const uploadBoxClassName = selectedFile
+            ? 'block cursor-pointer rounded-lg border-2 border-solid border-emerald-300 bg-emerald-50 p-5 text-center transition hover:border-emerald-500 hover:bg-emerald-100'
+            : 'block cursor-pointer rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-5 text-center transition hover:border-blue-500 hover:bg-blue-50';
+
+        const handleFileChange = async (
+            event: ChangeEvent<HTMLInputElement>,
+        ): Promise<void> => {
+            await fileRegistration.onChange(event);
+
+            const file = event.target.files?.item(0);
+
+            setUploadedFiles((currentFiles) => {
+                if (!file) {
+                    const nextFiles = { ...currentFiles };
+                    delete nextFiles[name];
+
+                    return nextFiles;
+                }
+
+                return {
+                    ...currentFiles,
+                    [name]: {
+                        name: file.name,
+                        size: file.size,
+                    },
+                };
+            });
+        };
 
         return (
             <div className="space-y-2">
                 <span className={labelClassName}>{label} *</span>
-                <label className="block cursor-pointer rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-5 text-center transition hover:border-blue-500 hover:bg-blue-50">
-                    <Upload className="mx-auto mb-2 h-6 w-6 text-blue-700" />
+                <label className={uploadBoxClassName}>
+                    {selectedFile ? (
+                        <CheckCircle2 className="mx-auto mb-2 h-6 w-6 text-emerald-700" />
+                    ) : (
+                        <Upload className="mx-auto mb-2 h-6 w-6 text-blue-700" />
+                    )}
                     <span className="block text-sm font-black text-slate-700">
-                        {note}
+                        {selectedFile ? 'Dokumen berhasil dipilih' : note}
                     </span>
+                    {selectedFile && (
+                        <span className="mt-1 block text-xs font-semibold break-words text-emerald-800">
+                            {selectedFile.name} (
+                            {formatFileSize(selectedFile.size)})
+                        </span>
+                    )}
                     <input
                         type="file"
                         accept={FILE_ACCEPT_ATTRIBUTE}
                         className="hidden"
-                        {...register(name)}
+                        {...fileRegistration}
+                        onChange={handleFileChange}
                     />
                 </label>
                 {selectedFile && (
