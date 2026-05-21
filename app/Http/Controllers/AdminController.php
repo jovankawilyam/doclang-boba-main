@@ -82,24 +82,24 @@ class AdminController extends Controller
         return back()->with('success', "Admin {$user->name} berhasil {$status}.");
     }
 
-    public function destroy(User $user): RedirectResponse
+    public function destroy(User $admin): RedirectResponse
     {
-        if ($user->id === auth()->id()) {
+        if ($admin->id === auth()->id()) {
             return back()->with('error', 'Tidak dapat menghapus akun Anda sendiri.');
         }
 
-        $this->authorizeSuperAdminRole($user->role);
+        $this->authorizeSuperAdminRole($admin->role);
 
         try {
-            $user->delete();
+            $admin->delete();
 
-            return back()->with('success', "Admin {$user->name} berhasil dihapus.");
+            return back()->with('success', "Admin {$admin->name} berhasil dihapus.");
         } catch (QueryException $e) {
             $sqlState = $e->errorInfo[0] ?? null;
             $driverCode = (int) ($e->errorInfo[1] ?? 0);
 
             if ($sqlState === '23000' || in_array($driverCode, [1451, 787], true)) {
-                return back()->with('error', "Gagal menghapus admin {$user->name} karena masih memiliki data dokumen terkait.");
+                return back()->with('error', "Gagal menghapus admin {$admin->name} karena masih memiliki data dokumen terkait.");
             }
 
             return back()->with('error', 'Gagal menghapus admin: Terjadi kesalahan database.');

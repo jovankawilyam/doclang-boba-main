@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\DoclangProses;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,20 +14,28 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        if (app()->isProduction() && (! env('SEED_SUPER_ADMIN_EMAIL') || ! env('SEED_SUPER_ADMIN_PASSWORD'))) {
+            throw new \RuntimeException('Production seeding requires SEED_SUPER_ADMIN_EMAIL and SEED_SUPER_ADMIN_PASSWORD.');
+        }
+
         // 1. Buat Super Admin (Akun utamamu)
         User::factory()->create([
             'name' => 'Super Admin',
-            'email' => env('SEED_SUPER_ADMIN_EMAIL', 'admin@gmail.com'),
-            'password' => env('SEED_SUPER_ADMIN_PASSWORD', 'superadmin123'),
+            'email' => env('SEED_SUPER_ADMIN_EMAIL', 'superadmin@example.test'),
+            'password' => env('SEED_SUPER_ADMIN_PASSWORD', Str::password(32)),
             'role' => 'super_admin',
             'is_active' => true,
         ]);
 
-        // 2. Buat beberapa admin biasa
+        // 2. Buat admin biasa hanya untuk lingkungan non-production.
+        if (app()->isProduction()) {
+            return;
+        }
+
         User::factory()->create([
             'name' => 'JOVANKA WILYAM MUZAKI',
-            'email' => env('SEED_ADMIN_EMAIL', 'admin123@gmail.com'),
-            'password' => env('SEED_ADMIN_PASSWORD', 'password'),
+            'email' => env('SEED_ADMIN_EMAIL', 'admin@example.test'),
+            'password' => env('SEED_ADMIN_PASSWORD', Str::password(32)),
             'role' => 'admin',
             'is_active' => true,
         ]);

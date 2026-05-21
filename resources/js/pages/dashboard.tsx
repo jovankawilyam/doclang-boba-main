@@ -1,16 +1,18 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import {
-    Activity,
+    AlertTriangle,
+    ArrowRight,
     CheckCircle2,
+    ClipboardList,
     Clock3,
     FileCheck2,
     FileText,
     Inbox,
-    Server,
-    TrendingUp,
+    ShieldCheck,
+    Users,
     XCircle,
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
@@ -49,6 +51,17 @@ interface Statistics {
     validasi_pph?: DocCategoryStats;
 }
 
+interface RecentDocument {
+    id: number;
+    id_pengajuan: string;
+    kode_lot_lelang: string;
+    nama_pemohon: string;
+    jenis_layanan: 'kuitansi' | 'risalah_lelang' | 'validasi_pph';
+    status_proses: StatusKey;
+    created_at: string | null;
+    tanggal_masuk_pengambilan_dokumen: string | null;
+}
+
 interface Props {
     admins?: Admin[];
     stats?: DashboardStats;
@@ -57,7 +70,10 @@ interface Props {
     docStatsKutipan?: DocCategoryStats;
     docStatsValidasi?: DocCategoryStats;
     todayDocumentTotal?: number;
+    recentDocuments?: RecentDocument[];
 }
+
+type StatusKey = 'proses' | 'siap_diambil' | 'selesai' | 'tidak_valid';
 
 const emptyStats: DocCategoryStats = {
     total: 0,
@@ -67,11 +83,40 @@ const emptyStats: DocCategoryStats = {
     tidak_valid: 0,
 };
 
+const statusLabels: Record<StatusKey, string> = {
+    proses: 'Proses',
+    siap_diambil: 'Siap Diambil',
+    selesai: 'Selesai',
+    tidak_valid: 'Tidak Valid',
+};
+
+const serviceLabels: Record<RecentDocument['jenis_layanan'], string> = {
+    kuitansi: 'Kuitansi',
+    risalah_lelang: 'Kutipan RL',
+    validasi_pph: 'Validasi PPh',
+};
+
 const formatNumber = (value: number | undefined) =>
     new Intl.NumberFormat('id-ID').format(value ?? 0);
 
 const percent = (value: number, total: number) =>
     total > 0 ? Math.round((value / total) * 100) : 0;
+
+const formatDate = (value?: string | null) =>
+    value
+        ? new Intl.DateTimeFormat('id-ID', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+          }).format(new Date(value))
+        : '-';
+
+const statusTone: Record<StatusKey, string> = {
+    proses: 'border-amber-200 bg-amber-50 text-amber-800',
+    siap_diambil: 'border-sky-200 bg-sky-50 text-sky-800',
+    selesai: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+    tidak_valid: 'border-rose-200 bg-rose-50 text-rose-800',
+};
 
 export default function Dashboard({
     admins = [],
@@ -81,24 +126,25 @@ export default function Dashboard({
     docStatsKutipan,
     docStatsValidasi,
     todayDocumentTotal = 0,
+    recentDocuments = [],
 }: Props) {
     const categories = [
         {
             key: 'kuitansi',
             label: 'Kuitansi',
-            description: 'Kuitansi Pasca Lelang',
+            href: '/documents/kuitansi',
             stats: statistics?.kuitansi ?? docStats ?? emptyStats,
         },
         {
             key: 'kutipan_rl',
             label: 'Kutipan RL',
-            description: 'Risalah Lelang',
+            href: '/documents/rl',
             stats: statistics?.kutipan_rl ?? docStatsKutipan ?? emptyStats,
         },
         {
             key: 'validasi_pph',
             label: 'Validasi PPh',
-            description: 'Validasi Pajak Penghasilan',
+            href: '/documents/validasi-pph',
             stats: statistics?.validasi_pph ?? docStatsValidasi ?? emptyStats,
         },
     ];
@@ -116,58 +162,32 @@ export default function Dashboard({
 
     const activeAdmins = admins.filter((admin) => admin.is_active).length;
     const completionRate = percent(totals.selesai, totals.total);
-    const validRate = percent(totals.total - totals.tidak_valid, totals.total);
+    const pendingWork = totals.proses + totals.tidak_valid;
 
-    const topCards = [
+    const summaryCards = [
         {
-            label: 'Total Dokumen Masuk',
+            label: 'Dokumen Masuk',
             value: totals.total,
-            helper: `${formatNumber(todayDocumentTotal)} dokumen masuk hari ini`,
+            helper: `${formatNumber(todayDocumentTotal)} masuk hari ini`,
             icon: FileText,
-            tone: 'border-blue-200/30 bg-blue-400/20 text-blue-50',
         },
         {
-            label: 'Dokumen Selesai',
-            value: totals.selesai,
-            helper: `${completionRate}% dari total dokumen`,
-            icon: FileCheck2,
-            tone: 'border-emerald-200/30 bg-emerald-400/20 text-emerald-50',
-        },
-        {
-            label: 'Status Sistem',
-            value: validRate,
-            suffix: '%',
-            helper: `${formatNumber(activeAdmins || stats?.total)} admin aktif`,
-            icon: Server,
-            tone: 'border-cyan-200/30 bg-cyan-400/20 text-cyan-50',
-        },
-    ];
-
-    const statusCards = [
-        {
-            label: 'Proses',
-            value: totals.proses,
-            icon: Clock3,
-            className: 'border-amber-300/30 bg-amber-500/20 text-amber-100',
+            label: 'Butuh Tindak Lanjut',
+            value: pendingWork,
+            helper: `${formatNumber(totals.proses)} proses, ${formatNumber(totals.tidak_valid)} tidak valid`,
+            icon: ClipboardList,
         },
         {
             label: 'Siap Diambil',
             value: totals.siap_diambil,
+            helper: 'Prioritas konfirmasi pengambilan',
             icon: Inbox,
-            className: 'border-cyan-300/30 bg-cyan-500/20 text-cyan-100',
         },
         {
             label: 'Selesai',
             value: totals.selesai,
-            icon: CheckCircle2,
-            className:
-                'border-emerald-300/30 bg-emerald-500/20 text-emerald-100',
-        },
-        {
-            label: 'Tidak Valid',
-            value: totals.tidak_valid,
-            icon: XCircle,
-            className: 'border-rose-300/30 bg-rose-500/20 text-rose-100',
+            helper: `${completionRate}% dari total dokumen`,
+            icon: FileCheck2,
         },
     ];
 
@@ -175,196 +195,342 @@ export default function Dashboard({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard Admin" />
 
-            <main className="flex min-h-[calc(100vh-4rem)] flex-col gap-8 p-4 md:p-8">
-                <header className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-                    <div>
-                        <p className="text-sm font-semibold tracking-wide text-cyan-100 uppercase">
-                            KPKNL Bogor
-                        </p>
-                        <h1 className="mt-2 text-3xl font-bold tracking-tight text-white md:text-4xl">
-                            Dashboard Doclang Boba
-                        </h1>
-                        <p className="mt-2 max-w-2xl text-sm font-medium text-blue-100">
-                            Ringkasan operasional dokumen pasca lelang untuk
-                            pemantauan cepat saat admin masuk sistem.
-                        </p>
-                    </div>
-                    <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-cyan-50 shadow-xl backdrop-blur-xl">
-                        <Activity className="h-4 w-4" />
-                        Sinkron dari statistik agregat
-                    </div>
-                </header>
-
-                <section className="grid gap-5 md:grid-cols-3">
-                    {topCards.map((card) => (
-                        <TopStatCard key={card.label} {...card} />
-                    ))}
-                </section>
-
-                <section className="grid gap-6 xl:grid-cols-[1.35fr_0.9fr]">
-                    <GlassPanel title="Rincian Dokumen Per Kategori">
-                        <div className="space-y-5">
-                            {categories.map((category) => (
-                                <CategoryRow
-                                    key={category.key}
-                                    category={category}
-                                    totalDocuments={totals.total}
-                                />
-                            ))}
+            <main className="min-h-[calc(100vh-4rem)] bg-slate-100 p-4 text-slate-950 md:p-6">
+                <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
+                    <header className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+                        <div>
+                            <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                                KPKNL Bogor
+                            </p>
+                            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">
+                                Dashboard Operasional Doclang Boba
+                            </h1>
+                            <p className="mt-2 max-w-2xl text-sm text-slate-600">
+                                Pantau antrean layanan, status dokumen, dan
+                                aktivitas terbaru dari satu layar kerja.
+                            </p>
                         </div>
-                    </GlassPanel>
+                        <div className="grid gap-2 text-sm sm:grid-cols-2">
+                            <StatusSummary
+                                icon={ShieldCheck}
+                                label="Admin Aktif"
+                                value={`${formatNumber(activeAdmins)} / ${formatNumber(stats?.total)}`}
+                            />
+                            <StatusSummary
+                                icon={Users}
+                                label="Super Admin"
+                                value={formatNumber(stats?.super_admin)}
+                            />
+                        </div>
+                    </header>
 
-                    <GlassPanel title="Distribusi Status Global">
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            {statusCards.map((status) => (
+                    <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                        {summaryCards.map((card) => {
+                            const Icon = card.icon;
+
+                            return (
+                                <Card
+                                    key={card.label}
+                                    className="rounded-lg border-slate-200 bg-white shadow-sm"
+                                >
+                                    <CardContent className="flex items-start justify-between gap-4 p-5">
+                                        <div>
+                                            <p className="text-sm font-medium text-slate-500">
+                                                {card.label}
+                                            </p>
+                                            <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
+                                                {formatNumber(card.value)}
+                                            </p>
+                                            <p className="mt-2 text-xs font-medium text-slate-500">
+                                                {card.helper}
+                                            </p>
+                                        </div>
+                                        <div className="rounded-md border border-slate-200 bg-slate-50 p-2.5 text-slate-700">
+                                            <Icon className="h-5 w-5" />
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            );
+                        })}
+                    </section>
+
+                    <section className="grid gap-5 xl:grid-cols-[1fr_0.85fr]">
+                        <Card className="rounded-lg border-slate-200 bg-white shadow-sm">
+                            <CardHeader className="border-b border-slate-200 p-5">
+                                <CardTitle className="text-base font-semibold text-slate-950">
+                                    Ringkasan Layanan
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                <div className="divide-y divide-slate-100">
+                                    {categories.map((category) => (
+                                        <ServiceRow
+                                            key={category.key}
+                                            label={category.label}
+                                            href={category.href}
+                                            stats={category.stats}
+                                            totalDocuments={totals.total}
+                                        />
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="rounded-lg border-slate-200 bg-white shadow-sm">
+                            <CardHeader className="border-b border-slate-200 p-5">
+                                <CardTitle className="text-base font-semibold text-slate-950">
+                                    Distribusi Status
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="grid gap-3 p-5 sm:grid-cols-2">
                                 <StatusBox
-                                    key={status.label}
-                                    {...status}
+                                    icon={Clock3}
+                                    label="Proses"
+                                    value={totals.proses}
                                     total={totals.total}
+                                    tone="border-amber-200 bg-amber-50 text-amber-800"
                                 />
-                            ))}
-                        </div>
-                    </GlassPanel>
-                </section>
+                                <StatusBox
+                                    icon={Inbox}
+                                    label="Siap Diambil"
+                                    value={totals.siap_diambil}
+                                    total={totals.total}
+                                    tone="border-sky-200 bg-sky-50 text-sky-800"
+                                />
+                                <StatusBox
+                                    icon={CheckCircle2}
+                                    label="Selesai"
+                                    value={totals.selesai}
+                                    total={totals.total}
+                                    tone="border-emerald-200 bg-emerald-50 text-emerald-800"
+                                />
+                                <StatusBox
+                                    icon={XCircle}
+                                    label="Tidak Valid"
+                                    value={totals.tidak_valid}
+                                    total={totals.total}
+                                    tone="border-rose-200 bg-rose-50 text-rose-800"
+                                />
+                            </CardContent>
+                        </Card>
+                    </section>
+
+                    <Card className="rounded-lg border-slate-200 bg-white shadow-sm">
+                        <CardHeader className="flex flex-col gap-2 border-b border-slate-200 p-5 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <CardTitle className="text-base font-semibold text-slate-950">
+                                    Aktivitas Terbaru
+                                </CardTitle>
+                                <p className="mt-1 text-sm text-slate-500">
+                                    Enam permohonan terakhir yang masuk ke
+                                    sistem.
+                                </p>
+                            </div>
+                            {totals.tidak_valid > 0 && (
+                                <div className="inline-flex items-center gap-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-800">
+                                    <AlertTriangle className="h-4 w-4" />
+                                    {formatNumber(totals.tidak_valid)} perlu
+                                    koreksi
+                                </div>
+                            )}
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-sm">
+                                    <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-500 uppercase">
+                                        <tr>
+                                            <th className="px-5 py-3">Nomor</th>
+                                            <th className="px-5 py-3">
+                                                Pemohon
+                                            </th>
+                                            <th className="px-5 py-3">
+                                                Layanan
+                                            </th>
+                                            <th className="px-5 py-3">
+                                                Tanggal
+                                            </th>
+                                            <th className="px-5 py-3">
+                                                Status
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {recentDocuments.length === 0 ? (
+                                            <tr>
+                                                <td
+                                                    className="px-5 py-8 text-center text-slate-500"
+                                                    colSpan={5}
+                                                >
+                                                    Belum ada aktivitas dokumen.
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            recentDocuments.map((document) => (
+                                                <tr
+                                                    key={document.id}
+                                                    className="hover:bg-slate-50"
+                                                >
+                                                    <td className="px-5 py-4 font-semibold text-slate-950">
+                                                        {document.id_pengajuan}
+                                                        <div className="text-xs font-normal text-slate-500">
+                                                            {
+                                                                document.kode_lot_lelang
+                                                            }
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-5 py-4 text-slate-700">
+                                                        {document.nama_pemohon}
+                                                    </td>
+                                                    <td className="px-5 py-4 text-slate-700">
+                                                        {
+                                                            serviceLabels[
+                                                                document
+                                                                    .jenis_layanan
+                                                            ]
+                                                        }
+                                                    </td>
+                                                    <td className="px-5 py-4 text-slate-600">
+                                                        {formatDate(
+                                                            document.created_at,
+                                                        )}
+                                                    </td>
+                                                    <td className="px-5 py-4">
+                                                        <StatusPill
+                                                            status={
+                                                                document.status_proses
+                                                            }
+                                                        />
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
             </main>
         </AppLayout>
     );
 }
 
-function TopStatCard({
+function StatusSummary({
+    icon: Icon,
     label,
     value,
-    suffix = '',
-    helper,
-    icon: Icon,
-    tone,
 }: {
+    icon: typeof ShieldCheck;
     label: string;
-    value: number;
-    suffix?: string;
-    helper: string;
-    icon: typeof FileText;
-    tone: string;
+    value: string;
 }) {
     return (
-        <Card className="rounded-3xl border border-white/20 bg-white/10 shadow-2xl shadow-blue-950/20 backdrop-blur-xl">
-            <CardContent className="flex items-start justify-between gap-5 p-6">
-                <div>
-                    <p className="text-sm font-medium text-blue-100">{label}</p>
-                    <p className="mt-3 text-3xl font-bold tracking-tight text-white">
-                        {formatNumber(value)}
-                        {suffix}
-                    </p>
-                    <p className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-cyan-50 backdrop-blur-lg">
-                        <TrendingUp className="h-3.5 w-3.5" />
-                        {helper}
-                    </p>
-                </div>
-                <div
-                    className={`rounded-2xl border p-3 shadow-[0_0_24px_rgba(125,211,252,0.25)] ${tone}`}
-                >
-                    <Icon className="h-6 w-6" />
-                </div>
-            </CardContent>
-        </Card>
-    );
-}
-
-function GlassPanel({
-    title,
-    children,
-}: {
-    title: string;
-    children: React.ReactNode;
-}) {
-    return (
-        <section className="rounded-3xl border border-white/20 bg-white/10 p-6 shadow-2xl backdrop-blur-xl">
-            <h2 className="text-lg font-semibold text-white">{title}</h2>
-            <div className="mt-6">{children}</div>
-        </section>
-    );
-}
-
-function CategoryRow({
-    category,
-    totalDocuments,
-}: {
-    category: {
-        label: string;
-        description: string;
-        stats: DocCategoryStats;
-    };
-    totalDocuments: number;
-}) {
-    const share = percent(category.stats.total, totalDocuments);
-
-    return (
-        <div className="rounded-2xl border border-white/15 bg-white/10 p-5">
-            <div className="flex items-center justify-between gap-4">
-                <div>
-                    <p className="text-base font-semibold text-white">
-                        {category.label}
-                    </p>
-                    <p className="text-sm font-medium text-blue-100">
-                        {category.description}
-                    </p>
-                </div>
-                <p className="text-2xl font-bold text-white">
-                    {formatNumber(category.stats.total)}
-                </p>
-            </div>
-
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/15">
-                <div
-                    className="h-full rounded-full bg-cyan-200"
-                    style={{ width: `${share}%` }}
-                />
-            </div>
-
-            <div className="mt-4 grid grid-cols-4 gap-2 text-center text-xs font-medium text-blue-100">
-                <MiniStat label="Proses" value={category.stats.proses} />
-                <MiniStat label="Siap" value={category.stats.siap_diambil} />
-                <MiniStat label="Selesai" value={category.stats.selesai} />
-                <MiniStat label="Invalid" value={category.stats.tidak_valid} />
+        <div className="flex min-w-44 items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+            <Icon className="h-4 w-4 text-slate-600" />
+            <div>
+                <p className="text-xs font-medium text-slate-500">{label}</p>
+                <p className="text-sm font-semibold text-slate-950">{value}</p>
             </div>
         </div>
     );
 }
 
-function MiniStat({ label, value }: { label: string; value: number }) {
+function ServiceRow({
+    label,
+    href,
+    stats,
+    totalDocuments,
+}: {
+    label: string;
+    href: string;
+    stats: DocCategoryStats;
+    totalDocuments: number;
+}) {
+    const share = percent(stats.total, totalDocuments);
+
     return (
-        <div className="rounded-xl bg-white/10 px-3 py-2">
-            <p className="font-semibold text-white">{formatNumber(value)}</p>
-            <p>{label}</p>
+        <div className="grid gap-4 p-5 lg:grid-cols-[1fr_220px_120px] lg:items-center">
+            <div>
+                <div className="flex items-center justify-between gap-3">
+                    <p className="font-semibold text-slate-950">{label}</p>
+                    <Link
+                        href={href}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-slate-950"
+                    >
+                        Buka
+                        <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                </div>
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                        className="h-full rounded-full bg-slate-700"
+                        style={{ width: `${share}%` }}
+                    />
+                </div>
+                <p className="mt-2 text-xs text-slate-500">
+                    {share}% dari total dokumen
+                </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+                <MiniMetric label="Proses" value={stats.proses} />
+                <MiniMetric label="Selesai" value={stats.selesai} />
+                <MiniMetric label="Siap" value={stats.siap_diambil} />
+                <MiniMetric label="Tidak Valid" value={stats.tidak_valid} />
+            </div>
+            <div className="text-left lg:text-right">
+                <p className="text-2xl font-semibold text-slate-950">
+                    {formatNumber(stats.total)}
+                </p>
+                <p className="text-xs text-slate-500">total</p>
+            </div>
+        </div>
+    );
+}
+
+function MiniMetric({ label, value }: { label: string; value: number }) {
+    return (
+        <div className="rounded-md bg-slate-50 px-3 py-2">
+            <p className="font-semibold text-slate-950">
+                {formatNumber(value)}
+            </p>
+            <p className="text-slate-500">{label}</p>
         </div>
     );
 }
 
 function StatusBox({
+    icon: Icon,
     label,
     value,
-    icon: Icon,
-    className,
     total,
+    tone,
 }: {
+    icon: typeof Clock3;
     label: string;
     value: number;
-    icon: typeof FileText;
-    className: string;
     total: number;
+    tone: string;
 }) {
     return (
-        <div className={`rounded-2xl border p-5 ${className}`}>
-            <div className="flex items-center justify-between">
+        <div className={`rounded-lg border p-4 ${tone}`}>
+            <div className="flex items-center justify-between gap-3">
                 <Icon className="h-5 w-5" />
                 <span className="text-xs font-semibold">
                     {percent(value, total)}%
                 </span>
             </div>
-            <p className="mt-5 text-3xl font-bold text-white">
-                {formatNumber(value)}
-            </p>
-            <p className="mt-1 text-sm font-medium">{label}</p>
+            <p className="mt-3 text-2xl font-semibold">{formatNumber(value)}</p>
+            <p className="text-sm font-medium">{label}</p>
         </div>
+    );
+}
+
+function StatusPill({ status }: { status: StatusKey }) {
+    return (
+        <span
+            className={`inline-flex rounded-md border px-2.5 py-1 text-xs font-semibold ${statusTone[status]}`}
+        >
+            {statusLabels[status]}
+        </span>
     );
 }

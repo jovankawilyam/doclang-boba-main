@@ -1,15 +1,15 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
-    Users,
-    Shield,
-    UserPlus,
+    CheckCircle,
+    Loader2,
     Power,
     PowerOff,
-    Trash2,
     Search,
-    CheckCircle,
+    Shield,
+    Trash2,
+    UserPlus,
+    Users,
     XCircle,
-    Loader2,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -65,6 +65,13 @@ const getInitials = (name: string) =>
         .slice(0, 2)
         .toUpperCase();
 
+const formatDate = (value: string) =>
+    new Intl.DateTimeFormat('id-ID', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+    }).format(new Date(value));
+
 export default function AdminIndex({ admins, stats }: Props) {
     const { props } = usePage<{
         auth: { user: { id: number } };
@@ -80,13 +87,15 @@ export default function AdminIndex({ admins, stats }: Props) {
     const [processingId, setProcessingId] = useState<number | null>(null);
 
     const filtered = admins.filter(
-        (a) =>
+        (admin) =>
             (statusFilter === 'all' ||
-                (statusFilter === 'active' && a.is_active) ||
-                (statusFilter === 'inactive' && !a.is_active)) &&
-            (a.name.toLowerCase().includes(search.toLowerCase()) ||
-                a.email.toLowerCase().includes(search.toLowerCase())),
+                (statusFilter === 'active' && admin.is_active) ||
+                (statusFilter === 'inactive' && !admin.is_active)) &&
+            (admin.name.toLowerCase().includes(search.toLowerCase()) ||
+                admin.email.toLowerCase().includes(search.toLowerCase())),
     );
+    const activeAdmins = admins.filter((admin) => admin.is_active).length;
+    const inactiveAdmins = admins.length - activeAdmins;
 
     const handleToggle = (id: number) => {
         setProcessingId(id);
@@ -118,9 +127,7 @@ export default function AdminIndex({ admins, stats }: Props) {
             preserveScroll: true,
             onSuccess: () => {
                 closeDeleteModal();
-                router.reload({
-                    only: ['admins', 'stats'],
-                });
+                router.reload({ only: ['admins', 'stats'] });
             },
             onFinish: () => {
                 setDeleteProcessing(false);
@@ -133,341 +140,339 @@ export default function AdminIndex({ admins, stats }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Manajemen Admin" />
 
-            <div className="flex flex-col gap-6 p-6">
-                <div className="flex items-center justify-between border-b border-white/20 pb-5">
-                    <div>
-                        <p className="text-sm font-semibold tracking-wide text-cyan-100 uppercase">
-                            Administrasi Sistem
-                        </p>
-                        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-white">
-                            Manajemen Admin
-                        </h1>
-                        <p className="text-sm font-medium text-blue-100">
-                            Kelola akun admin dan hak akses sistem
-                        </p>
-                    </div>
-                    <Link href="/admin/create">
-                        <Button className="gap-2 border border-white/20 bg-white/15 text-white shadow-lg backdrop-blur-lg hover:bg-white/25">
-                            <UserPlus className="h-4 w-4" />
-                            Tambah Admin
-                        </Button>
-                    </Link>
-                </div>
-
-                {/* Flash Messages */}
-                {flash.success && (
-                    <div className="flex items-center gap-2 rounded-lg border border-emerald-300/40 bg-emerald-400/15 px-4 py-3 text-sm text-emerald-100 backdrop-blur-lg">
-                        <CheckCircle className="h-4 w-4 shrink-0" />
-                        {flash.success}
-                    </div>
-                )}
-                {flash.error && (
-                    <div className="flex items-center gap-2 rounded-lg border border-rose-300/40 bg-rose-400/15 px-4 py-3 text-sm text-rose-100 backdrop-blur-lg">
-                        <XCircle className="h-4 w-4 shrink-0" />
-                        {flash.error}
-                    </div>
-                )}
-
-                {/* Stats */}
-                <div className="grid gap-4 md:grid-cols-3">
-                    <Card className="rounded-3xl border border-white/20 bg-white/10 shadow-2xl backdrop-blur-xl">
-                        <CardContent className="flex items-center gap-4 p-6">
-                            <div className="rounded-lg border border-white/20 bg-white/15 p-3 shadow-[0_0_22px_rgba(125,211,252,0.35)]">
-                                <Shield className="h-6 w-6 text-cyan-100 drop-shadow-[0_0_10px_rgba(103,232,249,0.8)]" />
-                            </div>
-                            <div>
-                                <p className="text-sm text-blue-100">
-                                    Super Admin
-                                </p>
-                                <p className="text-3xl font-bold">
-                                    {formatStat(stats.super_admin)}
-                                </p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card className="rounded-3xl border border-white/20 bg-white/10 shadow-2xl backdrop-blur-xl">
-                        <CardContent className="flex items-center gap-4 p-6">
-                            <div className="rounded-lg border border-white/20 bg-white/15 p-3 shadow-[0_0_22px_rgba(125,211,252,0.35)]">
-                                <Users className="h-6 w-6 text-cyan-100 drop-shadow-[0_0_10px_rgba(103,232,249,0.8)]" />
-                            </div>
-                            <div>
-                                <p className="text-sm text-blue-100">Admin</p>
-                                <p className="text-3xl font-bold">
-                                    {formatStat(stats.admin)}
-                                </p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card className="rounded-3xl border border-white/20 bg-white/10 shadow-2xl backdrop-blur-xl">
-                        <CardContent className="flex items-center gap-4 p-6">
-                            <div className="rounded-lg border border-white/20 bg-white/15 p-3 shadow-[0_0_22px_rgba(125,211,252,0.35)]">
-                                <Users className="h-6 w-6 text-cyan-100 drop-shadow-[0_0_10px_rgba(103,232,249,0.8)]" />
-                            </div>
-                            <div>
-                                <p className="text-sm text-blue-100">
-                                    Total Admin
-                                </p>
-                                <p className="text-3xl font-bold">
-                                    {formatStat(stats.total)}
-                                </p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Table */}
-                <Card className="rounded-3xl border border-white/20 bg-white/10 shadow-2xl backdrop-blur-xl">
-                    <CardHeader className="border-b border-white/15 px-6 py-5">
-                        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-white">
-                                <Users className="h-5 w-5" />
-                                Daftar Admin
-                            </CardTitle>
-                            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-                                <div className="relative w-full sm:w-64">
-                                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-blue-100" />
-                                    <Input
-                                        placeholder="Cari nama atau email..."
-                                        className="border-white/20 bg-white/10 pl-9 text-white placeholder:text-blue-100"
-                                        value={search}
-                                        onChange={(e) =>
-                                            setSearch(e.target.value)
-                                        }
-                                    />
-                                </div>
-                                <select
-                                    value={statusFilter}
-                                    onChange={(e) =>
-                                        setStatusFilter(e.target.value)
-                                    }
-                                    className="h-10 rounded-md border border-white/20 bg-white/10 px-3 text-sm font-medium text-white shadow-lg backdrop-blur-lg transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
-                                >
-                                    <option value="all">Semua Status</option>
-                                    <option value="active">Aktif</option>
-                                    <option value="inactive">Nonaktif</option>
-                                </select>
-                            </div>
+            <main className="min-h-[calc(100vh-4rem)] bg-slate-100 p-4 text-slate-950 md:p-6">
+                <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
+                    <header className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+                        <div>
+                            <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                                Administrasi Sistem
+                            </p>
+                            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">
+                                Manajemen Admin
+                            </h1>
+                            <p className="mt-2 max-w-2xl text-sm text-slate-600">
+                                Kelola akun petugas, status akses, dan peran
+                                pengguna internal Doclang Boba.
+                            </p>
                         </div>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="sticky top-0 border-b border-white/20 bg-white/10 text-left text-xs text-blue-50 uppercase backdrop-blur-md">
-                                    <tr>
-                                        <th className="px-6 py-4 font-semibold">
-                                            Nama
-                                        </th>
-                                        <th className="px-6 py-4 font-semibold">
-                                            Email
-                                        </th>
-                                        <th className="px-6 py-4 font-semibold">
-                                            Role
-                                        </th>
-                                        <th className="px-6 py-4 font-semibold">
-                                            Status
-                                        </th>
-                                        <th className="px-6 py-4 font-semibold">
-                                            Bergabung
-                                        </th>
-                                        <th className="px-6 py-4 text-right font-semibold">
-                                            Aksi
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-white/10">
-                                    {filtered.length === 0 ? (
+                        <Link href="/admin/create">
+                            <Button className="gap-2 rounded-md bg-slate-950 text-white hover:bg-slate-800">
+                                <UserPlus className="h-4 w-4" />
+                                Tambah Admin
+                            </Button>
+                        </Link>
+                    </header>
+
+                    {flash.success && (
+                        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+                            <CheckCircle className="h-4 w-4 shrink-0" />
+                            {flash.success}
+                        </div>
+                    )}
+                    {flash.error && (
+                        <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800">
+                            <XCircle className="h-4 w-4 shrink-0" />
+                            {flash.error}
+                        </div>
+                    )}
+
+                    <section className="grid gap-4 md:grid-cols-4">
+                        <AdminMetric
+                            icon={Users}
+                            label="Total Admin"
+                            value={stats.total}
+                        />
+                        <AdminMetric
+                            icon={Shield}
+                            label="Super Admin"
+                            value={stats.super_admin}
+                        />
+                        <AdminMetric
+                            icon={CheckCircle}
+                            label="Aktif"
+                            value={activeAdmins}
+                        />
+                        <AdminMetric
+                            icon={XCircle}
+                            label="Nonaktif"
+                            value={inactiveAdmins}
+                        />
+                    </section>
+
+                    <Card className="rounded-lg border-slate-200 bg-white shadow-sm">
+                        <CardHeader className="border-b border-slate-200 p-5">
+                            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                                <div>
+                                    <CardTitle className="text-base font-semibold text-slate-950">
+                                        Daftar Akun Admin
+                                    </CardTitle>
+                                    <p className="mt-1 text-sm text-slate-500">
+                                        Menampilkan{' '}
+                                        {formatStat(filtered.length)} dari{' '}
+                                        {formatStat(admins.length)} akun.
+                                    </p>
+                                </div>
+                                <div className="flex flex-col gap-3 sm:flex-row">
+                                    <div className="relative w-full sm:w-72">
+                                        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                        <Input
+                                            placeholder="Cari nama atau email"
+                                            className="border-slate-300 bg-white pl-9 text-slate-950 placeholder:text-slate-400"
+                                            value={search}
+                                            onChange={(event) =>
+                                                setSearch(event.target.value)
+                                            }
+                                        />
+                                    </div>
+                                    <select
+                                        value={statusFilter}
+                                        onChange={(event) =>
+                                            setStatusFilter(event.target.value)
+                                        }
+                                        className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                                    >
+                                        <option value="all">
+                                            Semua Status
+                                        </option>
+                                        <option value="active">Aktif</option>
+                                        <option value="inactive">
+                                            Nonaktif
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-sm">
+                                    <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-500 uppercase">
                                         <tr>
-                                            <td
-                                                colSpan={6}
-                                                className="px-6 py-10 text-center text-sm text-blue-100"
-                                            >
-                                                Tidak ada admin yang ditemukan.
-                                            </td>
+                                            <th className="px-5 py-3">Admin</th>
+                                            <th className="px-5 py-3">Role</th>
+                                            <th className="px-5 py-3">
+                                                Status
+                                            </th>
+                                            <th className="px-5 py-3">
+                                                Bergabung
+                                            </th>
+                                            <th className="px-5 py-3 text-right">
+                                                Aksi
+                                            </th>
                                         </tr>
-                                    ) : (
-                                        filtered.map((admin) => (
-                                            <tr
-                                                key={admin.id}
-                                                className="last:border-0 hover:bg-white/10"
-                                            >
-                                                <td className="px-6 py-4 text-sm font-medium">
-                                                    <div className="flex items-center gap-3">
-                                                        <Avatar className="h-10 w-10 border border-white/20">
-                                                            <AvatarFallback className="bg-white/15 text-xs font-semibold text-white">
-                                                                {getInitials(
-                                                                    admin.name,
-                                                                )}
-                                                            </AvatarFallback>
-                                                        </Avatar>
-                                                        <div>
-                                                            <p className="font-semibold text-white">
-                                                                {admin.name}
-                                                            </p>
-                                                            <p className="text-xs text-blue-100">
-                                                                ID Admin #
-                                                                {admin.id}
-                                                            </p>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {filtered.length === 0 ? (
+                                            <tr>
+                                                <td
+                                                    colSpan={5}
+                                                    className="px-5 py-10 text-center text-slate-500"
+                                                >
+                                                    Tidak ada admin yang cocok
+                                                    dengan filter.
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            filtered.map((admin) => (
+                                                <tr
+                                                    key={admin.id}
+                                                    className="hover:bg-slate-50"
+                                                >
+                                                    <td className="px-5 py-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <Avatar className="h-10 w-10 border border-slate-200">
+                                                                <AvatarFallback className="bg-slate-100 text-xs font-semibold text-slate-700">
+                                                                    {getInitials(
+                                                                        admin.name,
+                                                                    )}
+                                                                </AvatarFallback>
+                                                            </Avatar>
+                                                            <div>
+                                                                <p className="font-semibold text-slate-950">
+                                                                    {admin.name}
+                                                                </p>
+                                                                <p className="text-xs text-slate-500">
+                                                                    {
+                                                                        admin.email
+                                                                    }
+                                                                </p>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-blue-100">
-                                                    {admin.email}
-                                                </td>
-                                                <td className="px-6 py-4 text-sm">
-                                                    <Badge
-                                                        variant="outline"
-                                                        className="rounded-full border-white/20 bg-white/10 text-blue-50"
-                                                    >
-                                                        {admin.role ===
-                                                        'super_admin'
-                                                            ? 'Super Admin'
-                                                            : 'Admin'}
-                                                    </Badge>
-                                                </td>
-                                                <td className="px-6 py-4 text-sm">
-                                                    <Badge
-                                                        variant="outline"
-                                                        className={
-                                                            admin.is_active
-                                                                ? 'rounded-full border-emerald-300/40 bg-emerald-500/20 px-3 py-1 text-xs font-semibold tracking-wide text-emerald-200'
-                                                                : 'rounded-full border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold tracking-wide text-blue-100'
-                                                        }
-                                                    >
-                                                        {admin.is_active
-                                                            ? 'ACTIVE'
-                                                            : 'INACTIVE'}
-                                                    </Badge>
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-blue-100">
-                                                    {new Date(
-                                                        admin.created_at,
-                                                    ).toLocaleDateString(
-                                                        'id-ID',
-                                                        {
-                                                            day: 'numeric',
-                                                            month: 'short',
-                                                            year: 'numeric',
-                                                        },
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        <Button
-                                                            variant={
-                                                                admin.is_active
-                                                                    ? 'outline'
-                                                                    : 'outline'
-                                                            }
-                                                            size="sm"
-                                                            className="h-8 gap-1 border-white/20 bg-white/10 text-blue-50 hover:bg-white/20 hover:text-white"
-                                                            disabled={
-                                                                processingId ===
-                                                                    admin.id ||
-                                                                admin.id ===
-                                                                    auth.user.id
-                                                            }
-                                                            onClick={() =>
-                                                                handleToggle(
-                                                                    admin.id,
-                                                                )
+                                                    </td>
+                                                    <td className="px-5 py-4">
+                                                        <Badge
+                                                            variant="outline"
+                                                            className={
+                                                                admin.role ===
+                                                                'super_admin'
+                                                                    ? 'rounded-md border-indigo-200 bg-indigo-50 text-indigo-800'
+                                                                    : 'rounded-md border-slate-200 bg-slate-50 text-slate-700'
                                                             }
                                                         >
-                                                            {admin.is_active ? (
-                                                                <>
-                                                                    <PowerOff className="h-3 w-3" />
-                                                                    {processingId ===
-                                                                    admin.id
-                                                                        ? 'Memproses...'
-                                                                        : 'Nonaktifkan'}
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <Power className="h-3 w-3" />
-                                                                    {processingId ===
-                                                                    admin.id
-                                                                        ? 'Memproses...'
-                                                                        : 'Aktifkan'}
-                                                                </>
-                                                            )}
-                                                        </Button>
-                                                        {admin.id !==
-                                                            auth.user.id && (
+                                                            {admin.role ===
+                                                            'super_admin'
+                                                                ? 'Super Admin'
+                                                                : 'Admin'}
+                                                        </Badge>
+                                                    </td>
+                                                    <td className="px-5 py-4">
+                                                        <Badge
+                                                            variant="outline"
+                                                            className={
+                                                                admin.is_active
+                                                                    ? 'rounded-md border-emerald-200 bg-emerald-50 text-emerald-800'
+                                                                    : 'rounded-md border-slate-200 bg-slate-50 text-slate-600'
+                                                            }
+                                                        >
+                                                            {admin.is_active
+                                                                ? 'Aktif'
+                                                                : 'Nonaktif'}
+                                                        </Badge>
+                                                    </td>
+                                                    <td className="px-5 py-4 text-slate-600">
+                                                        {formatDate(
+                                                            admin.created_at,
+                                                        )}
+                                                    </td>
+                                                    <td className="px-5 py-4">
+                                                        <div className="flex items-center justify-end gap-2">
                                                             <Button
-                                                                variant="ghost"
+                                                                variant="outline"
                                                                 size="sm"
-                                                                className="h-8 gap-1 text-rose-100 hover:bg-rose-400/20 hover:text-white"
+                                                                className="h-9 gap-2 border-slate-300 text-slate-700 hover:bg-slate-100"
                                                                 disabled={
-                                                                    deleteProcessing ||
                                                                     processingId ===
-                                                                        admin.id
+                                                                        admin.id ||
+                                                                    admin.id ===
+                                                                        auth
+                                                                            .user
+                                                                            .id
                                                                 }
                                                                 onClick={() =>
-                                                                    openDeleteModal(
-                                                                        admin,
+                                                                    handleToggle(
+                                                                        admin.id,
                                                                     )
                                                                 }
                                                             >
-                                                                <Trash2 className="h-3 w-3" />
-                                                                Hapus
+                                                                {admin.is_active ? (
+                                                                    <PowerOff className="h-4 w-4" />
+                                                                ) : (
+                                                                    <Power className="h-4 w-4" />
+                                                                )}
+                                                                {processingId ===
+                                                                admin.id
+                                                                    ? 'Memproses'
+                                                                    : admin.is_active
+                                                                      ? 'Nonaktifkan'
+                                                                      : 'Aktifkan'}
                                                             </Button>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </CardContent>
-                </Card>
+                                                            {admin.id !==
+                                                                auth.user
+                                                                    .id && (
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="h-9 gap-2 border-rose-200 text-rose-700 hover:bg-rose-50"
+                                                                    disabled={
+                                                                        deleteProcessing ||
+                                                                        processingId ===
+                                                                            admin.id
+                                                                    }
+                                                                    onClick={() =>
+                                                                        openDeleteModal(
+                                                                            admin,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                    Hapus
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </CardContent>
+                    </Card>
 
-                <Dialog
-                    open={confirmModalOpen}
-                    onOpenChange={(open) => {
-                        if (!open && !deleteProcessing) closeDeleteModal();
-                    }}
-                >
-                    <DialogContent className="border border-white/20 bg-blue-950/80 text-white shadow-2xl backdrop-blur-xl">
-                        <DialogHeader>
-                            <DialogTitle>Hapus Admin</DialogTitle>
-                            <DialogDescription className="text-blue-100">
-                                Admin{' '}
-                                <span className="font-semibold text-white">
-                                    {selectedAdmin?.name}
-                                </span>{' '}
-                                akan dihapus dari sistem. Aksi ini tidak dapat
-                                dibatalkan.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <DialogFooter>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                className="border-white/20 bg-white/10 text-blue-50 hover:bg-white/20 hover:text-white"
-                                disabled={deleteProcessing}
-                                onClick={closeDeleteModal}
-                            >
-                                Batal
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="destructive"
-                                disabled={deleteProcessing}
-                                onClick={confirmDeleteAdmin}
-                                className="gap-2"
-                            >
-                                {deleteProcessing && (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                )}
-                                {deleteProcessing
-                                    ? 'Menghapus...'
-                                    : 'Konfirmasi Hapus'}
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            </div>
+                    <Dialog
+                        open={confirmModalOpen}
+                        onOpenChange={(open) => {
+                            if (!open && !deleteProcessing) closeDeleteModal();
+                        }}
+                    >
+                        <DialogContent className="border border-slate-200 bg-white text-slate-950 shadow-2xl">
+                            <DialogHeader>
+                                <DialogTitle>Hapus Akun Admin</DialogTitle>
+                                <DialogDescription className="text-slate-600">
+                                    Akun{' '}
+                                    <span className="font-semibold text-slate-950">
+                                        {selectedAdmin?.name}
+                                    </span>{' '}
+                                    akan dihapus dari daftar admin. Akun ini
+                                    tidak bisa login lagi setelah dihapus.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="border-slate-300 text-slate-700"
+                                    disabled={deleteProcessing}
+                                    onClick={closeDeleteModal}
+                                >
+                                    Batal
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    disabled={deleteProcessing}
+                                    onClick={confirmDeleteAdmin}
+                                    className="gap-2"
+                                >
+                                    {deleteProcessing && (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                    )}
+                                    {deleteProcessing
+                                        ? 'Menghapus'
+                                        : 'Konfirmasi Hapus'}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                </div>
+            </main>
         </AppLayout>
+    );
+}
+
+function AdminMetric({
+    icon: Icon,
+    label,
+    value,
+}: {
+    icon: typeof Users;
+    label: string;
+    value: number;
+}) {
+    return (
+        <Card className="rounded-lg border-slate-200 bg-white shadow-sm">
+            <CardContent className="flex items-center justify-between gap-4 p-5">
+                <div>
+                    <p className="text-sm font-medium text-slate-500">
+                        {label}
+                    </p>
+                    <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
+                        {formatStat(value)}
+                    </p>
+                </div>
+                <div className="rounded-md border border-slate-200 bg-slate-50 p-2.5 text-slate-700">
+                    <Icon className="h-5 w-5" />
+                </div>
+            </CardContent>
+        </Card>
     );
 }

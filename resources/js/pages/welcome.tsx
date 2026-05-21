@@ -7,14 +7,8 @@ import {
     Search,
     XCircle,
 } from 'lucide-react';
-import {
-    type FormEvent,
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { FormEvent } from 'react';
 import FloatingWhatsApp from '@/components/FloatingWhatsApp';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -381,7 +375,7 @@ export default function Welcome({
                 className={`sticky top-0 z-50 w-full border-b border-[#D8E0EC] bg-white/95 shadow-sm backdrop-blur transition-transform duration-300 dark:border-slate-200 dark:bg-white/95 ${
                     showNav ? 'translate-y-0' : '-translate-y-full'
                 }`}
-                >
+            >
                 <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-8">
                     <a href="/" className="cursor-pointer">
                         <img
@@ -452,11 +446,11 @@ export default function Welcome({
                 </div>
 
                 {/* MENU MOBILE DENGAN ANIMASI */}
-                <div 
-                    className={`overflow-hidden transition-all duration-300 ease-in-out md:hidden border-[#D8E0EC] bg-white px-6 shadow-sm dark:border-slate-200 dark:bg-white ${
-                        open 
-                            ? 'max-h-[450px] opacity-100 py-5 border-t scale-100' 
-                            : 'max-h-0 opacity-0 py-0 border-t-0 scale-95 pointer-events-none'
+                <div
+                    className={`overflow-hidden border-[#D8E0EC] bg-white px-6 shadow-sm transition-all duration-300 ease-in-out md:hidden dark:border-slate-200 dark:bg-white ${
+                        open
+                            ? 'max-h-[450px] scale-100 border-t py-5 opacity-100'
+                            : 'pointer-events-none max-h-0 scale-95 border-t-0 py-0 opacity-0'
                     }`}
                 >
                     <div className="space-y-3">
@@ -631,7 +625,7 @@ export default function Welcome({
                                     <p className="text-xs font-black tracking-widest text-slate-500 uppercase dark:text-slate-500">
                                         Total
                                     </p>
-                                    <p className="text-5xl font-black text-qslate-50 dark:text-slate-950">
+                                    <p className="text-qslate-50 text-5xl font-black dark:text-slate-950">
                                         {formatStat(activeStats.total)}
                                     </p>
                                 </div>

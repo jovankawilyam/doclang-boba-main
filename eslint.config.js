@@ -55,7 +55,14 @@ export default [
             'import/order': [
                 'error',
                 {
-                    groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+                    groups: [
+                        'builtin',
+                        'external',
+                        'internal',
+                        'parent',
+                        'sibling',
+                        'index',
+                    ],
                     alphabetize: {
                         order: 'asc',
                         caseInsensitive: true,
@@ -79,6 +86,7 @@ export default [
             'resources/js/actions/**',
             'resources/js/components/ui/*',
             'resources/js/routes/**',
+            'whatsapp-gateway/**',
         ],
     },
     prettier, // Turn off all rules that might conflict with Prettier

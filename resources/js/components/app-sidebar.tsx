@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     BookOpen,
     BookOpenText,
@@ -22,7 +22,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import type { NavItem } from '@/types';
+import type { Auth, NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
     {
@@ -69,6 +69,11 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { auth } = usePage<{ auth: Auth }>().props;
+    const visibleMiddleNavItems = middleNavItems.filter(
+        (item) => item.href !== '/admin' || auth.user.role === 'super_admin',
+    );
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -85,8 +90,7 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMain items={mainNavItems} />
-                <NavMiddle items={middleNavItems} />{' '}
-                {/* ini sebelumnya belum dipakai */}
+                <NavMiddle items={visibleMiddleNavItems} />
             </SidebarContent>
 
             <SidebarFooter>

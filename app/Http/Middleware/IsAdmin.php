@@ -6,19 +6,17 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class IsSuperAdmin
+class IsAdmin
 {
     /**
-     * Handle an incoming request.
-     *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
 
-        if (! $user || $user->role !== 'super_admin') {
-            abort(403, 'Akses Ditolak! Hanya Super Admin yang dapat mengakses halaman ini.');
+        if (! $user || ! in_array($user->role, ['admin', 'super_admin'], true)) {
+            abort(403, 'Akses ditolak. Akun ini tidak memiliki hak akses admin.');
         }
 
         if (! $user->is_active) {

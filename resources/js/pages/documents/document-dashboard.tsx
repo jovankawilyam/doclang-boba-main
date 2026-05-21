@@ -131,21 +131,21 @@ const formatStat = (value: number | undefined) =>
 const formatDate = (value?: string | null) =>
     value
         ? new Intl.DateTimeFormat('id-ID', {
-              day: '2-digit',
-              month: 'short',
-              year: 'numeric',
-          }).format(new Date(value))
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+        }).format(new Date(value))
         : '-';
 
 const formatDateTime = (value?: string | null) =>
     value
         ? new Intl.DateTimeFormat('id-ID', {
-              day: '2-digit',
-              month: 'short',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-          }).format(new Date(value))
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        }).format(new Date(value))
         : '-';
 
 const addHours = (value: string, hours: number) => {
@@ -171,14 +171,14 @@ const getInvalidWhatsappCooldown = (document: DocumentItem) => {
 const getStatusColor = (status: string) => {
     switch (status) {
         case 'siap_diambil':
-            return 'border-cyan-300/40 bg-cyan-500/20 text-cyan-100';
+            return 'border-sky-200 bg-sky-50 text-sky-800';
         case 'selesai':
-            return 'border-emerald-300/40 bg-emerald-500/20 text-emerald-100';
+            return 'border-emerald-200 bg-emerald-50 text-emerald-800';
         case 'tidak_valid':
-            return 'border-rose-300/40 bg-rose-500/20 text-rose-100';
+            return 'border-rose-200 bg-rose-50 text-rose-800';
         case 'proses':
         default:
-            return 'border-amber-300/40 bg-amber-500/20 text-amber-100';
+            return 'border-amber-200 bg-amber-50 text-amber-800';
     }
 };
 
@@ -196,11 +196,11 @@ function DetailField({
     value?: string | null;
 }) {
     return (
-        <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-            <dt className="text-[11px] font-semibold tracking-wide text-blue-100 uppercase">
+        <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+            <dt className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
                 {label}
             </dt>
-            <dd className="mt-1 text-sm font-medium break-words text-white">
+            <dd className="mt-1 text-sm font-medium break-words text-slate-950">
                 {value || '-'}
             </dd>
         </div>
@@ -216,7 +216,7 @@ function DetailSection({
 }) {
     return (
         <section className="space-y-3">
-            <h3 className="text-sm font-bold tracking-wide text-cyan-100 uppercase">
+            <h3 className="text-sm font-bold tracking-wide text-slate-600 uppercase">
                 {title}
             </h3>
             <dl className="grid gap-3 md:grid-cols-2">{children}</dl>
@@ -230,12 +230,12 @@ function FileButton({ href, label }: { href: string | null; label: string }) {
             href={href}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex h-9 items-center justify-center rounded-full border border-white/20 bg-white/10 px-4 text-xs font-semibold text-white transition hover:bg-white/20"
+            className="inline-flex h-9 items-center justify-center rounded-md border border-slate-300 bg-white px-4 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
         >
             {label}
         </a>
     ) : (
-        <span className="inline-flex h-9 items-center rounded-full border border-white/10 px-4 text-xs font-semibold text-blue-100">
+        <span className="inline-flex h-9 items-center rounded-md border border-slate-200 bg-slate-50 px-4 text-xs font-semibold text-slate-500">
             {label}: -
         </span>
     );
@@ -266,12 +266,12 @@ function DetailModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-h-[88vh] overflow-y-auto border-white/20 bg-slate-950 text-white shadow-2xl sm:max-w-5xl">
+            <DialogContent className="max-h-[88vh] overflow-y-auto border-slate-200 bg-white text-slate-950 shadow-2xl sm:max-w-5xl">
                 <DialogHeader>
-                    <DialogTitle className="text-white">
+                    <DialogTitle className="text-slate-950">
                         Detail Permohonan {document.id_pengajuan}
                     </DialogTitle>
-                    <DialogDescription className="text-blue-100">
+                    <DialogDescription className="text-slate-600">
                         Data lengkap yang dikirim pemohon dan status proses
                         layanan.
                     </DialogDescription>
@@ -358,8 +358,8 @@ function DetailModal({
                             value={
                                 document.jenis_objek_risalah
                                     ? (rlObjectLabels[
-                                          document.jenis_objek_risalah
-                                      ] ?? document.jenis_objek_risalah)
+                                        document.jenis_objek_risalah
+                                    ] ?? document.jenis_objek_risalah)
                                     : null
                             }
                         />
@@ -385,7 +385,7 @@ function DetailModal({
                     </DetailSection>
 
                     <div className="space-y-3">
-                        <h3 className="text-sm font-bold tracking-wide text-cyan-100 uppercase">
+                        <h3 className="text-sm font-bold tracking-wide text-slate-600 uppercase">
                             Tautan Berkas
                         </h3>
                         <div className="flex flex-wrap gap-2">
@@ -492,10 +492,10 @@ function DetailModal({
                     </DetailSection>
 
                     {canSendInvalidWhatsapp && (
-                        <div className="flex flex-col items-end gap-2 border-t border-white/10 pt-4">
+                        <div className="flex flex-col items-end gap-2 border-t border-slate-200 pt-4">
                             {invalidWhatsappCooldown.active &&
                                 invalidWhatsappCooldown.nextAllowedAt && (
-                                    <p className="text-right text-xs font-medium text-blue-100">
+                                    <p className="text-right text-xs font-medium text-slate-500">
                                         WhatsApp sudah terkirim. Bisa dikirim
                                         kembali pada{' '}
                                         {formatDateTime(
@@ -514,7 +514,7 @@ function DetailModal({
                                     onClick={() =>
                                         onSendInvalidWhatsapp(document)
                                     }
-                                    className="gap-2 rounded-full border border-emerald-300/30 bg-emerald-500/20 px-5 text-emerald-50 hover:bg-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60"
+                                    className="gap-2 rounded-md bg-emerald-700 px-5 text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
                                     {isSending ? (
                                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -656,10 +656,10 @@ export default function DocumentDashboard({
                     setSelectedDocument((currentDocument) =>
                         currentDocument?.id === document.id
                             ? {
-                                  ...currentDocument,
-                                  invalid_whatsapp_sent_at:
-                                      new Date().toISOString(),
-                              }
+                                ...currentDocument,
+                                invalid_whatsapp_sent_at:
+                                    new Date().toISOString(),
+                            }
                             : currentDocument,
                     );
                 },
@@ -675,7 +675,7 @@ export default function DocumentDashboard({
         router.post(
             '/documents',
             {
-                nomor_pengajuan: `${nomorPengajuan}/${config.addSuffix}/${new Date().getFullYear()}`,
+                nomor_pengajuan: nomorPengajuan,
                 status_proses: 'proses',
                 category: config.addCategory,
             },
@@ -698,328 +698,348 @@ export default function DocumentDashboard({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={config.title} />
 
-            <div className="flex min-h-[calc(100vh-4rem)] flex-col gap-8 p-6 md:p-8">
-                {flash.success && (
-                    <div className="flex items-center gap-2 rounded-lg border border-emerald-300/40 bg-emerald-400/15 px-4 py-3 text-sm text-emerald-100 backdrop-blur-lg">
-                        <CheckCircle className="h-4 w-4 shrink-0" />
-                        {flash.success}
-                    </div>
-                )}
-                {flash.error && (
-                    <div className="flex items-center gap-2 rounded-lg border border-rose-300/40 bg-rose-400/15 px-4 py-3 text-sm text-rose-100 backdrop-blur-lg">
-                        <XCircle className="h-4 w-4 shrink-0" />
-                        {flash.error}
-                    </div>
-                )}
-
-                <header className="flex flex-col gap-2">
-                    <h1 className="text-3xl font-semibold tracking-tight text-white">
-                        {config.title}
-                    </h1>
-                    <p className="text-blue-100">{config.description}</p>
-                </header>
-
-                <Card
-                    className={`rounded-3xl border border-white/20 bg-white/10 shadow-2xl backdrop-blur-xl transition-all duration-300 ${filtering ? 'opacity-60' : ''}`}
-                >
-                    <CardHeader className="flex flex-col items-center justify-between gap-4 border-b border-white/15 pb-5 md:flex-row">
-                        <CardTitle className="flex items-center gap-2 text-xl font-semibold text-white">
-                            <FileText className="h-5 w-5 text-cyan-100 drop-shadow-[0_0_10px_rgba(103,232,249,0.8)]" />
-                            Daftar Permohonan
-                        </CardTitle>
-                        <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row">
-                            <form
-                                onSubmit={handleSearch}
-                                className="flex w-full flex-col gap-2 md:w-auto md:flex-row"
-                            >
-                                <div className="relative w-full md:w-64">
-                                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-blue-100" />
-                                    <Input
-                                        type="text"
-                                        placeholder="Cari pengajuan..."
-                                        value={search}
-                                        onChange={(event) =>
-                                            setSearch(event.target.value)
-                                        }
-                                        className={`w-full rounded-full border-white/20 bg-white/10 pl-9 text-white shadow-lg ring-offset-transparent transition-all duration-300 placeholder:text-blue-100 focus-visible:ring-2 ${config.accentRing}`}
-                                    />
-                                </div>
-                                <select
-                                    value={status}
-                                    onChange={(event) =>
-                                        onFilterChange(event.target.value)
-                                    }
-                                    className={`h-10 rounded-full border border-white/20 bg-white/10 px-4 text-sm font-medium text-white shadow-lg backdrop-blur-lg transition-all duration-300 outline-none focus-visible:ring-2 ${config.accentRing}`}
-                                >
-                                    {statusOptions.map((option) => (
-                                        <option
-                                            key={option.value}
-                                            value={option.value}
-                                        >
-                                            {option.label}
-                                        </option>
-                                    ))}
-                                </select>
-                                {filtering && (
-                                    <Loader2 className="h-5 w-5 animate-spin self-center text-cyan-100" />
-                                )}
-                            </form>
-                            <Button
-                                onClick={() => setShowAddForm(!showAddForm)}
-                                disabled={processing}
-                                className="gap-2 rounded-full border border-white/20 bg-white/15 px-5 whitespace-nowrap text-white shadow-lg backdrop-blur-lg transition-all duration-300 hover:bg-white/25"
-                            >
-                                <Plus className="h-4 w-4" />
-                                Tambah Data
-                            </Button>
+            <main className="min-h-[calc(100vh-4rem)] bg-slate-100 p-4 text-slate-950 md:p-6">
+                <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
+                    {flash.success && (
+                        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+                            <CheckCircle className="h-4 w-4 shrink-0" />
+                            {flash.success}
                         </div>
-                    </CardHeader>
-
-                    {showAddForm && (
-                        <div className="animate-in border-b border-white/15 bg-white/10 p-6 backdrop-blur-lg duration-300 fade-in slide-in-from-top-4">
-                            <form
-                                onSubmit={handleAddSubmit}
-                                className="flex max-w-lg items-end gap-4"
-                            >
-                                <div className="flex-1 space-y-2">
-                                    <label className="text-sm font-semibold text-white">
-                                        Nomor Pengajuan Baru (angka saja)
-                                    </label>
-                                    <Input
-                                        required
-                                        placeholder="Misal: 200"
-                                        value={nomorPengajuan}
-                                        onChange={(event) =>
-                                            setNomorPengajuan(
-                                                event.target.value.replace(
-                                                    /[^0-9]/g,
-                                                    '',
-                                                ),
-                                            )
-                                        }
-                                        className={`border-white/20 bg-white/10 text-white shadow-lg ring-offset-transparent transition-all duration-300 placeholder:text-blue-100 focus-visible:ring-2 ${config.accentRing}`}
-                                    />
-                                </div>
-                                <Button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="rounded-full border border-white/20 bg-white/15 px-6 text-white transition-all duration-300 hover:bg-white/25"
-                                >
-                                    {processing ? 'Menyimpan...' : 'Simpan'}
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    className="rounded-full text-blue-50 transition-colors duration-300 hover:bg-white/15"
-                                    onClick={() => setShowAddForm(false)}
-                                >
-                                    Batal
-                                </Button>
-                            </form>
+                    )}
+                    {flash.error && (
+                        <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800">
+                            <XCircle className="h-4 w-4 shrink-0" />
+                            {flash.error}
                         </div>
                     )}
 
-                    <CardContent className="p-0">
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="hover:bg-transparent">
-                                    <TableHead>No. Pengajuan</TableHead>
-                                    <TableHead>Tanggal</TableHead>
-                                    <TableHead>Nama Pemohon</TableHead>
-                                    <TableHead>Jenis Permohonan</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">
-                                        Aksi
-                                    </TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {documents.data.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={6}
-                                            className="p-12 text-center"
-                                        >
-                                            <div className="flex flex-col items-center justify-center space-y-3 text-blue-100">
-                                                <div className="rounded-full bg-white/10 p-4">
-                                                    <FolderX className="h-8 w-8 text-blue-100" />
-                                                </div>
-                                                <p className="text-base font-medium">
-                                                    {config.emptyLabel}
-                                                </p>
-                                            </div>
-                                        </TableCell>
+                    <header className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+                        <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                            Management
+                        </p>
+                        <div className="mt-1 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                            <div>
+                                <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
+                                    {config.title}
+                                </h1>
+                                <p className="mt-2 max-w-2xl text-sm text-slate-600">
+                                    {config.description}
+                                </p>
+                            </div>
+                            <div className="text-sm text-slate-500">
+                                Total data:{' '}
+                                <span className="font-semibold text-slate-950">
+                                    {formatStat(documents.total)}
+                                </span>
+                            </div>
+                        </div>
+                    </header>
+
+                    <Card
+                        className={`rounded-lg border-slate-200 bg-white shadow-sm transition-all duration-300 ${filtering ? 'opacity-60' : ''}`}
+                    >
+                        <CardHeader className="flex flex-col items-start justify-between gap-4 border-b border-slate-200 p-5 md:flex-row md:items-center">
+                            <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-950">
+                                <FileText className="h-5 w-5 text-slate-600" />
+                                Daftar Permohonan
+                            </CardTitle>
+                            <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row">
+                                <form
+                                    onSubmit={handleSearch}
+                                    className="flex w-full flex-col gap-2 md:w-auto md:flex-row"
+                                >
+                                    <div className="relative w-full md:w-64">
+                                        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-blue-100" />
+                                        <Input
+                                            type="text"
+                                            placeholder="Cari pengajuan..."
+                                            value={search}
+                                            onChange={(event) =>
+                                                setSearch(event.target.value)
+                                            }
+                                            className="w-full rounded-md border-slate-300 bg-white pl-9 text-slate-950 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-slate-400"
+                                        />
+                                    </div>
+                                    <select
+                                        value={status}
+                                        onChange={(event) =>
+                                            onFilterChange(event.target.value)
+                                        }
+                                        className="h-10 rounded-md border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                                    >
+                                        {statusOptions.map((option) => (
+                                            <option
+                                                key={option.value}
+                                                value={option.value}
+                                            >
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {filtering && (
+                                        <Loader2 className="h-5 w-5 animate-spin self-center text-slate-500" />
+                                    )}
+                                </form>
+                                <Button
+                                    onClick={() => setShowAddForm(!showAddForm)}
+                                    disabled={processing}
+                                    className="gap-2 rounded-md bg-slate-950 px-5 whitespace-nowrap text-white hover:bg-slate-800"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    Tambah Data
+                                </Button>
+                            </div>
+                        </CardHeader>
+
+                        {showAddForm && (
+                            <div className="animate-in border-b border-slate-200 bg-slate-50 p-5 duration-300 fade-in slide-in-from-top-4">
+                                <form
+                                    onSubmit={handleAddSubmit}
+                                    className="flex max-w-lg items-end gap-4"
+                                >
+                                    <div className="flex-1 space-y-2">
+                                        <label className="text-sm font-semibold text-slate-700">
+                                            Kode Lot / Referensi Dokumen
+                                        </label>
+                                        <Input
+                                            required
+                                            placeholder="Misal: BGR-LOT-200"
+                                            value={nomorPengajuan}
+                                            onChange={(event) =>
+                                                setNomorPengajuan(
+                                                    event.target.value,
+                                                )
+                                            }
+                                            className="border-slate-300 bg-white text-slate-950 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-slate-400"
+                                        />
+                                    </div>
+                                    <Button
+                                        type="submit"
+                                        disabled={processing}
+                                        className="rounded-md bg-slate-950 px-6 text-white hover:bg-slate-800"
+                                    >
+                                        {processing ? 'Menyimpan...' : 'Simpan'}
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        className="rounded-md text-slate-600 transition-colors duration-300 hover:bg-slate-200"
+                                        onClick={() => setShowAddForm(false)}
+                                    >
+                                        Batal
+                                    </Button>
+                                </form>
+                            </div>
+                        )}
+
+                        <CardContent className="p-0">
+                            <Table>
+                                <TableHeader className='text-black'>
+                                    <TableRow className='text-black hover:bg-transparent'>
+                                        <TableHead className='text-black'>No. Pengajuan</TableHead>
+                                        <TableHead className='text-black'>Tanggal</TableHead>
+                                        <TableHead className='text-black'>Nama Pemohon</TableHead>
+                                        <TableHead className='text-black'>Jenis Permohonan</TableHead>
+                                        <TableHead className='text-black'>Status</TableHead>
+                                        <TableHead className="text-right text-black">
+                                            Aksi
+                                        </TableHead>
                                     </TableRow>
-                                ) : (
-                                    documents.data.map((document) => (
-                                        <TableRow
-                                            key={document.id}
-                                            className="group"
-                                        >
-                                            <TableCell className="font-semibold text-white">
-                                                {document.id_pengajuan}
-                                            </TableCell>
-                                            <TableCell className="text-blue-50">
-                                                {formatDate(
-                                                    document.tanggal_masuk_pengambilan_dokumen,
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="text-blue-50">
-                                                <div className="flex flex-col">
-                                                    <span className="font-semibold text-white">
-                                                        {document.nama_pemohon}
-                                                    </span>
-                                                    <span className="text-xs text-blue-100">
-                                                        {
-                                                            document.nomor_wa_pemohon
-                                                        }
-                                                    </span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-blue-50">
-                                                {
-                                                    serviceLabels[
-                                                        document.jenis_layanan
-                                                    ]
-                                                }
-                                            </TableCell>
-                                            <TableCell>
-                                                <select
-                                                    value={
-                                                        document.status_proses
-                                                    }
-                                                    onChange={(event) =>
-                                                        handleStatusChange(
-                                                            document.id,
-                                                            event.target.value,
-                                                        )
-                                                    }
-                                                    disabled={
-                                                        updatingId ===
-                                                            document.id ||
-                                                        deletingId ===
-                                                            document.id
-                                                    }
-                                                    className={`cursor-pointer appearance-none rounded-full border px-4 py-2 text-xs font-semibold ring-offset-white transition-all duration-300 outline-none hover:opacity-80 focus-visible:ring-2 ${config.accentRing} ${getStatusColor(document.status_proses)}`}
-                                                >
-                                                    {statusOptions
-                                                        .filter(
-                                                            (option) =>
-                                                                option.value,
-                                                        )
-                                                        .map((option) => (
-                                                            <option
-                                                                key={
-                                                                    option.value
-                                                                }
-                                                                value={
-                                                                    option.value
-                                                                }
-                                                                className="bg-slate-900 text-white"
-                                                            >
-                                                                {option.label}
-                                                            </option>
-                                                        ))}
-                                                </select>
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <div className="inline-flex items-center gap-2">
-                                                    <Button
-                                                        type="button"
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        onClick={() =>
-                                                            setSelectedDocument(
-                                                                document,
-                                                            )
-                                                        }
-                                                        className="h-9 w-9 rounded-full text-cyan-100 hover:bg-cyan-500/20 hover:text-white"
-                                                    >
-                                                        <Eye className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        type="button"
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        disabled={
-                                                            updatingId ===
-                                                                document.id ||
-                                                            deletingId ===
-                                                                document.id
-                                                        }
-                                                        onClick={() =>
-                                                            handleDelete(
-                                                                document.id,
-                                                            )
-                                                        }
-                                                        className="h-9 w-9 rounded-full text-rose-100 hover:bg-rose-500/20 hover:text-white"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
+                                </TableHeader>
+                                <TableBody>
+                                    {documents.data.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell
+                                                colSpan={6}
+                                                className="p-12 text-center"
+                                            >
+                                                <div className="flex flex-col items-center justify-center space-y-3 text-slate-500">
+                                                    <div className="rounded-full bg-slate-100 p-4">
+                                                        <FolderX className="h-8 w-8 text-slate-400" />
+                                                    </div>
+                                                    <p className="text-base font-medium">
+                                                        {config.emptyLabel}
+                                                    </p>
                                                 </div>
                                             </TableCell>
                                         </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-
-                        <div className="flex flex-col items-center justify-between gap-4 border-t border-white/15 p-6 text-sm text-blue-100 sm:flex-row">
-                            <span>
-                                Menampilkan{' '}
-                                <span className="font-bold text-white">
-                                    {documents.data.length}
-                                </span>{' '}
-                                dari total{' '}
-                                <span className="font-bold text-white">
-                                    {formatStat(documents.total)}
-                                </span>{' '}
-                                data
-                            </span>
-                            <div className="flex flex-wrap gap-1.5">
-                                {documents.links.map((link, index) =>
-                                    link.url ? (
-                                        <Button
-                                            key={index}
-                                            variant={
-                                                link.active
-                                                    ? 'default'
-                                                    : 'outline'
-                                            }
-                                            size="sm"
-                                            className={`h-9 min-w-9 rounded-full px-3 font-bold transition-all duration-300 ${link.active ? 'border-white/20 bg-white/20 text-white shadow-lg hover:bg-white/30' : 'border-white/20 bg-white/10 text-blue-50 hover:bg-white/20'}`}
-                                            onClick={() =>
-                                                router.get(
-                                                    link.url ?? config.href,
-                                                    { search, status },
-                                                    {
-                                                        preserveState: true,
-                                                        preserveScroll: true,
-                                                    },
-                                                )
-                                            }
-                                            dangerouslySetInnerHTML={{
-                                                __html: link.label,
-                                            }}
-                                        />
                                     ) : (
-                                        <Button
-                                            key={index}
-                                            variant="outline"
-                                            size="sm"
-                                            disabled
-                                            className="h-9 min-w-9 rounded-full border-white/20 px-3 font-bold text-blue-100 opacity-50"
-                                            dangerouslySetInnerHTML={{
-                                                __html: link.label,
-                                            }}
-                                        />
-                                    ),
-                                )}
+                                        documents.data.map((document) => (
+                                            <TableRow
+                                                key={document.id}
+                                                className="group"
+                                            >
+                                                <TableCell className="font-semibold text-slate-950">
+                                                    {document.id_pengajuan}
+                                                </TableCell>
+                                                <TableCell className="text-slate-600">
+                                                    {formatDate(
+                                                        document.tanggal_masuk_pengambilan_dokumen,
+                                                    )}
+                                                </TableCell>
+                                                <TableCell className="text-slate-700">
+                                                    <div className="flex flex-col">
+                                                        <span className="font-semibold text-slate-950">
+                                                            {
+                                                                document.nama_pemohon
+                                                            }
+                                                        </span>
+                                                        <span className="text-xs text-slate-500">
+                                                            {
+                                                                document.nomor_wa_pemohon
+                                                            }
+                                                        </span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-slate-700">
+                                                    {
+                                                        serviceLabels[
+                                                        document
+                                                            .jenis_layanan
+                                                        ]
+                                                    }
+                                                </TableCell>
+                                                <TableCell>
+                                                    <select
+                                                        value={
+                                                            document.status_proses
+                                                        }
+                                                        onChange={(event) =>
+                                                            handleStatusChange(
+                                                                document.id,
+                                                                event.target
+                                                                    .value,
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            updatingId ===
+                                                            document.id ||
+                                                            deletingId ===
+                                                            document.id
+                                                        }
+                                                        className={`cursor-pointer appearance-none rounded-md border px-3 py-2 text-xs font-semibold ring-offset-white outline-none hover:opacity-80 focus-visible:ring-2 focus-visible:ring-slate-400 ${getStatusColor(document.status_proses)}`}
+                                                    >
+                                                        {statusOptions
+                                                            .filter(
+                                                                (option) =>
+                                                                    option.value,
+                                                            )
+                                                            .map((option) => (
+                                                                <option
+                                                                    key={
+                                                                        option.value
+                                                                    }
+                                                                    value={
+                                                                        option.value
+                                                                    }
+                                                                    className="bg-white text-slate-950"
+                                                                >
+                                                                    {
+                                                                        option.label
+                                                                    }
+                                                                </option>
+                                                            ))}
+                                                    </select>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <div className="inline-flex items-center gap-2">
+                                                        <Button
+                                                            type="button"
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            onClick={() =>
+                                                                setSelectedDocument(
+                                                                    document,
+                                                                )
+                                                            }
+                                                            className="h-9 w-9 rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+                                                        >
+                                                            <Eye className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button
+                                                            type="button"
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            disabled={
+                                                                updatingId ===
+                                                                document.id ||
+                                                                deletingId ===
+                                                                document.id
+                                                            }
+                                                            onClick={() =>
+                                                                handleDelete(
+                                                                    document.id,
+                                                                )
+                                                            }
+                                                            className="h-9 w-9 rounded-md text-rose-700 hover:bg-rose-50 hover:text-rose-800"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+
+                            <div className="flex flex-col items-center justify-between gap-4 border-t border-slate-200 p-5 text-sm text-slate-500 sm:flex-row">
+                                <span>
+                                    Menampilkan{' '}
+                                    <span className="font-bold text-slate-950">
+                                        {documents.data.length}
+                                    </span>{' '}
+                                    dari total{' '}
+                                    <span className="font-bold text-slate-950">
+                                        {formatStat(documents.total)}
+                                    </span>{' '}
+                                    data
+                                </span>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {documents.links.map((link, index) =>
+                                        link.url ? (
+                                            <Button
+                                                key={index}
+                                                variant={
+                                                    link.active
+                                                        ? 'default'
+                                                        : 'outline'
+                                                }
+                                                size="sm"
+                                                className={`h-9 min-w-9 rounded-md px-3 font-bold transition-all duration-300 ${link.active ? 'bg-slate-950 text-white hover:bg-slate-800' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}`}
+                                                onClick={() =>
+                                                    router.get(
+                                                        link.url ?? config.href,
+                                                        { search, status },
+                                                        {
+                                                            preserveState: true,
+                                                            preserveScroll: true,
+                                                        },
+                                                    )
+                                                }
+                                                dangerouslySetInnerHTML={{
+                                                    __html: link.label,
+                                                }}
+                                            />
+                                        ) : (
+                                            <Button
+                                                key={index}
+                                                variant="outline"
+                                                size="sm"
+                                                disabled
+                                                className="h-9 min-w-9 rounded-md border-slate-200 px-3 font-bold text-slate-400 opacity-50"
+                                                dangerouslySetInnerHTML={{
+                                                    __html: link.label,
+                                                }}
+                                            />
+                                        ),
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </main>
 
             <DetailModal
                 document={selectedDocument}
