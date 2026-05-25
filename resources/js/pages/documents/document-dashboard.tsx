@@ -9,17 +9,16 @@ import {
     Search,
     Send,
     Trash2,
-    Wifi,
-    WifiOff,
     XCircle,
 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Dialog,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
@@ -108,10 +107,6 @@ interface PaginatedDocuments {
 
 interface DocumentDashboardProps {
     documents: PaginatedDocuments;
-    whatsappStats?: {
-        pending: number;
-        failed: number;
-    };
     filters: {
         search?: string;
         status?: string;
@@ -650,7 +645,7 @@ function DetailModal({
                                                     -{' '}
                                                     {notification.target_number}
                                                 </p>
-                                                <p className="mt-1 text-xs text-slate-500">
+                                                <p className="mt-1 text-xs text-slate-950">
                                                     {formatDateTime(
                                                         notification.sent_at ??
                                                             notification.attempted_at ??
@@ -756,159 +751,8 @@ function DetailModal({
     );
 }
 
-function WhatsappGatewayPanel({
-    stats,
-}: {
-    stats: { pending: number; failed: number };
-}) {
-    const [status, setStatus] = useState<{
-        loading: boolean;
-        ready: boolean;
-        hasQr: boolean;
-        wid: string | null;
-        lastReadyAt: string | null;
-        message?: string;
-    }>({
-        loading: true,
-        ready: false,
-        hasQr: false,
-        wid: null,
-        lastReadyAt: null,
-    });
-    const [qr, setQr] = useState<string | null>(null);
-    const [qrError, setQrError] = useState<string | null>(null);
-
-    useEffect(() => {
-        let active = true;
-
-        const loadStatus = async () => {
-            try {
-                const response = await fetch('/admin/whatsapp/status', {
-                    headers: { Accept: 'application/json' },
-                });
-                const payload = await response.json();
-                const whatsapp = payload.whatsapp;
-
-                if (!active) return;
-
-                setStatus({
-                    loading: false,
-                    ready: response.ok && Boolean(whatsapp?.ready),
-                    hasQr: Boolean(whatsapp?.hasQr),
-                    wid: whatsapp?.wid ?? null,
-                    lastReadyAt: whatsapp?.lastReadyAt ?? null,
-                    message: payload.message ?? payload.error,
-                });
-
-                if (whatsapp?.hasQr && !whatsapp?.ready) {
-                    const qrResponse = await fetch('/admin/whatsapp/qr', {
-                        headers: { Accept: 'application/json' },
-                    });
-                    const qrPayload = await qrResponse.json();
-
-                    if (!active) return;
-
-                    if (qrResponse.ok && qrPayload.qrDataUrl) {
-                        setQr(qrPayload.qrDataUrl);
-                        setQrError(null);
-                    } else {
-                        setQr(null);
-                        setQrError(
-                            qrPayload.error ??
-                                'QR WhatsApp gagal dimuat dari gateway.',
-                        );
-                    }
-                } else {
-                    setQr(null);
-                    setQrError(null);
-                }
-            } catch {
-                if (active) {
-                    setQr(null);
-                    setQrError(null);
-                    setStatus((current) => ({
-                        ...current,
-                        loading: false,
-                        ready: false,
-                        message: 'Gateway WhatsApp tidak dapat dihubungi.',
-                    }));
-                }
-            }
-        };
-
-        void loadStatus();
-        const interval = window.setInterval(loadStatus, 10000);
-
-        return () => {
-            active = false;
-            window.clearInterval(interval);
-        };
-    }, []);
-
-    return (
-        <Card className="rounded-lg border-slate-200 bg-white shadow-sm">
-            <CardContent className="flex flex-col gap-4 p-5 lg:flex-row lg:items-start lg:justify-between">
-                <div className="flex gap-3">
-                    <div
-                        className={`rounded-md border p-2 ${status.ready ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700'}`}
-                    >
-                        {status.ready ? (
-                            <Wifi className="h-5 w-5" />
-                        ) : (
-                            <WifiOff className="h-5 w-5" />
-                        )}
-                    </div>
-                    <div>
-                        <p className="text-sm font-semibold text-slate-950">
-                            Koneksi WhatsApp
-                        </p>
-                        <p className="mt-1 text-sm text-slate-600">
-                            {status.loading
-                                ? 'Memeriksa koneksi...'
-                                : status.ready
-                                  ? `Terhubung${status.wid ? ` (${status.wid.replace('@c.us', '')})` : ''}`
-                                  : status.hasQr
-                                    ? qrError ||
-                                      'Scan QR untuk menghubungkan WhatsApp kantor.'
-                                    : status.message ||
-                                      'Gateway aktif, menunggu QR WhatsApp dibuat.'}
-                        </p>
-                        {status.lastReadyAt && (
-                            <p className="mt-1 text-xs text-slate-500">
-                                Terhubung terakhir:{' '}
-                                {formatDateTime(status.lastReadyAt)}
-                            </p>
-                        )}
-                        <div className="mt-3 flex gap-2 text-xs font-semibold">
-                            <span className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-amber-800">
-                                Menunggu: {stats.pending}
-                            </span>
-                            <span className="rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-rose-800">
-                                Gagal: {stats.failed}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                {qr && !status.ready && (
-                    <div className="rounded-lg border border-slate-200 bg-white p-3">
-                        <img
-                            src={qr}
-                            alt="QR koneksi WhatsApp"
-                            className="h-48 w-48"
-                        />
-                        <p className="mt-2 max-w-48 text-center text-xs text-slate-500">
-                            Scan melalui menu Perangkat Tertaut.
-                        </p>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
-    );
-}
-
 export default function DocumentDashboard({
     documents,
-    whatsappStats = { pending: 0, failed: 0 },
     filters,
     config,
 }: DocumentDashboardProps) {
@@ -933,6 +777,13 @@ export default function DocumentDashboard({
     const [retryingNotificationId, setRetryingNotificationId] = useState<
         number | null
     >(null);
+    const [invalidDocumentId, setInvalidDocumentId] = useState<number | null>(
+        null,
+    );
+    const [invalidNote, setInvalidNote] = useState('');
+    const [invalidNoteError, setInvalidNoteError] = useState<string | null>(
+        null,
+    );
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
@@ -968,29 +819,71 @@ export default function DocumentDashboard({
         );
     };
 
-    const handleStatusChange = (docId: number, value: string) => {
-        const payload: Record<string, string> = {
-            status_proses: value,
-        };
-
+    const handleStatusChange = (docId: number, value: StatusProses) => {
         if (value === 'tidak_valid') {
-            const catatanTidakValid = window.prompt(
-                'Masukkan alasan data tidak valid:',
-            );
-
-            if (!catatanTidakValid?.trim()) {
-                return;
-            }
-
-            payload.catatan_tidak_valid = catatanTidakValid.trim();
+            setInvalidDocumentId(docId);
+            setInvalidNote('');
+            setInvalidNoteError(null);
+            return;
         }
 
         setUpdatingId(docId);
-        router.patch(`/permohonan/${docId}`, payload, {
-            preserveScroll: true,
-            preserveState: true,
-            onFinish: () => setUpdatingId(null),
-        });
+        router.patch(
+            `/permohonan/${docId}`,
+            { status_proses: value },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onFinish: () => setUpdatingId(null),
+            },
+        );
+    };
+
+    const handleInvalidDialogOpenChange = (open: boolean) => {
+        if (!open && updatingId === null) {
+            setInvalidDocumentId(null);
+            setInvalidNote('');
+            setInvalidNoteError(null);
+        }
+    };
+
+    const handleInvalidSubmit = (event: React.FormEvent) => {
+        event.preventDefault();
+
+        if (invalidDocumentId === null) return;
+
+        const note = invalidNote.trim();
+
+        if (!note) {
+            setInvalidNoteError('Catatan tidak valid wajib diisi.');
+            return;
+        }
+
+        setInvalidNoteError(null);
+        setUpdatingId(invalidDocumentId);
+        router.patch(
+            `/permohonan/${invalidDocumentId}`,
+            {
+                status_proses: 'tidak_valid',
+                catatan_tidak_valid: note,
+            },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    setInvalidDocumentId(null);
+                    setInvalidNote('');
+                },
+                onError: (errors) => {
+                    const error = errors.catatan_tidak_valid;
+
+                    if (typeof error === 'string') {
+                        setInvalidNoteError(error);
+                    }
+                },
+                onFinish: () => setUpdatingId(null),
+            },
+        );
     };
 
     const handleDelete = (docId: number) => {
@@ -1091,10 +984,6 @@ export default function DocumentDashboard({
                             {flash.error}
                         </div>
                     )}
-
-                    <WhatsappGatewayPanel
-                        stats={whatsappStats}
-                    />
 
                     <header className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
                         <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
@@ -1301,7 +1190,7 @@ export default function DocumentDashboard({
                                                             handleStatusChange(
                                                                 document.id,
                                                                 event.target
-                                                                    .value,
+                                                                    .value as StatusProses,
                                                             )
                                                         }
                                                         disabled={
@@ -1448,6 +1337,76 @@ export default function DocumentDashboard({
                     }
                 }}
             />
+
+            <Dialog
+                open={invalidDocumentId !== null}
+                onOpenChange={handleInvalidDialogOpenChange}
+            >
+                <DialogContent className="border-slate-200 bg-white text-slate-950 shadow-2xl sm:max-w-md">
+                    <DialogHeader className="text-left">
+                        <DialogTitle className="text-slate-950">
+                            Tandai Tidak Valid
+                        </DialogTitle>
+                        <DialogDescription className="text-slate-600">
+                            Isi alasan agar pemohon mengetahui berkas yang perlu
+                            diperbaiki.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleInvalidSubmit} className="space-y-4">
+                        <div className="space-y-2">
+                            <label
+                                htmlFor="catatan-tidak-valid"
+                                className="text-sm font-semibold text-slate-700"
+                            >
+                                Catatan Tidak Valid
+                            </label>
+                            <textarea
+                                id="catatan-tidak-valid"
+                                value={invalidNote}
+                                onChange={(event) => {
+                                    setInvalidNote(event.target.value);
+                                    setInvalidNoteError(null);
+                                }}
+                                rows={4}
+                                autoFocus
+                                placeholder="Contoh: KTP tidak terbaca, mohon unggah ulang dokumen yang jelas."
+                                className="w-full resize-none rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none placeholder:text-slate-400 focus:border-slate-950 focus:ring-2 focus:ring-slate-200"
+                            />
+                            {invalidNoteError && (
+                                <p className="text-sm font-medium text-rose-700">
+                                    {invalidNoteError}
+                                </p>
+                            )}
+                        </div>
+                        <DialogFooter>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                disabled={updatingId !== null}
+                                onClick={() =>
+                                    handleInvalidDialogOpenChange(false)
+                                }
+                            >
+                                Batal
+                            </Button>
+                            <Button
+                                type="submit"
+                                disabled={updatingId !== null}
+                                className="bg-rose-700 text-white hover:bg-rose-800"
+                            >
+                                {updatingId !== null ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Menyimpan...
+                                    </>
+                                ) : (
+                                    'Simpan Tidak Valid'
+                                )}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }

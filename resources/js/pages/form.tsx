@@ -86,15 +86,10 @@ type UploadedFileInfo = {
     size: number;
 };
 
-const IDENTITY_MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024;
+const IDENTITY_MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 const SERVICE_MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 const FILE_ACCEPT_ATTRIBUTE = '.pdf,.jpg,.jpeg,.png';
-const ACCEPTED_FILE_TYPES = [
-    'application/pdf',
-    'image/jpeg',
-    'image/png',
-    'image/jpg',
-];
+const ACCEPTED_FILE_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png'];
 
 const serviceOptions: ServiceType[] = [
     'Pemberian Kuitansi Pembayaran Harga Lelang',
@@ -162,6 +157,12 @@ const formatFileSize = (bytes: number): string => {
     return `${sizeInMb.toFixed(sizeInMb >= 1 ? 2 : 3)} MB`;
 };
 
+const hasAcceptedFileExtension = (file: File): boolean => {
+    const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
+
+    return ACCEPTED_FILE_EXTENSIONS.includes(extension);
+};
+
 const validateRequiredFile = (
     context: z.RefinementCtx,
     value: unknown,
@@ -179,7 +180,7 @@ const validateRequiredFile = (
         return;
     }
 
-    if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
+    if (!hasAcceptedFileExtension(file)) {
         context.addIssue({
             code: z.ZodIssueCode.custom,
             path: [path],
@@ -1023,7 +1024,7 @@ const FormPage = () => {
                                     <FileInput
                                         name="dokumen_identitas_pemohon"
                                         label="Document Identitas Pemohon"
-                                        note="Unggah PDF/JPG/JPEG/PNG maksimal 15MB"
+                                        note="Unggah PDF/JPG/JPEG/PNG maksimal 10MB"
                                     />
                                 </div>
 
@@ -1135,12 +1136,12 @@ const FormPage = () => {
                                             <FileInput
                                                 name="dokumen_identitas_pemberi_kuasa"
                                                 label="Document Identitas Pemberi Kuasa"
-                                                note="Unggah PDF/JPG/JPEG/PNG maksimal 15MB"
+                                                note="Unggah PDF/JPG/JPEG/PNG maksimal 10MB"
                                             />
                                             <FileInput
                                                 name="surat_kuasa"
                                                 label="Surat Kuasa"
-                                                note="Unggah PDF/JPG/JPEG/PNG maksimal 15MB"
+                                                note="Unggah PDF/JPG/JPEG/PNG maksimal 10MB"
                                             />
                                         </div>
                                     </div>

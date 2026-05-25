@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Throwable;
 
@@ -21,10 +22,33 @@ class WhatsAppConnectionController extends Controller
         return $this->proxy((string) config('services.whatsapp.gateway_qr_url'));
     }
 
-    private function proxy(string $url): JsonResponse
+    public function reconnect(): JsonResponse
+    {
+        return $this->proxy((string) config('services.whatsapp.gateway_reconnect_url'), 'post');
+    }
+
+    public function pairingCode(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'phone' => ['required', 'string', 'max:32'],
+        ]);
+
+        return $this->proxy(
+            (string) config('services.whatsapp.gateway_pairing_code_url'),
+            'post',
+            $validated
+        );
+    }
+
+    public function currentPairingCode(): JsonResponse
+    {
+        return $this->proxy((string) config('services.whatsapp.gateway_pairing_code_url'));
+    }
+
+    private function proxy(string $url, string $method = 'get', array $payload = []): JsonResponse
     {
         try {
-            $response = $this->gatewayRequest()->get($url);
+            $response = $this->gatewayRequest()->{$method}($url, $payload);
 
             return response()->json(
                 $response->json() ?? ['message' => $response->body()],

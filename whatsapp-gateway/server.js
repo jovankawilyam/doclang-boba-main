@@ -14,8 +14,12 @@ const GATEWAY_TOKEN = process.env.WA_GATEWAY_TOKEN || '';
 
 let isClientReady = false;
 let isInitializing = false;
+let isReconnecting = false;
 let currentQrDataUrl = null;
 let qrGeneratedAt = null;
+let currentPairingCode = null;
+let pairingPhoneNumber = null;
+let pairingGeneratedAt = null;
 let lastReadyAt = null;
 
 app.use(express.json());
@@ -37,7 +41,7 @@ const client = new Client({
   },
 });
 
-function sanitizePhoneNumber(phone) {
+function normalizePhoneNumber(phone) {
   if (phone === null || phone === undefined) {
     throw new Error('Nomor HP wajib diisi.');
   }
@@ -81,8 +85,12 @@ function sanitizePhoneNumber(phone) {
     throw new Error('Format nomor HP tidak valid. Gunakan contoh: 081234567890 atau +6281234567890.');
   }
 
+  return normalized;
+}
+
+function sanitizePhoneNumber(phone) {
   // Format wajib untuk chat WhatsApp personal di whatsapp-web.js.
-  return `${normalized}@c.us`;
+  return `${normalizePhoneNumber(phone)}@c.us`;
 }
 
 function getGatewayStatus() {
@@ -95,7 +103,14 @@ function getGatewayStatus() {
     hasQr: Boolean(currentQrDataUrl),
     qrGeneratedAt,
     lastReadyAt,
+    isReconnecting,
   };
+}
+
+function clearPairingCode() {
+  currentPairingCode = null;
+  pairingPhoneNumber = null;
+  pairingGeneratedAt = null;
 }
 
 function requireGatewayToken(req, res, next) {
@@ -115,9 +130,15 @@ function initializeClient() {
   }
 
   isInitializing = true;
-  client.initialize().finally(() => {
-    isInitializing = false;
-  });
+  client
+    .initialize()
+    .catch((error) => {
+      console.error('Gagal memulai WhatsApp Gateway:', error);
+    })
+    .finally(() => {
+      isInitializing = false;
+      isReconnecting = false;
+    });
 }
 
 client.on('qr', async (qr) => {
@@ -138,10 +159,16 @@ client.on('authenticated', () => {
   console.log('WhatsApp berhasil diautentikasi. Session tersimpan di .wwebjs_auth.');
 });
 
+client.on('code', (code) => {
+  currentPairingCode = code;
+  pairingGeneratedAt = new Date().toISOString();
+});
+
 client.on('ready', () => {
   isClientReady = true;
   currentQrDataUrl = null;
   qrGeneratedAt = null;
+  clearPairingCode();
   lastReadyAt = new Date().toISOString();
   console.log('WhatsApp Gateway siap mengirim pesan.');
 });
@@ -154,6 +181,10 @@ client.on('auth_failure', (message) => {
 client.on('disconnected', (reason) => {
   isClientReady = false;
   console.warn('WhatsApp terputus:', reason);
+
+  if (isReconnecting) {
+    return;
+  }
 
   // Inisialisasi ulang agar service mencoba tersambung lagi setelah disconnect.
   initializeClient();
@@ -184,6 +215,85 @@ app.get('/api/admin/qr', requireGatewayToken, (req, res) => {
     qrDataUrl: currentQrDataUrl,
     generatedAt: qrGeneratedAt,
   });
+});
+
+app.post('/api/admin/pairing-code', requireGatewayToken, async (req, res) => {
+  if (getGatewayStatus().ready) {
+    return res.status(409).json({
+      success: false,
+      error: 'WhatsApp masih terhubung. Putuskan koneksi lama sebelum meminta kode tautan.',
+    });
+  }
+
+  try {
+    const phoneNumber = normalizePhoneNumber(req.body.phone);
+    pairingPhoneNumber = phoneNumber;
+    const pairingCode = await client.requestPairingCode(phoneNumber);
+    currentPairingCode = pairingCode;
+    pairingGeneratedAt = new Date().toISOString();
+
+    return res.json({
+      success: true,
+      pairingCode: currentPairingCode,
+      phoneNumber: pairingPhoneNumber,
+      generatedAt: pairingGeneratedAt,
+    });
+  } catch (error) {
+    console.error('Gagal membuat kode tautan WhatsApp:', error);
+
+    return res.status(422).json({
+      success: false,
+      error: error.message || 'Gagal membuat kode tautan WhatsApp.',
+    });
+  }
+});
+
+app.get('/api/admin/pairing-code', requireGatewayToken, (req, res) => {
+  if (!currentPairingCode) {
+    return res.status(404).json({
+      error: 'Kode tautan belum diminta atau sudah tidak aktif.',
+    });
+  }
+
+  return res.json({
+    success: true,
+    pairingCode: currentPairingCode,
+    phoneNumber: pairingPhoneNumber,
+    generatedAt: pairingGeneratedAt,
+  });
+});
+
+app.post('/api/admin/reconnect', requireGatewayToken, async (req, res) => {
+  if (isReconnecting) {
+    return res.status(409).json({
+      success: false,
+      error: 'Proses penggantian nomor WhatsApp sedang berjalan.',
+    });
+  }
+
+  isReconnecting = true;
+  isClientReady = false;
+  currentQrDataUrl = null;
+  qrGeneratedAt = null;
+  clearPairingCode();
+
+  try {
+    await client.logout();
+    initializeClient();
+
+    return res.status(202).json({
+      success: true,
+      message: 'Sesi WhatsApp lama diputus. Menunggu QR untuk nomor baru.',
+    });
+  } catch (error) {
+    isReconnecting = false;
+    console.error('Gagal memutus sesi WhatsApp lama:', error);
+
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Gagal memutus koneksi WhatsApp lama.',
+    });
+  }
 });
 
 app.post('/api/send-message', requireGatewayToken, async (req, res) => {

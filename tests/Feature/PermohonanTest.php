@@ -136,6 +136,32 @@ test('public users can submit a doclang request as json form data for fetch clie
     Storage::disk('local')->assertExists($permohonan->dokumen_identitas_pemohon_path);
 });
 
+test('public users can upload jpg and png identity documents', function (string $extension) {
+    Queue::fake();
+    Storage::fake('local');
+
+    $response = $this->post(route('permohonan.store'), [
+        'peran_pemohon' => 'pemenang',
+        'email_pemohon' => "gambar-{$extension}@example.test",
+        'jenis_identitas_pemohon' => 'KTP',
+        'nomor_identitas_pemohon' => '3271000000000005',
+        'alamat_pemohon' => 'Bogor',
+        'nama_pemohon' => 'Pemohon Gambar',
+        'nomor_wa_pemohon' => '081234567894',
+        'kode_lot_lelang' => 'BGR-LOT-012',
+        'jenis_layanan' => 'kuitansi',
+        'tanggal_pelunasan' => '2026-05-18',
+        'dokumen_identitas_pemohon' => UploadedFile::fake()->image("ktp.{$extension}"),
+    ]);
+
+    $response->assertRedirect()->assertSessionHas('success');
+
+    $permohonan = DoclangProses::firstOrFail();
+
+    expect($permohonan->dokumen_identitas_pemohon_path)->toEndWith(".{$extension}");
+    Storage::disk('local')->assertExists($permohonan->dokumen_identitas_pemohon_path);
+})->with(['jpg', 'png']);
+
 test('public request rejects identity document larger than ten megabytes', function () {
     Storage::fake('local');
 
@@ -359,6 +385,67 @@ test('admins can access whatsapp connection qr', function () {
         ->getJson(route('whatsapp.connection.qr'))
         ->assertOk()
         ->assertJsonPath('qrDataUrl', 'data:image/png;base64,test');
+});
+
+test('admins can disconnect whatsapp session to request a new qr', function () {
+    Http::fake([
+        '*' => Http::response([
+            'success' => true,
+            'message' => 'Sesi WhatsApp lama diputus. Menunggu QR untuk nomor baru.',
+        ], 202),
+    ]);
+
+    $admin = User::factory()->create(['role' => 'admin']);
+
+    $this->actingAs($admin)
+        ->postJson(route('whatsapp.connection.reconnect'))
+        ->assertAccepted()
+        ->assertJsonPath('success', true);
+
+    Http::assertSent(fn ($request) => $request->method() === 'POST'
+        && str_ends_with($request->url(), '/api/admin/reconnect'));
+});
+
+test('admins can request a whatsapp phone number pairing code', function () {
+    Http::fake([
+        '*' => Http::response([
+            'success' => true,
+            'pairingCode' => '12345678',
+        ]),
+    ]);
+
+    $admin = User::factory()->create(['role' => 'admin']);
+
+    $this->actingAs($admin)
+        ->postJson(route('whatsapp.connection.pairing-code'), [
+            'phone' => '081911883609',
+        ])
+        ->assertOk()
+        ->assertJsonPath('pairingCode', '12345678');
+
+    Http::assertSent(fn ($request) => $request->method() === 'POST'
+        && str_ends_with($request->url(), '/api/admin/pairing-code')
+        && $request['phone'] === '081911883609');
+});
+
+test('admins can retrieve the latest whatsapp phone number pairing code', function () {
+    Http::fake([
+        '*' => Http::response([
+            'success' => true,
+            'pairingCode' => 'ABCD5678',
+            'phoneNumber' => '6281911883609',
+        ]),
+    ]);
+
+    $admin = User::factory()->create(['role' => 'admin']);
+
+    $this->actingAs($admin)
+        ->getJson(route('whatsapp.connection.current-pairing-code'))
+        ->assertOk()
+        ->assertJsonPath('pairingCode', 'ABCD5678');
+
+    Http::assertSent(fn ($request) => $request->method() === 'GET'
+        && str_ends_with($request->url(), '/api/admin/pairing-code'));
 });
 
 test('admin cannot resend invalid whatsapp notification before twenty four hours', function () {

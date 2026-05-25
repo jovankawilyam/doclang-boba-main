@@ -6,6 +6,7 @@ use App\Http\Controllers\PermohonanController;
 use App\Http\Controllers\WhatsAppConnectionController;
 use App\Models\DoclangProses;
 use App\Models\User;
+use App\Models\WhatsAppNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -105,6 +106,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'docStatsValidasi' => $documentStats['validasi_pph'],
             'todayDocumentTotal' => DoclangProses::whereDate('created_at', today())->count(),
             'recentDocuments' => $recentDocuments,
+            'whatsappStats' => [
+                'pending' => WhatsAppNotification::query()->where('status', 'pending')->count(),
+                'failed' => WhatsAppNotification::query()->where('status', 'failed')->count(),
+            ],
         ]);
     })->name('dashboard');
 
@@ -138,6 +143,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/whatsapp-notifications/{notification}/retry', [PermohonanController::class, 'retryWhatsAppNotification'])->name('whatsapp-notifications.retry');
         Route::get('/admin/whatsapp/status', [WhatsAppConnectionController::class, 'status'])->name('whatsapp.connection.status');
         Route::get('/admin/whatsapp/qr', [WhatsAppConnectionController::class, 'qr'])->name('whatsapp.connection.qr');
+        Route::get('/admin/whatsapp/pairing-code', [WhatsAppConnectionController::class, 'currentPairingCode'])->name('whatsapp.connection.current-pairing-code');
+        Route::post('/admin/whatsapp/pairing-code', [WhatsAppConnectionController::class, 'pairingCode'])->name('whatsapp.connection.pairing-code');
+        Route::post('/admin/whatsapp/reconnect', [WhatsAppConnectionController::class, 'reconnect'])->name('whatsapp.connection.reconnect');
         Route::get('/permohonan/{permohonan}/file/{field}', [PermohonanController::class, 'downloadFile'])->name('permohonan.file');
     });
 
