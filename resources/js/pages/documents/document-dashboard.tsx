@@ -9,9 +9,11 @@ import {
     Search,
     Send,
     Trash2,
+    Wifi,
+    WifiOff,
     XCircle,
 } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -34,6 +36,20 @@ import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
 type StatusProses = 'proses' | 'siap_diambil' | 'selesai' | 'tidak_valid';
+type WhatsappStatus = 'pending' | 'sent' | 'failed';
+
+interface WhatsappNotification {
+    id: number;
+    type: 'submission' | 'invalid';
+    target_number: string;
+    status: WhatsappStatus;
+    retry_count: number;
+    error_message: string | null;
+    attempted_at: string | null;
+    sent_at: string | null;
+    failed_at: string | null;
+    created_at: string | null;
+}
 
 export interface DocumentItem {
     id: number;
@@ -74,6 +90,7 @@ export interface DocumentItem {
     status_proses: StatusProses;
     catatan_tidak_valid: string | null;
     invalid_whatsapp_sent_at: string | null;
+    whatsapp_notifications?: WhatsappNotification[];
     created_at: string | null;
 }
 
@@ -91,6 +108,10 @@ interface PaginatedDocuments {
 
 interface DocumentDashboardProps {
     documents: PaginatedDocuments;
+    whatsappStats?: {
+        pending: number;
+        failed: number;
+    };
     filters: {
         search?: string;
         status?: string;
@@ -131,21 +152,21 @@ const formatStat = (value: number | undefined) =>
 const formatDate = (value?: string | null) =>
     value
         ? new Intl.DateTimeFormat('id-ID', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-        }).format(new Date(value))
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+          }).format(new Date(value))
         : '-';
 
 const formatDateTime = (value?: string | null) =>
     value
         ? new Intl.DateTimeFormat('id-ID', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        }).format(new Date(value))
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+          }).format(new Date(value))
         : '-';
 
 const addHours = (value: string, hours: number) => {
@@ -188,6 +209,18 @@ const getStatusLabel = (status: StatusProses) =>
 const getFileUrl = (docId: number, field: string, path: string | null) =>
     path ? `/permohonan/${docId}/file/${field}` : null;
 
+const whatsappStatusLabel: Record<WhatsappStatus, string> = {
+    pending: 'Menunggu',
+    sent: 'Terkirim',
+    failed: 'Gagal',
+};
+
+const whatsappStatusTone: Record<WhatsappStatus, string> = {
+    pending: 'border-amber-200 bg-amber-50 text-amber-800',
+    sent: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+    failed: 'border-rose-200 bg-rose-50 text-rose-800',
+};
+
 function DetailField({
     label,
     value,
@@ -224,16 +257,29 @@ function DetailSection({
     );
 }
 
-function FileButton({ href, label }: { href: string | null; label: string }) {
+function FileButton({
+    href,
+    label,
+    active,
+    onPreview,
+}: {
+    href: string | null;
+    label: string;
+    active: boolean;
+    onPreview: (label: string, href: string) => void;
+}) {
     return href ? (
-        <a
-            href={href}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex h-9 items-center justify-center rounded-md border border-slate-300 bg-white px-4 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+        <button
+            type="button"
+            onClick={() => onPreview(label, href)}
+            className={`inline-flex h-9 items-center justify-center rounded-md border px-4 text-xs font-semibold transition ${
+                active
+                    ? 'border-slate-950 bg-slate-950 text-white'
+                    : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+            }`}
         >
             {label}
-        </a>
+        </button>
     ) : (
         <span className="inline-flex h-9 items-center rounded-md border border-slate-200 bg-slate-50 px-4 text-xs font-semibold text-slate-500">
             {label}: -
@@ -247,13 +293,22 @@ function DetailModal({
     onOpenChange,
     sendingWhatsappId,
     onSendInvalidWhatsapp,
+    retryingNotificationId,
+    onRetryWhatsapp,
 }: {
     document: DocumentItem | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
     sendingWhatsappId: number | null;
     onSendInvalidWhatsapp: (document: DocumentItem) => void;
+    retryingNotificationId: number | null;
+    onRetryWhatsapp: (notification: WhatsappNotification) => void;
 }) {
+    const [previewFile, setPreviewFile] = useState<{
+        label: string;
+        href: string;
+    } | null>(null);
+
     if (!document) {
         return null;
     }
@@ -263,6 +318,12 @@ function DetailModal({
         document.status_proses === 'tidak_valid' &&
         Boolean(document.catatan_tidak_valid);
     const isSending = sendingWhatsappId === document.id;
+    const whatsappNotifications = document.whatsapp_notifications ?? [];
+    const invalidDeliveryPending = whatsappNotifications.some(
+        (notification) =>
+            notification.type === 'invalid' &&
+            notification.status === 'pending',
+    );
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -358,8 +419,8 @@ function DetailModal({
                             value={
                                 document.jenis_objek_risalah
                                     ? (rlObjectLabels[
-                                        document.jenis_objek_risalah
-                                    ] ?? document.jenis_objek_risalah)
+                                          document.jenis_objek_risalah
+                                      ] ?? document.jenis_objek_risalah)
                                     : null
                             }
                         />
@@ -396,6 +457,12 @@ function DetailModal({
                                     'identitas-pemohon',
                                     document.dokumen_identitas_pemohon_path,
                                 )}
+                                active={
+                                    previewFile?.label === 'Identitas Pemohon'
+                                }
+                                onPreview={(label, href) =>
+                                    setPreviewFile({ label, href })
+                                }
                             />
                             <FileButton
                                 label="Identitas Kuasa"
@@ -404,6 +471,12 @@ function DetailModal({
                                     'identitas-pemberi-kuasa',
                                     document.dokumen_identitas_pemberi_kuasa_path,
                                 )}
+                                active={
+                                    previewFile?.label === 'Identitas Kuasa'
+                                }
+                                onPreview={(label, href) =>
+                                    setPreviewFile({ label, href })
+                                }
                             />
                             <FileButton
                                 label="Surat Kuasa"
@@ -412,6 +485,10 @@ function DetailModal({
                                     'surat-kuasa',
                                     document.surat_kuasa_path,
                                 )}
+                                active={previewFile?.label === 'Surat Kuasa'}
+                                onPreview={(label, href) =>
+                                    setPreviewFile({ label, href })
+                                }
                             />
                             <FileButton
                                 label="Bukti Pelunasan"
@@ -420,6 +497,12 @@ function DetailModal({
                                     'bukti-pelunasan',
                                     document.bukti_pelunasan_path,
                                 )}
+                                active={
+                                    previewFile?.label === 'Bukti Pelunasan'
+                                }
+                                onPreview={(label, href) =>
+                                    setPreviewFile({ label, href })
+                                }
                             />
                             <FileButton
                                 label="Bukti Validasi SSPD BPHTB"
@@ -428,6 +511,13 @@ function DetailModal({
                                     'bukti-validasi-sspd-bphtb',
                                     document.bukti_validasi_sspd_bphtb_path,
                                 )}
+                                active={
+                                    previewFile?.label ===
+                                    'Bukti Validasi SSPD BPHTB'
+                                }
+                                onPreview={(label, href) =>
+                                    setPreviewFile({ label, href })
+                                }
                             />
                             <FileButton
                                 label="Kuitansi Pembayaran"
@@ -436,6 +526,12 @@ function DetailModal({
                                     'kuitansi-pembayaran-harga-lelang',
                                     document.kuitansi_pembayaran_harga_lelang_path,
                                 )}
+                                active={
+                                    previewFile?.label === 'Kuitansi Pembayaran'
+                                }
+                                onPreview={(label, href) =>
+                                    setPreviewFile({ label, href })
+                                }
                             />
                             <FileButton
                                 label="Slip Setor PBB/BPHTB"
@@ -444,6 +540,13 @@ function DetailModal({
                                     'slip-setor-pbb-atau-bphtb',
                                     document.slip_setor_pbb_atau_bphtb_path,
                                 )}
+                                active={
+                                    previewFile?.label ===
+                                    'Slip Setor PBB/BPHTB'
+                                }
+                                onPreview={(label, href) =>
+                                    setPreviewFile({ label, href })
+                                }
                             />
                             <FileButton
                                 label="Slip Setor PPh"
@@ -452,6 +555,10 @@ function DetailModal({
                                     'slip-setor-pph',
                                     document.slip_setor_pph_path,
                                 )}
+                                active={previewFile?.label === 'Slip Setor PPh'}
+                                onPreview={(label, href) =>
+                                    setPreviewFile({ label, href })
+                                }
                             />
                             <FileButton
                                 label="NPWP Pemenang"
@@ -460,8 +567,35 @@ function DetailModal({
                                     'npwp-pemenang-lelang',
                                     document.npwp_pemenang_lelang_path,
                                 )}
+                                active={previewFile?.label === 'NPWP Pemenang'}
+                                onPreview={(label, href) =>
+                                    setPreviewFile({ label, href })
+                                }
                             />
                         </div>
+                        {previewFile && (
+                            <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                                <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
+                                    <p className="text-sm font-semibold text-slate-700">
+                                        Pratinjau: {previewFile.label}
+                                    </p>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setPreviewFile(null)}
+                                        className="text-slate-600 hover:bg-slate-100"
+                                    >
+                                        Tutup
+                                    </Button>
+                                </div>
+                                <iframe
+                                    title={`Pratinjau ${previewFile.label}`}
+                                    src={previewFile.href}
+                                    className="h-[62vh] w-full bg-white"
+                                />
+                            </div>
+                        )}
                     </div>
 
                     <DetailSection title="Status">
@@ -491,6 +625,89 @@ function DetailModal({
                         />
                     </DetailSection>
 
+                    <section className="space-y-3">
+                        <h3 className="text-sm font-bold tracking-wide text-slate-600 uppercase">
+                            Riwayat WhatsApp
+                        </h3>
+                        {whatsappNotifications.length === 0 ? (
+                            <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-500">
+                                Belum ada notifikasi WhatsApp.
+                            </p>
+                        ) : (
+                            <div className="space-y-2">
+                                {whatsappNotifications.map((notification) => (
+                                    <div
+                                        key={notification.id}
+                                        className="rounded-lg border border-slate-200 bg-white p-3"
+                                    >
+                                        <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-start">
+                                            <div>
+                                                <p className="text-sm font-semibold text-slate-950">
+                                                    {notification.type ===
+                                                    'invalid'
+                                                        ? 'Dokumen Tidak Valid'
+                                                        : 'Permohonan Diterima'}{' '}
+                                                    -{' '}
+                                                    {notification.target_number}
+                                                </p>
+                                                <p className="mt-1 text-xs text-slate-500">
+                                                    {formatDateTime(
+                                                        notification.sent_at ??
+                                                            notification.attempted_at ??
+                                                            notification.created_at,
+                                                    )}
+                                                    {notification.retry_count >
+                                                    0
+                                                        ? ` | Kirim ulang: ${notification.retry_count}x`
+                                                        : ''}
+                                                </p>
+                                            </div>
+                                            <span
+                                                className={`inline-flex rounded-md border px-2 py-1 text-xs font-semibold ${whatsappStatusTone[notification.status]}`}
+                                            >
+                                                {
+                                                    whatsappStatusLabel[
+                                                        notification.status
+                                                    ]
+                                                }
+                                            </span>
+                                        </div>
+                                        {notification.error_message && (
+                                            <p className="mt-2 rounded-md bg-rose-50 px-3 py-2 text-xs text-rose-800">
+                                                {notification.error_message}
+                                            </p>
+                                        )}
+                                        {notification.status === 'failed' && (
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                disabled={
+                                                    retryingNotificationId ===
+                                                    notification.id
+                                                }
+                                                className="mt-3 gap-2"
+                                                onClick={() =>
+                                                    onRetryWhatsapp(
+                                                        notification,
+                                                    )
+                                                }
+                                            >
+                                                {retryingNotificationId ===
+                                                notification.id ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <Send className="h-4 w-4" />
+                                                )}
+                                                Kirim Ulang
+                                            </Button>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </section>
+
                     {canSendInvalidWhatsapp && (
                         <div className="flex flex-col items-end gap-2 border-t border-slate-200 pt-4">
                             {invalidWhatsappCooldown.active &&
@@ -509,23 +726,26 @@ function DetailModal({
                                     type="button"
                                     disabled={
                                         isSending ||
-                                        invalidWhatsappCooldown.active
+                                        invalidWhatsappCooldown.active ||
+                                        invalidDeliveryPending
                                     }
                                     onClick={() =>
                                         onSendInvalidWhatsapp(document)
                                     }
                                     className="gap-2 rounded-md bg-emerald-700 px-5 text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
-                                    {isSending ? (
+                                    {isSending || invalidDeliveryPending ? (
                                         <Loader2 className="h-4 w-4 animate-spin" />
                                     ) : invalidWhatsappCooldown.active ? (
                                         <CheckCircle className="h-4 w-4" />
                                     ) : (
                                         <Send className="h-4 w-4" />
                                     )}
-                                    {invalidWhatsappCooldown.active
-                                        ? 'WhatsApp Sudah Terkirim'
-                                        : 'Kirim WhatsApp Tidak Valid'}
+                                    {invalidDeliveryPending
+                                        ? 'Sedang Dikirim'
+                                        : invalidWhatsappCooldown.active
+                                          ? 'WhatsApp Sudah Terkirim'
+                                          : 'Kirim WhatsApp Tidak Valid'}
                                 </Button>
                             </div>
                         </div>
@@ -536,13 +756,165 @@ function DetailModal({
     );
 }
 
+function WhatsappGatewayPanel({
+    stats,
+}: {
+    stats: { pending: number; failed: number };
+}) {
+    const [status, setStatus] = useState<{
+        loading: boolean;
+        ready: boolean;
+        hasQr: boolean;
+        wid: string | null;
+        lastReadyAt: string | null;
+        message?: string;
+    }>({
+        loading: true,
+        ready: false,
+        hasQr: false,
+        wid: null,
+        lastReadyAt: null,
+    });
+    const [qr, setQr] = useState<string | null>(null);
+    const [qrError, setQrError] = useState<string | null>(null);
+
+    useEffect(() => {
+        let active = true;
+
+        const loadStatus = async () => {
+            try {
+                const response = await fetch('/admin/whatsapp/status', {
+                    headers: { Accept: 'application/json' },
+                });
+                const payload = await response.json();
+                const whatsapp = payload.whatsapp;
+
+                if (!active) return;
+
+                setStatus({
+                    loading: false,
+                    ready: response.ok && Boolean(whatsapp?.ready),
+                    hasQr: Boolean(whatsapp?.hasQr),
+                    wid: whatsapp?.wid ?? null,
+                    lastReadyAt: whatsapp?.lastReadyAt ?? null,
+                    message: payload.message ?? payload.error,
+                });
+
+                if (whatsapp?.hasQr && !whatsapp?.ready) {
+                    const qrResponse = await fetch('/admin/whatsapp/qr', {
+                        headers: { Accept: 'application/json' },
+                    });
+                    const qrPayload = await qrResponse.json();
+
+                    if (!active) return;
+
+                    if (qrResponse.ok && qrPayload.qrDataUrl) {
+                        setQr(qrPayload.qrDataUrl);
+                        setQrError(null);
+                    } else {
+                        setQr(null);
+                        setQrError(
+                            qrPayload.error ??
+                                'QR WhatsApp gagal dimuat dari gateway.',
+                        );
+                    }
+                } else {
+                    setQr(null);
+                    setQrError(null);
+                }
+            } catch {
+                if (active) {
+                    setQr(null);
+                    setQrError(null);
+                    setStatus((current) => ({
+                        ...current,
+                        loading: false,
+                        ready: false,
+                        message: 'Gateway WhatsApp tidak dapat dihubungi.',
+                    }));
+                }
+            }
+        };
+
+        void loadStatus();
+        const interval = window.setInterval(loadStatus, 10000);
+
+        return () => {
+            active = false;
+            window.clearInterval(interval);
+        };
+    }, []);
+
+    return (
+        <Card className="rounded-lg border-slate-200 bg-white shadow-sm">
+            <CardContent className="flex flex-col gap-4 p-5 lg:flex-row lg:items-start lg:justify-between">
+                <div className="flex gap-3">
+                    <div
+                        className={`rounded-md border p-2 ${status.ready ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700'}`}
+                    >
+                        {status.ready ? (
+                            <Wifi className="h-5 w-5" />
+                        ) : (
+                            <WifiOff className="h-5 w-5" />
+                        )}
+                    </div>
+                    <div>
+                        <p className="text-sm font-semibold text-slate-950">
+                            Koneksi WhatsApp
+                        </p>
+                        <p className="mt-1 text-sm text-slate-600">
+                            {status.loading
+                                ? 'Memeriksa koneksi...'
+                                : status.ready
+                                  ? `Terhubung${status.wid ? ` (${status.wid.replace('@c.us', '')})` : ''}`
+                                  : status.hasQr
+                                    ? qrError ||
+                                      'Scan QR untuk menghubungkan WhatsApp kantor.'
+                                    : status.message ||
+                                      'Gateway aktif, menunggu QR WhatsApp dibuat.'}
+                        </p>
+                        {status.lastReadyAt && (
+                            <p className="mt-1 text-xs text-slate-500">
+                                Terhubung terakhir:{' '}
+                                {formatDateTime(status.lastReadyAt)}
+                            </p>
+                        )}
+                        <div className="mt-3 flex gap-2 text-xs font-semibold">
+                            <span className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-amber-800">
+                                Menunggu: {stats.pending}
+                            </span>
+                            <span className="rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-rose-800">
+                                Gagal: {stats.failed}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {qr && !status.ready && (
+                    <div className="rounded-lg border border-slate-200 bg-white p-3">
+                        <img
+                            src={qr}
+                            alt="QR koneksi WhatsApp"
+                            className="h-48 w-48"
+                        />
+                        <p className="mt-2 max-w-48 text-center text-xs text-slate-500">
+                            Scan melalui menu Perangkat Tertaut.
+                        </p>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
+
 export default function DocumentDashboard({
     documents,
+    whatsappStats = { pending: 0, failed: 0 },
     filters,
     config,
 }: DocumentDashboardProps) {
     const { props } = usePage<{
         flash?: { success?: string; error?: string };
+        auth?: { user?: { role?: string } };
     }>();
     const flash = props.flash ?? {};
     const [search, setSearch] = useState(filters.search || '');
@@ -558,6 +930,9 @@ export default function DocumentDashboard({
     const [sendingWhatsappId, setSendingWhatsappId] = useState<number | null>(
         null,
     );
+    const [retryingNotificationId, setRetryingNotificationId] = useState<
+        number | null
+    >(null);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
@@ -652,18 +1027,22 @@ export default function DocumentDashboard({
             {
                 preserveScroll: true,
                 preserveState: true,
-                onSuccess: () => {
-                    setSelectedDocument((currentDocument) =>
-                        currentDocument?.id === document.id
-                            ? {
-                                ...currentDocument,
-                                invalid_whatsapp_sent_at:
-                                    new Date().toISOString(),
-                            }
-                            : currentDocument,
-                    );
-                },
+                onSuccess: () => setSelectedDocument(null),
                 onFinish: () => setSendingWhatsappId(null),
+            },
+        );
+    };
+
+    const handleRetryWhatsapp = (notification: WhatsappNotification) => {
+        setRetryingNotificationId(notification.id);
+        router.post(
+            `/whatsapp-notifications/${notification.id}/retry`,
+            {},
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => setSelectedDocument(null),
+                onFinish: () => setRetryingNotificationId(null),
             },
         );
     };
@@ -712,6 +1091,10 @@ export default function DocumentDashboard({
                             {flash.error}
                         </div>
                     )}
+
+                    <WhatsappGatewayPanel
+                        stats={whatsappStats}
+                    />
 
                     <header className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
                         <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
@@ -834,13 +1217,23 @@ export default function DocumentDashboard({
 
                         <CardContent className="p-0">
                             <Table>
-                                <TableHeader className='text-black'>
-                                    <TableRow className='text-black hover:bg-transparent'>
-                                        <TableHead className='text-black'>No. Pengajuan</TableHead>
-                                        <TableHead className='text-black'>Tanggal</TableHead>
-                                        <TableHead className='text-black'>Nama Pemohon</TableHead>
-                                        <TableHead className='text-black'>Jenis Permohonan</TableHead>
-                                        <TableHead className='text-black'>Status</TableHead>
+                                <TableHeader className="text-black">
+                                    <TableRow className="text-black hover:bg-transparent">
+                                        <TableHead className="text-black">
+                                            No. Pengajuan
+                                        </TableHead>
+                                        <TableHead className="text-black">
+                                            Tanggal
+                                        </TableHead>
+                                        <TableHead className="text-black">
+                                            Nama Pemohon
+                                        </TableHead>
+                                        <TableHead className="text-black">
+                                            Jenis Permohonan
+                                        </TableHead>
+                                        <TableHead className="text-black">
+                                            Status
+                                        </TableHead>
                                         <TableHead className="text-right text-black">
                                             Aksi
                                         </TableHead>
@@ -894,8 +1287,8 @@ export default function DocumentDashboard({
                                                 <TableCell className="text-slate-700">
                                                     {
                                                         serviceLabels[
-                                                        document
-                                                            .jenis_layanan
+                                                            document
+                                                                .jenis_layanan
                                                         ]
                                                     }
                                                 </TableCell>
@@ -913,9 +1306,9 @@ export default function DocumentDashboard({
                                                         }
                                                         disabled={
                                                             updatingId ===
-                                                            document.id ||
+                                                                document.id ||
                                                             deletingId ===
-                                                            document.id
+                                                                document.id
                                                         }
                                                         className={`cursor-pointer appearance-none rounded-md border px-3 py-2 text-xs font-semibold ring-offset-white outline-none hover:opacity-80 focus-visible:ring-2 focus-visible:ring-slate-400 ${getStatusColor(document.status_proses)}`}
                                                     >
@@ -962,9 +1355,9 @@ export default function DocumentDashboard({
                                                             variant="ghost"
                                                             disabled={
                                                                 updatingId ===
-                                                                document.id ||
+                                                                    document.id ||
                                                                 deletingId ===
-                                                                document.id
+                                                                    document.id
                                                             }
                                                             onClick={() =>
                                                                 handleDelete(
@@ -1042,10 +1435,13 @@ export default function DocumentDashboard({
             </main>
 
             <DetailModal
+                key={selectedDocument?.id ?? 'closed'}
                 document={selectedDocument}
                 open={selectedDocument !== null}
                 sendingWhatsappId={sendingWhatsappId}
                 onSendInvalidWhatsapp={handleSendInvalidWhatsapp}
+                retryingNotificationId={retryingNotificationId}
+                onRetryWhatsapp={handleRetryWhatsapp}
                 onOpenChange={(open) => {
                     if (!open) {
                         setSelectedDocument(null);

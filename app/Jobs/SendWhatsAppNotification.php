@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Models\WhatsAppNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use RuntimeException;
 use Throwable;
 
 class SendWhatsAppNotification implements ShouldQueue
@@ -16,61 +18,84 @@ class SendWhatsAppNotification implements ShouldQueue
 
     public int $tries = 3;
 
-    public function __construct(
-        private readonly string $targetNumber,
-        private readonly string $message,
-    ) {}
+    public function __construct(private readonly int $notificationId) {}
 
     public function handle(): void
     {
+        $notification = WhatsAppNotification::query()->findOrFail($this->notificationId);
         $endpoint = config('services.whatsapp.gateway_url');
-        $senderNumber = config('services.whatsapp.sender_number');
 
-        if (! is_string($endpoint) || trim($endpoint) === '') {
-            Log::warning('WhatsApp notification skipped: WA_GATEWAY_URL is not configured.', [
-                'sender_number' => $senderNumber,
-                'target_number' => $this->targetNumber,
-            ]);
-
-            return;
-        }
-
-        $payload = [
-            'phone' => $this->normalizeTargetNumber($this->targetNumber),
-            'message' => $this->message,
-        ];
+        $notification->forceFill([
+            'status' => 'pending',
+            'attempted_at' => now(),
+            'error_message' => null,
+            'failed_at' => null,
+        ])->save();
 
         try {
-            $response = Http::withHeaders([
-                'Accept' => 'application/json',
-                'Content-Type' => 'application/json',
-            ])
-                ->timeout(15)
-                ->post($endpoint, $payload);
+            if (! is_string($endpoint) || trim($endpoint) === '') {
+                throw new RuntimeException('WA_GATEWAY_URL belum dikonfigurasi.');
+            }
+
+            $request = Http::acceptJson()->asJson()->timeout(15);
+            $gatewayToken = config('services.whatsapp.gateway_token');
+
+            if (is_string($gatewayToken) && trim($gatewayToken) !== '') {
+                $request = $request->withToken($gatewayToken);
+            }
+
+            $response = $request->post($endpoint, [
+                'phone' => $this->normalizeTargetNumber($notification->target_number),
+                'message' => $notification->message,
+            ]);
+
+            if ($response->failed()) {
+                $reason = $response->json('error') ?? $response->body();
+                throw new RuntimeException('Gateway menolak pengiriman: '.(string) $reason);
+            }
+
+            $notification->forceFill([
+                'status' => 'sent',
+                'gateway_message_id' => $response->json('data.messageId'),
+                'sent_at' => now(),
+                'error_message' => null,
+                'failed_at' => null,
+            ])->save();
+
+            if ($notification->type === 'invalid') {
+                $notification->permohonan()->update([
+                    'invalid_whatsapp_sent_at' => now(),
+                ]);
+            }
         } catch (Throwable $exception) {
-            Log::error('WhatsApp Gateway request error.', [
-                'sender_number' => $senderNumber,
-                'target_number' => $this->targetNumber,
+            $notification->forceFill([
+                'error_message' => $exception->getMessage(),
+            ])->save();
+
+            Log::error('WhatsApp Gateway notification attempt failed.', [
+                'notification_id' => $notification->id,
+                'target_number' => $notification->target_number,
                 'endpoint' => $endpoint,
-                'payload' => $payload,
                 'error' => $exception->getMessage(),
             ]);
 
+            throw $exception;
+        }
+    }
+
+    public function failed(?Throwable $exception): void
+    {
+        $notification = WhatsAppNotification::query()->find($this->notificationId);
+
+        if (! $notification) {
             return;
         }
 
-        if ($response->failed()) {
-            Log::error('WhatsApp Gateway notification failed.', [
-                'sender_number' => $senderNumber,
-                'target_number' => $this->targetNumber,
-                'endpoint' => $endpoint,
-                'payload' => $payload,
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
-
-            return;
-        }
+        $notification->forceFill([
+            'status' => 'failed',
+            'failed_at' => now(),
+            'error_message' => $exception?->getMessage() ?? $notification->error_message,
+        ])->save();
     }
 
     private function normalizeTargetNumber(string $number): string

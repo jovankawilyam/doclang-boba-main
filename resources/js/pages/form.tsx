@@ -733,7 +733,7 @@ const FormPage = () => {
             setUploadedFiles({});
             setStep(1);
             setSuccessMessage(
-                `${successResponse.message} Token permohonan: ${successResponse.token ?? successResponse.id_pengajuan}. Token juga dikirim lewat WhatsApp.`,
+                `${successResponse.message} Token permohonan: ${successResponse.token ?? successResponse.id_pengajuan}. Notifikasi WhatsApp sedang diproses.`,
             );
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } catch {

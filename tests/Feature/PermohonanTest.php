@@ -4,6 +4,7 @@ use App\Jobs\SendWhatsAppNotification;
 use App\Models\DoclangProses;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -42,6 +43,7 @@ test('public users can submit a doclang request and queue whatsapp notification'
 
     Storage::disk('local')->assertExists($permohonan->dokumen_identitas_pemohon_path);
     Storage::disk('local')->assertExists($permohonan->bukti_pelunasan_path);
+    expect($permohonan->whatsappNotifications()->firstOrFail()->status)->toBe('pending');
     Queue::assertPushed(SendWhatsAppNotification::class);
 });
 
@@ -74,6 +76,33 @@ test('public users with representative phone can queue whatsapp notification to 
     $response->assertSessionHas('success');
 
     Queue::assertPushed(SendWhatsAppNotification::class, 2);
+});
+
+test('public submission remains successful when sync whatsapp delivery fails', function () {
+    config(['queue.default' => 'sync']);
+    Http::fake(['*' => Http::response(['error' => 'Gateway belum siap.'], 503)]);
+    Storage::fake('local');
+
+    $response = $this->post(route('permohonan.store'), [
+        'peran_pemohon' => 'pemenang',
+        'email_pemohon' => 'gagal-wa@example.test',
+        'jenis_identitas_pemohon' => 'KTP',
+        'nomor_identitas_pemohon' => '3271000000000009',
+        'alamat_pemohon' => 'Bogor',
+        'nama_pemohon' => 'Pemohon Tanpa Gateway',
+        'nomor_wa_pemohon' => '081234567899',
+        'kode_lot_lelang' => 'BGR-LOT-019',
+        'jenis_layanan' => 'kuitansi',
+        'tanggal_pelunasan' => '2026-05-18',
+        'dokumen_identitas_pemohon' => UploadedFile::fake()->create('ktp.pdf', 512, 'application/pdf'),
+    ]);
+
+    $response->assertRedirect()->assertSessionHas('success');
+
+    $notification = DoclangProses::firstOrFail()->whatsappNotifications()->firstOrFail();
+
+    expect($notification->status)->toBe('failed');
+    expect($notification->error_message)->toContain('Gateway belum siap');
 });
 
 test('public users can submit a doclang request as json form data for fetch clients', function () {
@@ -183,9 +212,153 @@ test('admin can manually send invalid whatsapp notification after rejection', fu
 
     $permohonan->refresh();
 
-    expect($permohonan->invalid_whatsapp_sent_at)->not->toBeNull();
+    expect($permohonan->invalid_whatsapp_sent_at)->toBeNull();
+    expect($permohonan->whatsappNotifications()->where('type', 'invalid')->count())->toBe(2);
+    expect($permohonan->whatsappNotifications()->pluck('status')->all())->each->toBe('pending');
 
     Queue::assertPushed(SendWhatsAppNotification::class, 2);
+});
+
+test('successful whatsapp job records delivery and invalid notification sent timestamp', function () {
+    Http::fake([
+        '*' => Http::response([
+            'success' => true,
+            'data' => ['messageId' => 'message-123'],
+        ]),
+    ]);
+
+    $permohonan = DoclangProses::create([
+        'kode_lot_lelang' => 'BGR-LOT-002',
+        'id_pengajuan' => '0001/KPHL/2026',
+        'nama_pemohon' => 'Siti Aminah',
+        'nomor_wa_pemohon' => '081911111111',
+        'jenis_layanan' => 'kuitansi',
+        'status_proses' => 'tidak_valid',
+        'catatan_tidak_valid' => 'Bukti pelunasan belum terbaca jelas.',
+    ]);
+    $notification = $permohonan->whatsappNotifications()->create([
+        'type' => 'invalid',
+        'target_number' => '081911111111',
+        'message' => 'Dokumen tidak valid.',
+        'status' => 'pending',
+    ]);
+
+    (new SendWhatsAppNotification($notification->id))->handle();
+
+    $notification->refresh();
+    $permohonan->refresh();
+
+    expect($notification->status)->toBe('sent');
+    expect($notification->sent_at)->not->toBeNull();
+    expect($notification->gateway_message_id)->toBe('message-123');
+    expect($permohonan->invalid_whatsapp_sent_at)->not->toBeNull();
+});
+
+test('failed whatsapp job leaves an admin-visible failed delivery', function () {
+    Http::fake(['*' => Http::response(['error' => 'Gateway belum siap.'], 503)]);
+
+    $permohonan = DoclangProses::create([
+        'kode_lot_lelang' => 'BGR-LOT-002',
+        'id_pengajuan' => '0001/KPHL/2026',
+        'nama_pemohon' => 'Siti Aminah',
+        'nomor_wa_pemohon' => '081911111111',
+        'jenis_layanan' => 'kuitansi',
+        'status_proses' => 'tidak_valid',
+        'catatan_tidak_valid' => 'Bukti pelunasan belum terbaca jelas.',
+    ]);
+    $notification = $permohonan->whatsappNotifications()->create([
+        'type' => 'invalid',
+        'target_number' => '081911111111',
+        'message' => 'Dokumen tidak valid.',
+        'status' => 'pending',
+    ]);
+    $job = new SendWhatsAppNotification($notification->id);
+
+    try {
+        $job->handle();
+    } catch (Throwable $exception) {
+        $job->failed($exception);
+    }
+
+    $notification->refresh();
+
+    expect($notification->status)->toBe('failed');
+    expect($notification->error_message)->toContain('Gateway belum siap');
+    expect($permohonan->fresh()->invalid_whatsapp_sent_at)->toBeNull();
+});
+
+test('sync queue gateway failure returns admin to page with visible failure instead of server error', function () {
+    config(['queue.default' => 'sync']);
+    Http::fake(['*' => Http::response(['error' => 'Gateway belum siap.'], 503)]);
+
+    $admin = User::factory()->create();
+    $permohonan = DoclangProses::create([
+        'kode_lot_lelang' => 'BGR-LOT-002',
+        'id_pengajuan' => '0001/KPHL/2026',
+        'nama_pemohon' => 'Siti Aminah',
+        'nomor_wa_pemohon' => '081911111111',
+        'jenis_layanan' => 'kuitansi',
+        'status_proses' => 'tidak_valid',
+        'catatan_tidak_valid' => 'Bukti pelunasan belum terbaca jelas.',
+    ]);
+
+    $this->actingAs($admin)
+        ->post(route('permohonan.send-invalid-notification', $permohonan))
+        ->assertRedirect()
+        ->assertSessionHas('error');
+
+    $notification = $permohonan->whatsappNotifications()->firstOrFail();
+
+    expect($notification->status)->toBe('failed');
+    expect($notification->error_message)->toContain('Gateway belum siap');
+    expect($permohonan->fresh()->invalid_whatsapp_sent_at)->toBeNull();
+});
+
+test('admin can retry a failed whatsapp notification', function () {
+    Queue::fake();
+    $admin = User::factory()->create();
+    $permohonan = DoclangProses::create([
+        'kode_lot_lelang' => 'BGR-LOT-002',
+        'id_pengajuan' => '0001/KPHL/2026',
+        'nama_pemohon' => 'Siti Aminah',
+        'nomor_wa_pemohon' => '081911111111',
+        'jenis_layanan' => 'kuitansi',
+        'status_proses' => 'tidak_valid',
+        'catatan_tidak_valid' => 'Bukti pelunasan belum terbaca jelas.',
+    ]);
+    $notification = $permohonan->whatsappNotifications()->create([
+        'type' => 'invalid',
+        'target_number' => '081911111111',
+        'message' => 'Dokumen tidak valid.',
+        'status' => 'failed',
+        'error_message' => 'Gateway terputus.',
+    ]);
+
+    $this->actingAs($admin)
+        ->post(route('whatsapp-notifications.retry', $notification))
+        ->assertRedirect()
+        ->assertSessionHas('success');
+
+    expect($notification->fresh()->status)->toBe('pending');
+    expect($notification->fresh()->retry_count)->toBe(1);
+    Queue::assertPushed(SendWhatsAppNotification::class);
+});
+
+test('admins can access whatsapp connection qr', function () {
+    Http::fake(['*' => Http::response(['qrDataUrl' => 'data:image/png;base64,test'])]);
+
+    $admin = User::factory()->create(['role' => 'admin']);
+    $superAdmin = User::factory()->create(['role' => 'super_admin']);
+
+    $this->actingAs($admin)
+        ->getJson(route('whatsapp.connection.qr'))
+        ->assertOk()
+        ->assertJsonPath('qrDataUrl', 'data:image/png;base64,test');
+
+    $this->actingAs($superAdmin)
+        ->getJson(route('whatsapp.connection.qr'))
+        ->assertOk()
+        ->assertJsonPath('qrDataUrl', 'data:image/png;base64,test');
 });
 
 test('admin cannot resend invalid whatsapp notification before twenty four hours', function () {

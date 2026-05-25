@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DoclangProses;
 use App\Models\Document;
+use App\Models\WhatsAppNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -93,6 +94,7 @@ class DocumentController extends Controller
         $service = self::CATEGORY_TO_SERVICE[$category] ?? self::CATEGORY_TO_SERVICE['kuitansi'];
 
         $documents = DoclangProses::query()
+            ->with(['whatsappNotifications' => fn ($query) => $query->latest()])
             ->where('jenis_layanan', $service)
             ->when($search, function ($query, $search) {
                 $query->where(function ($query) use ($search): void {
@@ -120,6 +122,10 @@ class DocumentController extends Controller
         return Inertia::render($viewMap[$category] ?? 'documents/kuitansi', [
             'documents' => $documents,
             'filters' => ['search' => $search, 'status' => $status],
+            'whatsappStats' => [
+                'pending' => WhatsAppNotification::query()->where('status', 'pending')->count(),
+                'failed' => WhatsAppNotification::query()->where('status', 'failed')->count(),
+            ],
         ]);
     }
 

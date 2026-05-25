@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DoclangProses extends Model
 {
@@ -65,5 +66,10 @@ class DoclangProses extends Model
         static::creating(function (DoclangProses $permohonan): void {
             $permohonan->tanggal_masuk_pengambilan_dokumen ??= now()->toDateString();
         });
+    }
+
+    public function whatsappNotifications(): HasMany
+    {
+        return $this->hasMany(WhatsAppNotification::class, 'doclang_proses_id');
     }
 }

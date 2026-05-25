@@ -6,13 +6,16 @@ namespace App\Http\Controllers;
 
 use App\Jobs\SendWhatsAppNotification;
 use App\Models\DoclangProses;
+use App\Models\WhatsAppNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 class PermohonanController extends Controller
 {
@@ -211,9 +214,7 @@ class PermohonanController extends Controller
 
             $message = "Permohonan Doclang Boba berhasil diterima.\n\nToken Permohonan: {$permohonan->id_pengajuan}\nLayanan: ".self::JENIS_LAYANAN_LABEL[$permohonan->jenis_layanan]."\nStatus: proses\n\nSimpan token ini untuk pengecekan layanan KPKNL Bogor.";
 
-            foreach ($this->whatsappTargets($permohonan) as $targetNumber) {
-                SendWhatsAppNotification::dispatch($targetNumber, $message);
-            }
+            $this->queueWhatsAppNotifications($permohonan, 'submission', $message);
 
             return $permohonan;
         });
@@ -281,15 +282,39 @@ class PermohonanController extends Controller
 
         $message = "Permohonan Doclang Boba *TIDAK VALID*.\n\nNomor Tiket: {$permohonan->id_pengajuan}\nLayanan: ".(self::JENIS_LAYANAN_LABEL[$permohonan->jenis_layanan] ?? $permohonan->jenis_layanan)."\nAlasan: {$permohonan->catatan_tidak_valid}\n\nSilakan perbaiki berkas sesuai catatan tersebut.";
 
-        foreach ($this->whatsappTargets($permohonan) as $targetNumber) {
-            SendWhatsAppNotification::dispatch($targetNumber, $message);
+        if ($permohonan->whatsappNotifications()
+            ->where('type', 'invalid')
+            ->where('status', 'pending')
+            ->exists()) {
+            return redirect()->back()->with('error', 'Pengiriman WhatsApp tidak valid masih diproses.');
         }
 
-        $permohonan->forceFill([
-            'invalid_whatsapp_sent_at' => now(),
+        $failedImmediately = $this->queueWhatsAppNotifications($permohonan, 'invalid', $message, auth()->id());
+
+        return $failedImmediately
+            ? redirect()->back()->with('error', 'WhatsApp tidak valid gagal dikirim. Periksa riwayat dan koneksi WhatsApp, lalu kirim ulang.')
+            : redirect()->back()->with('success', 'WhatsApp tidak valid masuk antrean pengiriman.');
+    }
+
+    public function retryWhatsAppNotification(WhatsAppNotification $notification): RedirectResponse
+    {
+        if ($notification->status !== 'failed') {
+            return redirect()->back()->with('error', 'Hanya notifikasi gagal yang dapat dikirim ulang.');
+        }
+
+        $notification->forceFill([
+            'status' => 'pending',
+            'retry_count' => $notification->retry_count + 1,
+            'error_message' => null,
+            'failed_at' => null,
+            'requested_by' => auth()->id(),
         ])->save();
 
-        return redirect()->back()->with('success', 'WhatsApp tidak valid sudah terkirim.');
+        if ($this->dispatchWhatsAppNotification($notification->id)) {
+            return redirect()->back()->with('error', 'Pengiriman ulang WhatsApp gagal. Periksa koneksi WhatsApp lalu coba kembali.');
+        }
+
+        return redirect()->back()->with('success', 'WhatsApp dijadwalkan untuk dikirim ulang.');
     }
 
     public function destroy(DoclangProses $permohonan): RedirectResponse
@@ -361,6 +386,50 @@ class PermohonanController extends Controller
             ->unique(fn (string $number): string => preg_replace('/\D+/', '', $number) ?? $number)
             ->values()
             ->all();
+    }
+
+    private function queueWhatsAppNotifications(
+        DoclangProses $permohonan,
+        string $type,
+        string $message,
+        ?int $requestedBy = null,
+    ): bool {
+        $failedImmediately = false;
+
+        foreach ($this->whatsappTargets($permohonan) as $targetNumber) {
+            $notification = $permohonan->whatsappNotifications()->create([
+                'type' => $type,
+                'target_number' => $targetNumber,
+                'message' => $message,
+                'status' => 'pending',
+                'requested_by' => $requestedBy,
+            ]);
+
+            if ($this->dispatchWhatsAppNotification($notification->id)) {
+                $failedImmediately = true;
+            }
+        }
+
+        return $failedImmediately;
+    }
+
+    private function dispatchWhatsAppNotification(int $notificationId): bool
+    {
+        $job = new SendWhatsAppNotification($notificationId);
+
+        if (config('queue.default') !== 'sync') {
+            $job->afterCommit();
+        }
+
+        try {
+            Bus::dispatch($job);
+
+            return false;
+        } catch (Throwable $exception) {
+            $job->failed($exception);
+
+            return true;
+        }
     }
 
     private function normalizeJenisLayanan(string $jenisLayanan): string

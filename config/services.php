@@ -38,6 +38,9 @@ return [
     'whatsapp' => [
         'sender_number' => env('WA_SENDER_NUMBER', '081911883609'),
         'gateway_url' => env('WA_GATEWAY_URL', 'http://127.0.0.1:3001/api/send-message'),
+        'gateway_status_url' => env('WA_GATEWAY_STATUS_URL', 'http://127.0.0.1:3001/api/admin/status'),
+        'gateway_qr_url' => env('WA_GATEWAY_QR_URL', 'http://127.0.0.1:3001/api/admin/qr'),
+        'gateway_token' => env('WA_GATEWAY_TOKEN'),
     ],
 
     'fonnte' => [

@@ -3,10 +3,10 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\PermohonanController;
+use App\Http\Controllers\WhatsAppConnectionController;
 use App\Models\DoclangProses;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -59,24 +59,6 @@ Route::get('/persyaratan', function () {
 });
 Route::get('/form', function () {
     return Inertia::render('form');
-});
-Route::get('/whatsapp/health', function () {
-    try {
-        $response = Http::acceptJson()
-            ->timeout(3)
-            ->get('http://127.0.0.1:3001/health');
-
-        return response()->json([
-            'online' => $response->ok(),
-            'gateway' => $response->json(),
-        ], $response->ok() ? 200 : 503);
-    } catch (Throwable $exception) {
-        return response()->json([
-            'online' => false,
-            'message' => 'WhatsApp Gateway belum berjalan di port 3001.',
-            'error' => $exception->getMessage(),
-        ], 503);
-    }
 });
 Route::post('/permohonan/store', [PermohonanController::class, 'store'])->name('permohonan.store');
 
@@ -153,6 +135,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('/permohonan/{permohonan}', [PermohonanController::class, 'update'])->name('permohonan.update');
         Route::delete('/permohonan/{permohonan}', [PermohonanController::class, 'destroy'])->name('permohonan.destroy');
         Route::post('/permohonan/{permohonan}/send-invalid-notification', [PermohonanController::class, 'sendInvalidNotification'])->name('permohonan.send-invalid-notification');
+        Route::post('/whatsapp-notifications/{notification}/retry', [PermohonanController::class, 'retryWhatsAppNotification'])->name('whatsapp-notifications.retry');
+        Route::get('/admin/whatsapp/status', [WhatsAppConnectionController::class, 'status'])->name('whatsapp.connection.status');
+        Route::get('/admin/whatsapp/qr', [WhatsAppConnectionController::class, 'qr'])->name('whatsapp.connection.qr');
         Route::get('/permohonan/{permohonan}/file/{field}', [PermohonanController::class, 'downloadFile'])->name('permohonan.file');
     });
 

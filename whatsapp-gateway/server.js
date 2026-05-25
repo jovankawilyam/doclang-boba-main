@@ -1,4 +1,7 @@
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+
 const express = require('express');
+const QRCode = require('qrcode');
 const qrcode = require('qrcode-terminal');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 
@@ -7,9 +10,13 @@ const PORT = process.env.PORT || 3001;
 const HOST = process.env.HOST || '127.0.0.1';
 const CHROME_PATH =
   process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const GATEWAY_TOKEN = process.env.WA_GATEWAY_TOKEN || '';
 
 let isClientReady = false;
 let isInitializing = false;
+let currentQrDataUrl = null;
+let qrGeneratedAt = null;
+let lastReadyAt = null;
 
 app.use(express.json());
 
@@ -85,7 +92,21 @@ function getGatewayStatus() {
     hasClientInfo: Boolean(client.info),
     wid: client.info?.wid?._serialized || null,
     pushname: client.info?.pushname || null,
+    hasQr: Boolean(currentQrDataUrl),
+    qrGeneratedAt,
+    lastReadyAt,
   };
+}
+
+function requireGatewayToken(req, res, next) {
+  if (GATEWAY_TOKEN && req.get('authorization') !== `Bearer ${GATEWAY_TOKEN}`) {
+    return res.status(401).json({
+      success: false,
+      error: 'Token gateway tidak valid.',
+    });
+  }
+
+  return next();
 }
 
 function initializeClient() {
@@ -99,8 +120,16 @@ function initializeClient() {
   });
 }
 
-client.on('qr', (qr) => {
+client.on('qr', async (qr) => {
   isClientReady = false;
+  try {
+    currentQrDataUrl = await QRCode.toDataURL(qr, { margin: 2, width: 320 });
+    qrGeneratedAt = new Date().toISOString();
+  } catch (error) {
+    currentQrDataUrl = null;
+    qrGeneratedAt = null;
+    console.error('Gagal membuat gambar QR WhatsApp:', error);
+  }
   console.log('\nScan QR code berikut dengan WhatsApp di HP Anda:\n');
   qrcode.generate(qr, { small: true });
 });
@@ -111,6 +140,9 @@ client.on('authenticated', () => {
 
 client.on('ready', () => {
   isClientReady = true;
+  currentQrDataUrl = null;
+  qrGeneratedAt = null;
+  lastReadyAt = new Date().toISOString();
   console.log('WhatsApp Gateway siap mengirim pesan.');
 });
 
@@ -134,7 +166,27 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.post('/api/send-message', async (req, res) => {
+app.get('/api/admin/status', requireGatewayToken, (req, res) => {
+  res.json({
+    online: true,
+    whatsapp: getGatewayStatus(),
+  });
+});
+
+app.get('/api/admin/qr', requireGatewayToken, (req, res) => {
+  if (!currentQrDataUrl) {
+    return res.status(404).json({
+      error: 'QR belum tersedia. Gateway mungkin sudah terhubung atau masih memulai.',
+    });
+  }
+
+  return res.json({
+    qrDataUrl: currentQrDataUrl,
+    generatedAt: qrGeneratedAt,
+  });
+});
+
+app.post('/api/send-message', requireGatewayToken, async (req, res) => {
   const requestId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
   try {
