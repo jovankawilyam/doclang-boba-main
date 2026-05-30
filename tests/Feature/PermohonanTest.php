@@ -448,7 +448,7 @@ test('admins can retrieve the latest whatsapp phone number pairing code', functi
         && str_ends_with($request->url(), '/api/admin/pairing-code'));
 });
 
-test('admin cannot resend invalid whatsapp notification before twenty four hours', function () {
+test('admin can resend invalid whatsapp notification immediately after a previous delivery', function () {
     Queue::fake();
 
     $admin = User::factory()->create();
@@ -461,29 +461,6 @@ test('admin cannot resend invalid whatsapp notification before twenty four hours
         'status_proses' => 'tidak_valid',
         'catatan_tidak_valid' => 'Bukti pelunasan belum terbaca jelas.',
         'invalid_whatsapp_sent_at' => now()->subHours(23),
-    ]);
-
-    $this->actingAs($admin)
-        ->post(route('permohonan.send-invalid-notification', $permohonan))
-        ->assertRedirect()
-        ->assertSessionHas('error');
-
-    Queue::assertNotPushed(SendWhatsAppNotification::class);
-});
-
-test('admin can resend invalid whatsapp notification after twenty four hours', function () {
-    Queue::fake();
-
-    $admin = User::factory()->create();
-    $permohonan = DoclangProses::create([
-        'kode_lot_lelang' => 'BGR-LOT-002',
-        'id_pengajuan' => '0001/KPHL/2026',
-        'nama_pemohon' => 'Siti Aminah',
-        'nomor_wa_pemohon' => '081911111111',
-        'jenis_layanan' => 'kuitansi',
-        'status_proses' => 'tidak_valid',
-        'catatan_tidak_valid' => 'Bukti pelunasan belum terbaca jelas.',
-        'invalid_whatsapp_sent_at' => now()->subHours(24)->subMinute(),
     ]);
 
     $this->actingAs($admin)
@@ -565,6 +542,31 @@ test('document dashboard reads unified doclang process data by service', functio
             ->where('documents.data.0.id_pengajuan', '0002/KPHL/2026')
             ->where('documents.data.0.kode_lot_lelang', 'BGR-KWT-001')
             ->where('documents.data.0.nama_pemohon', 'Agus Rahman')
+        );
+});
+
+test('document dashboard pagination uses indonesian previous and next labels', function () {
+    config(['app.locale' => 'id']);
+
+    $admin = User::factory()->create();
+
+    foreach (range(1, 16) as $number) {
+        DoclangProses::create([
+            'kode_lot_lelang' => sprintf('BGR-KWT-%03d', $number),
+            'id_pengajuan' => sprintf('%04d/KPHL/2026', $number),
+            'nama_pemohon' => 'Pemohon Pagination',
+            'nomor_wa_pemohon' => '081922222222',
+            'jenis_layanan' => 'kuitansi',
+            'status_proses' => 'proses',
+        ]);
+    }
+
+    $this->actingAs($admin)
+        ->get(route('documents.kuitansi'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('documents.links.0.label', '&laquo; Sebelumnya')
+            ->where('documents.links.3.label', 'Berikutnya &raquo;')
         );
 });
 

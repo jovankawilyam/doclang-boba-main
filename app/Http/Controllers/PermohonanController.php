@@ -33,8 +33,6 @@ class PermohonanController extends Controller
 
     private const DOKUMEN_RULES = ['file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'];
 
-    private const INVALID_WHATSAPP_COOLDOWN_HOURS = 24;
-
     public function store(Request $request): RedirectResponse|JsonResponse
     {
         $request->merge([
@@ -267,17 +265,6 @@ class PermohonanController extends Controller
 
         if (! is_string($permohonan->catatan_tidak_valid) || trim($permohonan->catatan_tidak_valid) === '') {
             return redirect()->back()->with('error', 'Catatan tidak valid wajib diisi sebelum mengirim WhatsApp.');
-        }
-
-        if ($permohonan->invalid_whatsapp_sent_at !== null) {
-            $nextAllowedAt = $permohonan->invalid_whatsapp_sent_at->copy()->addHours(self::INVALID_WHATSAPP_COOLDOWN_HOURS);
-
-            if (now()->lessThan($nextAllowedAt)) {
-                return redirect()->back()->with(
-                    'error',
-                    'WhatsApp tidak valid sudah terkirim. Bisa dikirim kembali pada '.$nextAllowedAt->translatedFormat('d F Y H:i').'.'
-                );
-            }
         }
 
         $message = "Permohonan Doclang Boba *TIDAK VALID*.\n\nNomor Tiket: {$permohonan->id_pengajuan}\nLayanan: ".(self::JENIS_LAYANAN_LABEL[$permohonan->jenis_layanan] ?? $permohonan->jenis_layanan)."\nAlasan: {$permohonan->catatan_tidak_valid}\n\nSilakan perbaiki berkas sesuai catatan tersebut.";

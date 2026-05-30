@@ -70,7 +70,7 @@ const services: ServiceConfig[] = [
         key: 'kutipan_rl',
         label: 'Kutipan RL',
         shortLabel: 'Kutipan RL',
-        title: 'Pelacakan Kutipan Risalah Lelang',
+        title: 'Pelacakan Kutipan RL',
         description: 'Cek progres penerbitan kutipan risalah lelang.',
         placeholder: 'Contoh: 123/K-RL/2026',
         accent: 'text-[#123C69] dark:text-blue-700',
@@ -238,6 +238,7 @@ export default function Welcome({
     const [current, setCurrent] = useState(0);
     const [processing, setProcessing] = useState(false);
     const lastScrollYRef = useRef(0);
+    const trackingResultRef = useRef<HTMLDivElement>(null);
 
     const initialService = useMemo<ServiceKey>(() => {
         if (search_rl) return 'kutipan_rl';
@@ -362,6 +363,14 @@ export default function Welcome({
             {
                 preserveState: true,
                 preserveScroll: true,
+                onSuccess: () => {
+                    window.requestAnimationFrame(() => {
+                        trackingResultRef.current?.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start',
+                        });
+                    });
+                },
                 onFinish: () => setProcessing(false),
             },
         );
@@ -607,58 +616,10 @@ export default function Welcome({
                     </div>
 
                     <div className="grid gap-5 lg:grid-cols-[1fr_1.05fr] lg:items-stretch">
-                        <div
-                            className={`rounded-2xl border p-5 md:p-6 ${activeConfig.ring}`}
-                        >
-                            <div className="mb-4 flex items-center justify-between gap-3">
-                                <div>
-                                    <p className="text-base font-black text-slate-950 dark:text-slate-950">
-                                        2. Lihat ringkasan status
-                                    </p>
-                                    <h2
-                                        className={`mt-1 text-3xl font-black ${activeConfig.accent}`}
-                                    >
-                                        {activeConfig.label}
-                                    </h2>
-                                </div>
-                                <div className="rounded-2xl border border-[#D8E0EC] bg-white px-5 py-3 text-right shadow-sm dark:border-slate-200 dark:bg-white">
-                                    <p className="text-xs font-black tracking-widest text-slate-500 uppercase dark:text-slate-500">
-                                        Total
-                                    </p>
-                                    <p className="text-qslate-50 text-5xl font-black dark:text-slate-950">
-                                        {formatStat(activeStats.total)}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-2">
-                                {statCards.map((item) => {
-                                    const Icon = item.icon;
-
-                                    return (
-                                        <div
-                                            key={item.label}
-                                            className={`rounded-xl border bg-white/90 p-4 shadow-sm backdrop-blur dark:bg-white ${item.className}`}
-                                        >
-                                            <div className="mb-2 flex items-center justify-between gap-2">
-                                                <span className="text-sm font-black uppercase">
-                                                    {item.label}
-                                                </span>
-                                                <Icon className="h-5 w-5 shrink-0" />
-                                            </div>
-                                            <p className="text-4xl font-black">
-                                                {formatStat(item.value)}
-                                            </p>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        <div className="rounded-2xl border border-[#C7D2E3] bg-[#F8FAFC] p-5 md:p-6 dark:border-slate-200 dark:bg-[#F8FAFC]">
+                        <div className="rounded-2xl border border-[#C7D2E3] bg-[#F8FAFC] p-5 md:p-6 lg:order-1 dark:border-slate-200 dark:bg-[#F8FAFC]">
                             <div className="mb-5">
                                 <p className="text-base font-black text-blue-700 dark:text-blue-700">
-                                    3. Masukkan nomor tiket
+                                    2. Masukkan nomor tiket
                                 </p>
                                 <h2 className="mt-2 text-3xl font-black text-slate-950 md:text-4xl dark:text-slate-950">
                                     {activeConfig.title}
@@ -707,14 +668,67 @@ export default function Welcome({
                                 </p>
                             </form>
                         </div>
+                        {activeSearch && (
+                            <div
+                                ref={trackingResultRef}
+                                className="scroll-mt-24 lg:order-3 lg:col-span-2"
+                            >
+                                <TrackingResult
+                                    document={activeDocument}
+                                    searchedValue={activeSearch}
+                                    service={activeConfig}
+                                />
+                            </div>
+                        )}
+                        <div
+                            className={`rounded-2xl border p-5 md:p-6 lg:order-2 ${activeConfig.ring}`}
+                        >
+                            <div className="mb-4 flex items-center justify-between gap-3">
+                                <div>
+                                    <p className="text-base font-black text-slate-950 dark:text-slate-950">
+                                        3. Lihat ringkasan status
+                                    </p>
+                                    <h2
+                                        className={`mt-1 text-3xl font-black ${activeConfig.accent}`}
+                                    >
+                                        {activeConfig.label}
+                                    </h2>
+                                </div>
+                                <div className="rounded-2xl border border-[#D8E0EC] bg-white px-5 py-3 text-right shadow-sm dark:border-slate-200 dark:bg-white">
+                                    <p className="text-xs font-black tracking-widest text-slate-500 uppercase dark:text-slate-500">
+                                        Total
+                                    </p>
+                                    <p className="text-qslate-50 text-5xl font-black dark:text-slate-950">
+                                        {formatStat(activeStats.total)}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-2">
+                                {statCards.map((item) => {
+                                    const Icon = item.icon;
+
+                                    return (
+                                        <div
+                                            key={item.label}
+                                            className={`rounded-xl border bg-white/90 p-4 shadow-sm backdrop-blur dark:bg-white ${item.className}`}
+                                        >
+                                            <div className="mb-2 flex items-center justify-between gap-2">
+                                                <span className="text-sm font-black uppercase">
+                                                    {item.label}
+                                                </span>
+                                                <Icon className="h-5 w-5 shrink-0" />
+                                            </div>
+                                            <p className="text-4xl font-black">
+                                                {formatStat(item.value)}
+                                            </p>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     </div>
                 </section>
-
-                <TrackingResult
-                    document={activeDocument}
-                    searchedValue={activeSearch}
-                    service={activeConfig}
-                />
             </main>
 
             <section className="mt-20">

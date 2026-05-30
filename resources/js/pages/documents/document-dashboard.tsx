@@ -12,13 +12,13 @@ import {
     XCircle,
 } from 'lucide-react';
 import React, { useState } from 'react';
+import Swal from 'sweetalert2';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Dialog,
     DialogContent,
     DialogDescription,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
@@ -164,26 +164,6 @@ const formatDateTime = (value?: string | null) =>
           }).format(new Date(value))
         : '-';
 
-const addHours = (value: string, hours: number) => {
-    const date = new Date(value);
-    date.setHours(date.getHours() + hours);
-
-    return date;
-};
-
-const getInvalidWhatsappCooldown = (document: DocumentItem) => {
-    if (!document.invalid_whatsapp_sent_at) {
-        return { active: false, nextAllowedAt: null };
-    }
-
-    const nextAllowedAt = addHours(document.invalid_whatsapp_sent_at, 24);
-
-    return {
-        active: Date.now() < nextAllowedAt.getTime(),
-        nextAllowedAt,
-    };
-};
-
 const getStatusColor = (status: string) => {
     switch (status) {
         case 'siap_diambil':
@@ -214,6 +194,20 @@ const whatsappStatusTone: Record<WhatsappStatus, string> = {
     pending: 'border-amber-200 bg-amber-50 text-amber-800',
     sent: 'border-emerald-200 bg-emerald-50 text-emerald-800',
     failed: 'border-rose-200 bg-rose-50 text-rose-800',
+};
+
+const confirmationAlert = {
+    icon: 'warning' as const,
+    showCancelButton: true,
+    confirmButtonColor: '#000000',
+    cancelButtonColor: '#dc2626',
+    cancelButtonText: 'Batal',
+    reverseButtons: true,
+    customClass: {
+        // SweetAlert can be opened above the Radix detail modal.
+        // Override the modal's body pointer lock so its buttons remain clickable.
+        container: 'pointer-events-auto',
+    },
 };
 
 function DetailField({
@@ -308,7 +302,6 @@ function DetailModal({
         return null;
     }
 
-    const invalidWhatsappCooldown = getInvalidWhatsappCooldown(document);
     const canSendInvalidWhatsapp =
         document.status_proses === 'tidak_valid' &&
         Boolean(document.catatan_tidak_valid);
@@ -705,24 +698,11 @@ function DetailModal({
 
                     {canSendInvalidWhatsapp && (
                         <div className="flex flex-col items-end gap-2 border-t border-slate-200 pt-4">
-                            {invalidWhatsappCooldown.active &&
-                                invalidWhatsappCooldown.nextAllowedAt && (
-                                    <p className="text-right text-xs font-medium text-slate-500">
-                                        WhatsApp sudah terkirim. Bisa dikirim
-                                        kembali pada{' '}
-                                        {formatDateTime(
-                                            invalidWhatsappCooldown.nextAllowedAt.toISOString(),
-                                        )}
-                                        .
-                                    </p>
-                                )}
                             <div className="flex justify-end">
                                 <Button
                                     type="button"
                                     disabled={
-                                        isSending ||
-                                        invalidWhatsappCooldown.active ||
-                                        invalidDeliveryPending
+                                        isSending || invalidDeliveryPending
                                     }
                                     onClick={() =>
                                         onSendInvalidWhatsapp(document)
@@ -731,16 +711,12 @@ function DetailModal({
                                 >
                                     {isSending || invalidDeliveryPending ? (
                                         <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : invalidWhatsappCooldown.active ? (
-                                        <CheckCircle className="h-4 w-4" />
                                     ) : (
                                         <Send className="h-4 w-4" />
                                     )}
                                     {invalidDeliveryPending
                                         ? 'Sedang Dikirim'
-                                        : invalidWhatsappCooldown.active
-                                          ? 'WhatsApp Sudah Terkirim'
-                                          : 'Kirim WhatsApp Tidak Valid'}
+                                        : 'Kirim WhatsApp Tidak Valid'}
                                 </Button>
                             </div>
                         </div>
@@ -777,13 +753,6 @@ export default function DocumentDashboard({
     const [retryingNotificationId, setRetryingNotificationId] = useState<
         number | null
     >(null);
-    const [invalidDocumentId, setInvalidDocumentId] = useState<number | null>(
-        null,
-    );
-    const [invalidNote, setInvalidNote] = useState('');
-    const [invalidNoteError, setInvalidNoteError] = useState<string | null>(
-        null,
-    );
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
@@ -819,11 +788,52 @@ export default function DocumentDashboard({
         );
     };
 
-    const handleStatusChange = (docId: number, value: StatusProses) => {
+    const handleStatusChange = async (docId: number, value: StatusProses) => {
         if (value === 'tidak_valid') {
-            setInvalidDocumentId(docId);
-            setInvalidNote('');
-            setInvalidNoteError(null);
+            const result = await Swal.fire({
+                ...confirmationAlert,
+                title: 'Tandai Tidak Valid?',
+                text: 'Isi alasan agar pemohon mengetahui berkas yang perlu diperbaiki.',
+                input: 'textarea',
+                inputLabel: 'Catatan Tidak Valid',
+                inputPlaceholder:
+                    'Contoh: KTP tidak terbaca, mohon unggah ulang dokumen yang jelas.',
+                inputAttributes: {
+                    'aria-label': 'Catatan Tidak Valid',
+                },
+                confirmButtonText: 'Simpan Tidak Valid',
+                inputValidator: (value) =>
+                    value.trim()
+                        ? undefined
+                        : 'Catatan tidak valid wajib diisi.',
+            });
+
+            if (!result.isConfirmed) return;
+
+            setUpdatingId(docId);
+            router.patch(
+                `/permohonan/${docId}`,
+                {
+                    status_proses: 'tidak_valid',
+                    catatan_tidak_valid: result.value.trim(),
+                },
+                {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onError: (errors) => {
+                        void Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal Menyimpan Status',
+                            text:
+                                typeof errors.catatan_tidak_valid === 'string'
+                                    ? errors.catatan_tidak_valid
+                                    : 'Status tidak valid gagal disimpan.',
+                            confirmButtonColor: '#000000',
+                        });
+                    },
+                    onFinish: () => setUpdatingId(null),
+                },
+            );
             return;
         }
 
@@ -839,79 +849,39 @@ export default function DocumentDashboard({
         );
     };
 
-    const handleInvalidDialogOpenChange = (open: boolean) => {
-        if (!open && updatingId === null) {
-            setInvalidDocumentId(null);
-            setInvalidNote('');
-            setInvalidNoteError(null);
-        }
+    const handleDelete = async (document: DocumentItem) => {
+        const result = await Swal.fire({
+            ...confirmationAlert,
+            title: 'Hapus Pengajuan?',
+            text: `Pengajuan ${document.id_pengajuan} akan dihapus dan tidak dapat dipulihkan.`,
+            confirmButtonText: 'Ya, Hapus',
+        });
+
+        if (!result.isConfirmed) return;
+
+        setDeletingId(document.id);
+        router.delete(`/permohonan/${document.id}`, {
+            preserveScroll: true,
+            preserveState: true,
+            onFinish: () => setDeletingId(null),
+        });
     };
 
-    const handleInvalidSubmit = (event: React.FormEvent) => {
-        event.preventDefault();
-
-        if (invalidDocumentId === null) return;
-
-        const note = invalidNote.trim();
-
-        if (!note) {
-            setInvalidNoteError('Catatan tidak valid wajib diisi.');
-            return;
-        }
-
-        setInvalidNoteError(null);
-        setUpdatingId(invalidDocumentId);
-        router.patch(
-            `/permohonan/${invalidDocumentId}`,
-            {
-                status_proses: 'tidak_valid',
-                catatan_tidak_valid: note,
-            },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => {
-                    setInvalidDocumentId(null);
-                    setInvalidNote('');
-                },
-                onError: (errors) => {
-                    const error = errors.catatan_tidak_valid;
-
-                    if (typeof error === 'string') {
-                        setInvalidNoteError(error);
-                    }
-                },
-                onFinish: () => setUpdatingId(null),
-            },
-        );
-    };
-
-    const handleDelete = (docId: number) => {
-        if (confirm('Apakah Anda yakin ingin menghapus pengajuan ini?')) {
-            setDeletingId(docId);
-            router.delete(`/permohonan/${docId}`, {
-                preserveScroll: true,
-                preserveState: true,
-                onFinish: () => setDeletingId(null),
-            });
-        }
-    };
-
-    const handleSendInvalidWhatsapp = (document: DocumentItem) => {
+    const handleSendInvalidWhatsapp = async (document: DocumentItem) => {
         const recipients = [
             `pemohon (${document.nomor_wa_pemohon})`,
             document.nomor_wa_pemberi_kuasa
                 ? `kuasa (${document.nomor_wa_pemberi_kuasa})`
                 : null,
         ].filter(Boolean);
+        const result = await Swal.fire({
+            ...confirmationAlert,
+            title: 'Kirim WhatsApp?',
+            text: `Kirim pemberitahuan dokumen tidak valid ke ${recipients.join(' dan ')}?`,
+            confirmButtonText: 'Ya, Kirim',
+        });
 
-        if (
-            !confirm(
-                `Kirim WhatsApp pemberitahuan tidak valid ke ${recipients.join(' dan ')}?`,
-            )
-        ) {
-            return;
-        }
+        if (!result.isConfirmed) return;
 
         setSendingWhatsappId(document.id);
         router.post(
@@ -926,7 +896,16 @@ export default function DocumentDashboard({
         );
     };
 
-    const handleRetryWhatsapp = (notification: WhatsappNotification) => {
+    const handleRetryWhatsapp = async (notification: WhatsappNotification) => {
+        const result = await Swal.fire({
+            ...confirmationAlert,
+            title: 'Kirim Ulang WhatsApp?',
+            text: `Kirim ulang notifikasi ke ${notification.target_number}?`,
+            confirmButtonText: 'Ya, Kirim Ulang',
+        });
+
+        if (!result.isConfirmed) return;
+
         setRetryingNotificationId(notification.id);
         router.post(
             `/whatsapp-notifications/${notification.id}/retry`,
@@ -957,7 +936,12 @@ export default function DocumentDashboard({
                     setNomorPengajuan('');
                 },
                 onError: (errors) => {
-                    alert(Object.values(errors).flat().join(', '));
+                    void Swal.fire({
+                        icon: 'error',
+                        title: 'Dokumen Gagal Ditambahkan',
+                        text: Object.values(errors).flat().join(', '),
+                        confirmButtonColor: '#000000',
+                    });
                 },
                 onFinish: () => setProcessing(false),
                 preserveState: true,
@@ -1250,7 +1234,7 @@ export default function DocumentDashboard({
                                                             }
                                                             onClick={() =>
                                                                 handleDelete(
-                                                                    document.id,
+                                                                    document,
                                                                 )
                                                             }
                                                             className="h-9 w-9 rounded-md text-rose-700 hover:bg-rose-50 hover:text-rose-800"
@@ -1337,76 +1321,6 @@ export default function DocumentDashboard({
                     }
                 }}
             />
-
-            <Dialog
-                open={invalidDocumentId !== null}
-                onOpenChange={handleInvalidDialogOpenChange}
-            >
-                <DialogContent className="border-slate-200 bg-white text-slate-950 shadow-2xl sm:max-w-md">
-                    <DialogHeader className="text-left">
-                        <DialogTitle className="text-slate-950">
-                            Tandai Tidak Valid
-                        </DialogTitle>
-                        <DialogDescription className="text-slate-600">
-                            Isi alasan agar pemohon mengetahui berkas yang perlu
-                            diperbaiki.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleInvalidSubmit} className="space-y-4">
-                        <div className="space-y-2">
-                            <label
-                                htmlFor="catatan-tidak-valid"
-                                className="text-sm font-semibold text-slate-700"
-                            >
-                                Catatan Tidak Valid
-                            </label>
-                            <textarea
-                                id="catatan-tidak-valid"
-                                value={invalidNote}
-                                onChange={(event) => {
-                                    setInvalidNote(event.target.value);
-                                    setInvalidNoteError(null);
-                                }}
-                                rows={4}
-                                autoFocus
-                                placeholder="Contoh: KTP tidak terbaca, mohon unggah ulang dokumen yang jelas."
-                                className="w-full resize-none rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none placeholder:text-slate-400 focus:border-slate-950 focus:ring-2 focus:ring-slate-200"
-                            />
-                            {invalidNoteError && (
-                                <p className="text-sm font-medium text-rose-700">
-                                    {invalidNoteError}
-                                </p>
-                            )}
-                        </div>
-                        <DialogFooter>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                disabled={updatingId !== null}
-                                onClick={() =>
-                                    handleInvalidDialogOpenChange(false)
-                                }
-                            >
-                                Batal
-                            </Button>
-                            <Button
-                                type="submit"
-                                disabled={updatingId !== null}
-                                className="bg-rose-700 text-white hover:bg-rose-800"
-                            >
-                                {updatingId !== null ? (
-                                    <>
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                        Menyimpan...
-                                    </>
-                                ) : (
-                                    'Simpan Tidak Valid'
-                                )}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
         </AppLayout>
     );
 }
