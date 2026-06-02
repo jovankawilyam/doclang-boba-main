@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\JenisLayanan;
+use App\Enums\PermohonanStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -57,6 +59,8 @@ class DoclangProses extends Model
             'tanggal_masuk_pengambilan_dokumen' => 'date',
             'tanggal_pelunasan' => 'date',
             'tanggal_dokumen' => 'date',
+            'jenis_layanan' => JenisLayanan::class,
+            'status_proses' => PermohonanStatus::class,
             'invalid_whatsapp_sent_at' => 'datetime',
         ];
     }

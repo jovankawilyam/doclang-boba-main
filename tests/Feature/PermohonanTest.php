@@ -1,8 +1,10 @@
 <?php
 
+use App\Enums\PermohonanStatus;
 use App\Jobs\SendWhatsAppNotification;
 use App\Models\DoclangProses;
 use App\Models\User;
+use App\Services\PermohonanNumberGenerator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
@@ -39,7 +41,7 @@ test('public users can submit a doclang request and queue whatsapp notification'
     expect($permohonan->nomor_identitas_pemohon)->toBe('3271000000000001');
     expect($permohonan->alamat_pemohon)->toBe('Bogor');
     expect($permohonan->tanggal_pelunasan->toDateString())->toBe('2026-05-18');
-    expect($permohonan->status_proses)->toBe('proses');
+    expect($permohonan->status_proses)->toBe(PermohonanStatus::Proses);
 
     Storage::disk('local')->assertExists($permohonan->dokumen_identitas_pemohon_path);
     Storage::disk('local')->assertExists($permohonan->bukti_pelunasan_path);
@@ -182,6 +184,41 @@ test('public request rejects identity document larger than ten megabytes', funct
     $response->assertSessionHasErrors('dokumen_identitas_pemohon');
 });
 
+test('public submission cleans uploaded files when database transaction fails', function () {
+    Queue::fake();
+    Storage::fake('local');
+
+    DoclangProses::create([
+        'kode_lot_lelang' => 'BGR-LOT-EXISTING',
+        'id_pengajuan' => '0001/KPHL/2026',
+        'nama_pemohon' => 'Existing',
+        'nomor_wa_pemohon' => '081911111111',
+        'jenis_layanan' => 'kuitansi',
+        'status_proses' => 'proses',
+    ]);
+
+    $this->mock(PermohonanNumberGenerator::class, function ($mock): void {
+        $mock->shouldReceive('generate')->once()->andReturn('0001/KPHL/2026');
+    });
+
+    $this->post(route('permohonan.store'), [
+        'peran_pemohon' => 'pemenang',
+        'email_pemohon' => 'rollback@example.test',
+        'jenis_identitas_pemohon' => 'KTP',
+        'nomor_identitas_pemohon' => '3271000000000099',
+        'alamat_pemohon' => 'Bogor',
+        'nama_pemohon' => 'Rollback Test',
+        'nomor_wa_pemohon' => '081234567899',
+        'kode_lot_lelang' => 'BGR-LOT-099',
+        'jenis_layanan' => 'kuitansi',
+        'tanggal_pelunasan' => '2026-05-18',
+        'dokumen_identitas_pemohon' => UploadedFile::fake()->create('ktp.pdf', 512, 'application/pdf'),
+    ])->assertStatus(500);
+
+    expect(Storage::disk('local')->allFiles('doclang/identitas-pemohon'))->toBe([]);
+    expect(DoclangProses::query()->where('kode_lot_lelang', 'BGR-LOT-099')->exists())->toBeFalse();
+});
+
 test('admin rejection requires reason without automatically queueing whatsapp notification', function () {
     Queue::fake();
 
@@ -210,7 +247,7 @@ test('admin rejection requires reason without automatically queueing whatsapp no
 
     $permohonan->refresh();
 
-    expect($permohonan->status_proses)->toBe('tidak_valid');
+    expect($permohonan->status_proses)->toBe(PermohonanStatus::TidakValid);
     expect($permohonan->catatan_tidak_valid)->toBe('Bukti pelunasan belum terbaca jelas.');
 
     Queue::assertNotPushed(SendWhatsAppNotification::class);
@@ -640,7 +677,7 @@ test('admin can mark request as finished with document number and date', functio
 
     $permohonan->refresh();
 
-    expect($permohonan->status_proses)->toBe('selesai');
+    expect($permohonan->status_proses)->toBe(PermohonanStatus::Selesai);
     expect($permohonan->nomor_dokumen)->toBe('DOC-001');
     expect($permohonan->tanggal_dokumen->toDateString())->toBe('2026-05-18');
 

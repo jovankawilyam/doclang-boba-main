@@ -4,30 +4,33 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\JenisLayanan;
+use App\Enums\PermohonanStatus;
 use App\Models\DoclangProses;
 use App\Models\Document;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DocumentController extends Controller
 {
     public const CATEGORY_TO_SERVICE = [
-        'kuitansi' => 'kuitansi',
-        'risalah_lelang' => 'risalah_lelang',
-        'validasi_pph' => 'validasi_pph',
+        'kuitansi' => JenisLayanan::Kuitansi->value,
+        'risalah_lelang' => JenisLayanan::RisalahLelang->value,
+        'validasi_pph' => JenisLayanan::ValidasiPph->value,
     ];
 
     private const LEGACY_CATEGORY_ALIASES = [
-        'kutipan_rl' => 'risalah_lelang',
+        'kutipan_rl' => JenisLayanan::RisalahLelang->value,
     ];
 
     public static function getStatistics(): array
     {
-        $categories = ['kuitansi', 'risalah_lelang', 'validasi_pph'];
-        $statuses = ['proses', 'siap_diambil', 'selesai', 'tidak_valid'];
+        $categories = JenisLayanan::values();
+        $statuses = PermohonanStatus::values();
         $stats = [];
 
         foreach ($categories as $cat) {
@@ -54,15 +57,15 @@ class DocumentController extends Controller
             $stats[$category]['total'] += $total;
         }
 
-        $stats['kutipan_rl'] = $stats['risalah_lelang'];
+        $stats['kutipan_rl'] = $stats[JenisLayanan::RisalahLelang->value];
 
         return $stats;
     }
 
-    public static function findPublicTrackingDocument(string $search, string $service): ?array
+    public static function findPublicTrackingDocument(string $search, JenisLayanan $service): ?array
     {
         $document = DoclangProses::query()
-            ->where('jenis_layanan', $service)
+            ->where('jenis_layanan', $service->value)
             ->where(function ($query) use ($search): void {
                 $query
                     ->where('id_pengajuan', $search)
@@ -80,17 +83,17 @@ class DocumentController extends Controller
             'id' => $document->id,
             'nomor_pengajuan' => $document->id_pengajuan,
             'kode_lot_lelang' => $document->kode_lot_lelang,
-            'status_proses' => $document->status_proses,
+            'status_proses' => $document->status_proses?->value,
             'catatan' => $document->catatan_tidak_valid,
         ];
     }
 
-    public function index(Request $request, string $category = 'kuitansi'): Response
+    public function index(Request $request, string $category = JenisLayanan::Kuitansi->value): Response
     {
         $search = $request->input('search');
         $status = $request->input('status');
         $category = self::LEGACY_CATEGORY_ALIASES[$category] ?? $category;
-        $service = self::CATEGORY_TO_SERVICE[$category] ?? self::CATEGORY_TO_SERVICE['kuitansi'];
+        $service = self::CATEGORY_TO_SERVICE[$category] ?? self::CATEGORY_TO_SERVICE[JenisLayanan::Kuitansi->value];
 
         $documents = DoclangProses::query()
             ->with(['whatsappNotifications' => fn ($query) => $query->latest()])
@@ -113,9 +116,9 @@ class DocumentController extends Controller
             ->withQueryString();
 
         $viewMap = [
-            'kuitansi' => 'documents/kuitansi',
-            'risalah_lelang' => 'documents/rl',
-            'validasi_pph' => 'documents/validasi-pph',
+            JenisLayanan::Kuitansi->value => 'documents/kuitansi',
+            JenisLayanan::RisalahLelang->value => 'documents/rl',
+            JenisLayanan::ValidasiPph->value => 'documents/validasi-pph',
         ];
 
         return Inertia::render($viewMap[$category] ?? 'documents/kuitansi', [
@@ -129,7 +132,7 @@ class DocumentController extends Controller
         $validated = $request->validate([
             'nomor_pengajuan' => ['required', 'string', 'max:255'],
             'category' => 'required|in:kuitansi,kutipan_rl,risalah_lelang,validasi_pph',
-            'status_proses' => 'nullable|in:proses,siap_diambil,selesai,tidak_valid',
+            'status_proses' => ['nullable', Rule::enum(PermohonanStatus::class)],
         ]);
 
         $category = self::LEGACY_CATEGORY_ALIASES[$validated['category']] ?? $validated['category'];
@@ -142,7 +145,7 @@ class DocumentController extends Controller
                 'nama_pemohon' => 'Input Admin',
                 'nomor_wa_pemohon' => config('services.whatsapp.sender_number', '081911883609'),
                 'jenis_layanan' => self::CATEGORY_TO_SERVICE[$category],
-                'status_proses' => $validated['status_proses'] ?? 'proses',
+                'status_proses' => $validated['status_proses'] ?? PermohonanStatus::Proses,
             ]);
         });
 
@@ -152,7 +155,7 @@ class DocumentController extends Controller
     public function update(Request $request, Document $document): RedirectResponse
     {
         $validated = $request->validate([
-            'status_proses' => 'sometimes|required|in:proses,siap_diambil,selesai,tidak_valid',
+            'status_proses' => ['sometimes', 'required', Rule::enum(PermohonanStatus::class)],
             'catatan' => 'nullable|string',
         ]);
 
@@ -175,9 +178,9 @@ class DocumentController extends Controller
     private function generateIdPengajuan(string $jenisLayanan): string
     {
         $suffix = match ($jenisLayanan) {
-            'risalah_lelang' => 'K-RL',
-            'validasi_pph' => 'V-PPh',
-            default => 'KPHL',
+            JenisLayanan::RisalahLelang->value => JenisLayanan::RisalahLelang->ticketSuffix(),
+            JenisLayanan::ValidasiPph->value => JenisLayanan::ValidasiPph->ticketSuffix(),
+            default => JenisLayanan::Kuitansi->ticketSuffix(),
         };
         $year = now()->format('Y');
         $pattern = "%/{$suffix}/{$year}";

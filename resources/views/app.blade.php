@@ -31,9 +31,9 @@
             }
         </style>
 
-        <title inertia>{{ config('app.name', 'Doclang Boba') }}</title>
+        <title inertia>{{ config('Doclang-Boba') }}</title>
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
+        <link rel="icon" href="public/images/image.png" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
