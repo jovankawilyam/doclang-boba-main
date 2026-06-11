@@ -584,14 +584,18 @@ function WhatsappGatewayPanel({
     }, [pairingCode, status.ready]);
 
     const handleChangeNumber = () => {
+        const isConnected = status.ready;
+
         Swal.fire({
-            title: 'Putuskan WhatsApp?',
-            text: 'Putuskan nomor WhatsApp yang terhubung sekarang dan pilih cara menautkan nomor baru?',
+            title: isConnected ? 'Putuskan WhatsApp?' : 'Minta QR WhatsApp?',
+            text: isConnected
+                ? 'Putuskan nomor WhatsApp yang terhubung sekarang dan pilih cara menautkan nomor baru?'
+                : 'Mulai ulang koneksi WhatsApp agar QR atau kode tautan baru bisa dibuat?',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#000000', // Sesuai warna tombol hitam bawaan dashboard
             cancelButtonColor: '#dc2626', // Warna merah shadcn/tailwind
-            confirmButtonText: 'Ya, Putuskan',
+            confirmButtonText: isConnected ? 'Ya, Putuskan' : 'Ya, Minta QR',
             cancelButtonText: 'Batal',
             reverseButtons: true,
         }).then(async (result) => {
@@ -749,10 +753,28 @@ function WhatsappGatewayPanel({
                                 className="mt-4 border-black bg-black text-white hover:bg-white hover:text-black"
                             >
                                 {changingNumber
-                                    ? 'Memutus koneksi...'
+                                    ? status.ready
+                                        ? 'Memutus koneksi...'
+                                        : 'Menyiapkan QR...'
                                     : 'Ganti Nomor WhatsApp'}
                             </Button>
                         )}
+                        {!status.ready &&
+                            !status.hasQr &&
+                            !status.loading &&
+                            !status.reconnecting && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    disabled={changingNumber}
+                                    onClick={handleChangeNumber}
+                                    className="mt-4 border-black bg-black text-white hover:bg-white hover:text-black"
+                                >
+                                    {changingNumber
+                                        ? 'Menyiapkan QR...'
+                                        : 'Minta QR WhatsApp'}
+                                </Button>
+                            )}
                     </div>
                 </div>
                 {!status.ready && status.hasQr && (

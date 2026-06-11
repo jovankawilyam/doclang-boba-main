@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type {
     FieldErrors,
     FieldPath,
@@ -23,6 +23,8 @@ import type {
     StorePermohonanSuccessResponse,
     UploadedFileInfo,
 } from './types';
+
+const AUTOSAVE_STORAGE_KEY = 'doclang-boba:permohonan-form:draft:v1';
 
 type FileRule = {
     maxBytes: number;
@@ -436,8 +438,126 @@ const slideOneFields: FieldPath<DoclangFormValues>[] = [
     'dokumen_identitas_pemohon',
 ];
 
+type AutosavedField = {
+    [Field in keyof DoclangFormValues]-?: DoclangFormValues[Field] extends
+        | string
+        | undefined
+        ? Field
+        : never;
+}[keyof DoclangFormValues];
+
+const autosavedFields: AutosavedField[] = [
+    'email_pemohon',
+    'nama_pemohon',
+    'jenis_identitas_pemohon',
+    'nomor_identitas_pemohon',
+    'alamat_pemohon',
+    'nomor_wa_pemohon',
+    'peran_pemohon',
+    'nama_pemberi_kuasa',
+    'jenis_identitas_pemberi_kuasa',
+    'nomor_identitas_pemberi_kuasa',
+    'alamat_pemberi_kuasa',
+    'nomor_wa_pemberi_kuasa',
+    'kode_lot_lelang',
+    'jenis_layanan',
+    'tanggal_pelunasan',
+    'jenis_objek_risalah',
+    'nomor_kuitansi_pembayaran_harga_lelang',
+    'nomor_objek_pajak',
+    'alamat_objek_lelang',
+    'ntpn',
+    'npwp_pemenang_lelang',
+];
+
+type AutosavedDraft = {
+    values: Partial<DoclangFormValues>;
+    step: 1 | 2;
+};
+
+const canUseAutosaveStorage = (): boolean =>
+    typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
+
+const readAutosavedDraft = (): AutosavedDraft | null => {
+    if (!canUseAutosaveStorage()) {
+        return null;
+    }
+
+    try {
+        const storedDraft = window.localStorage.getItem(AUTOSAVE_STORAGE_KEY);
+
+        if (!storedDraft) {
+            return null;
+        }
+
+        const draft = JSON.parse(storedDraft) as Partial<AutosavedDraft>;
+
+        if (!draft.values || typeof draft.values !== 'object') {
+            return null;
+        }
+
+        return {
+            values: draft.values,
+            step: draft.step === 2 ? 2 : 1,
+        };
+    } catch {
+        return null;
+    }
+};
+
+const writeAutosavedDraft = (
+    values: Partial<DoclangFormValues>,
+    step: 1 | 2,
+): void => {
+    if (!canUseAutosaveStorage()) {
+        return;
+    }
+
+    try {
+        window.localStorage.setItem(
+            AUTOSAVE_STORAGE_KEY,
+            JSON.stringify({
+                values,
+                step,
+            }),
+        );
+    } catch {
+        // Ignore storage quota/private-mode failures; the form must still work.
+    }
+};
+
+const clearAutosavedDraft = (): void => {
+    if (!canUseAutosaveStorage()) {
+        return;
+    }
+
+    try {
+        window.localStorage.removeItem(AUTOSAVE_STORAGE_KEY);
+    } catch {
+        // Ignore storage failures; clearing the draft is best-effort.
+    }
+};
+
+const pickAutosavedValues = (
+    values: Partial<DoclangFormValues>,
+): Partial<DoclangFormValues> => {
+    const draft: Record<string, string | undefined> = {};
+
+    autosavedFields.forEach((field) => {
+        const value = values[field];
+
+        if (typeof value === 'string' || value === undefined) {
+            draft[field] = value;
+        }
+    });
+
+    return draft as Partial<DoclangFormValues>;
+};
+
 export const usePermohonanForm = () => {
-    const [step, setStep] = useState<1 | 2>(1);
+    const [step, setStep] = useState<1 | 2>(
+        () => readAutosavedDraft()?.step ?? 1,
+    );
     const [successMessage, setSuccessMessage] = useState<string>('');
     const [serverErrors, setServerErrors] = useState<string[]>([]);
     const [uploadedFiles, setUploadedFiles] = useState<
@@ -450,10 +570,15 @@ export const usePermohonanForm = () => {
         trigger,
         control,
         reset,
+        watch,
+        getValues,
         formState: { errors, isSubmitting },
     } = useForm<DoclangFormValues>({
         resolver: zodResolver(formSchema) as Resolver<DoclangFormValues>,
-        defaultValues,
+        defaultValues: {
+            ...defaultValues,
+            ...readAutosavedDraft()?.values,
+        },
         mode: 'onBlur',
         shouldUnregister: false,
     });
@@ -470,6 +595,31 @@ export const usePermohonanForm = () => {
         control,
         name: 'jenis_objek_risalah',
     });
+
+    useEffect(() => {
+        let timeoutId: number | undefined;
+        const subscription = watch((values) => {
+            if (timeoutId) {
+                window.clearTimeout(timeoutId);
+            }
+
+            timeoutId = window.setTimeout(() => {
+                writeAutosavedDraft(pickAutosavedValues(values), step);
+            }, 300);
+        });
+
+        return () => {
+            if (timeoutId) {
+                window.clearTimeout(timeoutId);
+            }
+
+            subscription.unsubscribe();
+        };
+    }, [step, watch]);
+
+    useEffect(() => {
+        writeAutosavedDraft(pickAutosavedValues(getValues()), step);
+    }, [getValues, step]);
 
     const goToSlideTwo = async (): Promise<void> => {
         setServerErrors([]);
@@ -641,6 +791,7 @@ export const usePermohonanForm = () => {
 
             reset(defaultValues);
             setUploadedFiles({});
+            clearAutosavedDraft();
             setStep(1);
             setSuccessMessage(
                 `${successResponse.message} Token permohonan: ${successResponse.token ?? successResponse.id_pengajuan}. Notifikasi WhatsApp sedang diproses.`,
