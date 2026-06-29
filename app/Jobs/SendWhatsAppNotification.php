@@ -17,7 +17,8 @@ class SendWhatsAppNotification implements ShouldQueue
     use Queueable;
 
     public int $tries = 3;
-    public int $timeout = 30; // 30 seconds total timeout
+    public int $timeout = 60; // 60 seconds total timeout (15s per attempt + overhead)
+    public int $backoff = 5; // 5 seconds between retries
 
     public function __construct(private readonly int $notificationId) {}
 
@@ -38,34 +39,55 @@ class SendWhatsAppNotification implements ShouldQueue
                 throw new RuntimeException('WA_GATEWAY_URL belum dikonfigurasi.');
             }
 
-            $request = Http::acceptJson()->asJson()->timeout(20); // 20 second timeout for HTTP request
+            // Use 30 second timeout for HTTP request (15s WhatsApp op + buffer)
+            $request = Http::acceptJson()
+                ->asJson()
+                ->timeout(30)
+                ->connectTimeout(10);
+            
             $gatewayToken = config('services.whatsapp.gateway_token');
 
             if (is_string($gatewayToken) && trim($gatewayToken) !== '') {
                 $request = $request->withToken($gatewayToken);
             }
 
+            Log::info('Sending WhatsApp notification via gateway.', [
+                'notification_id' => $notification->id,
+                'target_number' => $notification->target_number,
+                'endpoint' => $endpoint,
+            ]);
+
             $response = $request->post($endpoint, [
                 'phone' => $this->normalizeTargetNumber($notification->target_number),
                 'message' => $notification->message,
             ]);
 
-            // Handle 202 Accepted (async processing)
-            if ($response->status() === 202) {
+            // Handle different response statuses
+            if ($response->status() === 503) {
+                // Gateway not ready - retry
+                throw new RuntimeException('Gateway WhatsApp belum siap. Silakan coba lagi.');
+            }
+
+            if ($response->status() === 422) {
+                // Invalid phone number - don't retry
                 $notification->forceFill([
-                    'status' => 'queued',
-                    'gateway_message_id' => null,
-                    'sent_at' => null,
-                    'error_message' => null,
-                    'failed_at' => null,
+                    'status' => 'failed',
+                    'failed_at' => now(),
+                    'error_message' => $response->json('error') ?? 'Nomor tidak terdaftar.',
                 ])->save();
 
-                Log::info('WhatsApp notification queued for processing.', [
+                Log::warning('WhatsApp notification failed - invalid phone number.', [
                     'notification_id' => $notification->id,
                     'target_number' => $notification->target_number,
+                    'error' => $response->json('error'),
                 ]);
 
                 return;
+            }
+
+            if ($response->status() === 504) {
+                // Gateway timeout - retry
+                throw new RuntimeException('Gateway timeout. Silakan coba lagi.');
             }
 
             if ($response->failed()) {
@@ -73,6 +95,7 @@ class SendWhatsAppNotification implements ShouldQueue
                 throw new RuntimeException('Gateway menolak pengiriman: '.(string) $reason);
             }
 
+            // Success
             $notification->forceFill([
                 'status' => 'sent',
                 'gateway_message_id' => $response->json('data.messageId'),
