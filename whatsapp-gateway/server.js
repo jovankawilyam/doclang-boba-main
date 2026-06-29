@@ -11,6 +11,7 @@ const HOST = process.env.HOST || '0.0.0.0';
 const CHROME_PATH =
   process.env.CHROME_PATH || '/usr/bin/chromium';
 const GATEWAY_TOKEN = process.env.WA_GATEWAY_TOKEN || '';
+const OPERATION_TIMEOUT = 15000; // 15 seconds timeout for WhatsApp operations
 
 let isClientReady = false;
 let isInitializing = false;
@@ -21,6 +22,7 @@ let currentPairingCode = null;
 let pairingPhoneNumber = null;
 let pairingGeneratedAt = null;
 let lastReadyAt = null;
+let lastHealthCheckAt = null;
 
 app.use(express.json());
 
@@ -36,6 +38,10 @@ const client = new Client({
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
       '--disable-gpu',
+      '--disable-extensions',
+      '--disable-plugins',
+      '--disable-images',
+      '--disable-default-apps',
     ],
   },
 });
@@ -95,6 +101,7 @@ function getGatewayStatus() {
     hasQr: Boolean(currentQrDataUrl),
     qrGeneratedAt,
     lastReadyAt,
+    lastHealthCheckAt,
     isReconnecting,
   };
 }
@@ -133,6 +140,16 @@ function initializeClient() {
     });
 }
 
+// Timeout wrapper for WhatsApp operations
+function withTimeout(promise, timeoutMs) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Operasi WhatsApp timeout')), timeoutMs)
+    ),
+  ]);
+}
+
 client.on('qr', async (qr) => {
   isClientReady = false;
   try {
@@ -159,15 +176,18 @@ client.on('disconnected', (reason) => {
   isClientReady = false;
   console.warn('WhatsApp terputus:', reason);
   if (!isReconnecting) {
-    initializeClient();
+    isReconnecting = true;
+    setTimeout(() => initializeClient(), 5000);
   }
 });
 
 app.get('/health', (req, res) => {
+  lastHealthCheckAt = new Date().toISOString();
   res.json({ status: 'ok', whatsapp: getGatewayStatus() });
 });
 
 app.get('/api/admin/status', requireGatewayToken, (req, res) => {
+  lastHealthCheckAt = new Date().toISOString();
   res.json({ online: true, whatsapp: getGatewayStatus() });
 });
 
@@ -181,19 +201,78 @@ app.get('/api/admin/qr', requireGatewayToken, (req, res) => {
 app.post('/api/send-message', requireGatewayToken, async (req, res) => {
   try {
     const { phone, message } = req.body;
-    if (!message) return res.status(400).json({ success: false, error: 'Message wajib diisi.' });
+    
+    if (!phone) {
+      return res.status(400).json({ success: false, error: 'Nomor HP wajib diisi.' });
+    }
+    
+    if (!message) {
+      return res.status(400).json({ success: false, error: 'Message wajib diisi.' });
+    }
 
     const gatewayStatus = getGatewayStatus();
-    if (!gatewayStatus.ready) return res.status(503).json({ success: false, error: 'Gateway belum siap.', status: gatewayStatus });
+    if (!gatewayStatus.ready) {
+      return res.status(503).json({ 
+        success: false, 
+        error: 'Gateway belum siap.', 
+        status: gatewayStatus 
+      });
+    }
 
-    const chatId = sanitizePhoneNumber(phone);
-    const isRegistered = await client.isRegisteredUser(chatId);
-    if (!isRegistered) return res.status(422).json({ success: false, error: 'Nomor tidak terdaftar.' });
+    try {
+      const chatId = sanitizePhoneNumber(phone);
+      
+      // Check if user is registered with timeout
+      console.log(`Checking if ${chatId} is registered...`);
+      const isRegistered = await withTimeout(
+        client.isRegisteredUser(chatId),
+        OPERATION_TIMEOUT
+      );
+      
+      if (!isRegistered) {
+        console.warn(`Nomor ${chatId} tidak terdaftar.`);
+        return res.status(422).json({ 
+          success: false, 
+          error: 'Nomor tidak terdaftar.' 
+        });
+      }
 
-    const result = await client.sendMessage(chatId, message.trim());
-    return res.json({ success: true, data: { to: chatId, messageId: result.id.id } });
+      // Send message with timeout
+      console.log(`Sending message to ${chatId}...`);
+      const result = await withTimeout(
+        client.sendMessage(chatId, message.trim()),
+        OPERATION_TIMEOUT
+      );
+      
+      console.log(`Message sent to ${chatId}, ID: ${result.id.id}`);
+      return res.json({ 
+        success: true, 
+        data: { 
+          to: chatId, 
+          messageId: result.id.id 
+        } 
+      });
+    } catch (error) {
+      console.error(`Error sending message to ${phone}:`, error.message);
+      
+      if (error.message.includes('timeout')) {
+        return res.status(504).json({ 
+          success: false, 
+          error: 'Operasi WhatsApp timeout. Silakan coba lagi.' 
+        });
+      }
+      
+      return res.status(500).json({ 
+        success: false, 
+        error: error.message 
+      });
+    }
   } catch (error) {
-    return res.status(500).json({ success: false, error: error.message });
+    console.error('Unexpected error in /api/send-message:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
   }
 });
 
@@ -202,3 +281,4 @@ app.listen(PORT, HOST, () => {
 });
 
 initializeClient();
+
