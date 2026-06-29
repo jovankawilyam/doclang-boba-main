@@ -24,4 +24,9 @@ export default defineConfig({
     esbuild: {
         jsx: 'automatic',
     },
+    server: {
+        // Allow connections from ngrok tunnel
+        middlewareMode: false,
+        allowedHosts: ['localhost', '127.0.0.1', '.ngrok.io', '.ngrok-free.dev'],
+    },
 });
