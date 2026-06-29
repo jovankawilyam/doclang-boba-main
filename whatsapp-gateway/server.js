@@ -105,6 +105,22 @@ function clearPairingCode() {
   pairingGeneratedAt = null;
 }
 
+async function restartWhatsAppSession() {
+  isReconnecting = true;
+  isClientReady = false;
+  currentQrDataUrl = null;
+  qrGeneratedAt = null;
+  clearPairingCode();
+
+  try {
+    await client.logout();
+  } catch (error) {
+    console.warn('Logout WhatsApp dilewati:', error.message);
+  }
+
+  initializeClient();
+}
+
 function requireGatewayToken(req, res, next) {
   if (GATEWAY_TOKEN && req.get('authorization') !== `Bearer ${GATEWAY_TOKEN}`) {
     return res.status(401).json({
@@ -176,6 +192,63 @@ app.get('/api/admin/qr', requireGatewayToken, (req, res) => {
     return res.status(404).json({ error: 'QR belum tersedia.' });
   }
   return res.json({ qrDataUrl: currentQrDataUrl, generatedAt: qrGeneratedAt });
+});
+
+app.get('/api/admin/pairing-code', requireGatewayToken, (req, res) => {
+  if (!currentPairingCode) {
+    return res.status(404).json({ error: 'Kode tautan belum tersedia.' });
+  }
+
+  return res.json({
+    pairingCode: currentPairingCode,
+    phoneNumber: pairingPhoneNumber,
+    generatedAt: pairingGeneratedAt,
+  });
+});
+
+app.post('/api/admin/pairing-code', requireGatewayToken, async (req, res) => {
+  try {
+    if (getGatewayStatus().ready) {
+      return res.status(409).json({ error: 'WhatsApp sudah terhubung.' });
+    }
+
+    if (typeof client.requestPairingCode !== 'function') {
+      return res.status(501).json({ error: 'Gateway belum mendukung kode tautan.' });
+    }
+
+    const phoneNumber = normalizePhoneNumber(req.body.phone);
+    currentPairingCode = await client.requestPairingCode(phoneNumber);
+    pairingPhoneNumber = phoneNumber;
+    pairingGeneratedAt = new Date().toISOString();
+
+    return res.json({
+      pairingCode: currentPairingCode,
+      phoneNumber: pairingPhoneNumber,
+      generatedAt: pairingGeneratedAt,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/reconnect', requireGatewayToken, async (req, res) => {
+  try {
+    await restartWhatsAppSession();
+
+    return res.json({
+      success: true,
+      message: 'Gateway WhatsApp sedang membuat sesi penautan baru.',
+      whatsapp: getGatewayStatus(),
+    });
+  } catch (error) {
+    isReconnecting = false;
+
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+      whatsapp: getGatewayStatus(),
+    });
+  }
 });
 
 app.post('/api/send-message', requireGatewayToken, async (req, res) => {

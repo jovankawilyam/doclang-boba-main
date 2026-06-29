@@ -1,7 +1,12 @@
 /.phpunit.cache
 /bootstrap/ssr
 /node_modules
-/public/build
+/public/build/*
+!/public/build/.vite/
+!/public/build/.vite/**
+!/public/build/assets/
+!/public/build/assets/**
+!/public/build/manifest.json
 /public/hot
 /public/storage
 /storage/*.key

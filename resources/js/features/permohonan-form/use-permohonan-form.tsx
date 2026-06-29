@@ -545,6 +545,7 @@ const pickAutosavedValues = (
 
     autosavedFields.forEach((field) => {
         const value = values[field];
+        
 
         if (typeof value === 'string' || value === undefined) {
             draft[field] = value;
@@ -598,6 +599,7 @@ export const usePermohonanForm = () => {
 
     useEffect(() => {
         let timeoutId: number | undefined;
+        // eslint-disable-next-line react-hooks/incompatible-library
         const subscription = watch((values) => {
             if (timeoutId) {
                 window.clearTimeout(timeoutId);
