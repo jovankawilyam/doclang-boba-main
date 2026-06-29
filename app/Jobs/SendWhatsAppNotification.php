@@ -17,6 +17,7 @@ class SendWhatsAppNotification implements ShouldQueue
     use Queueable;
 
     public int $tries = 3;
+    public int $timeout = 30; // 30 seconds total timeout
 
     public function __construct(private readonly int $notificationId) {}
 
@@ -37,7 +38,7 @@ class SendWhatsAppNotification implements ShouldQueue
                 throw new RuntimeException('WA_GATEWAY_URL belum dikonfigurasi.');
             }
 
-            $request = Http::acceptJson()->asJson()->timeout(15);
+            $request = Http::acceptJson()->asJson()->timeout(20); // 20 second timeout for HTTP request
             $gatewayToken = config('services.whatsapp.gateway_token');
 
             if (is_string($gatewayToken) && trim($gatewayToken) !== '') {
@@ -48,6 +49,24 @@ class SendWhatsAppNotification implements ShouldQueue
                 'phone' => $this->normalizeTargetNumber($notification->target_number),
                 'message' => $notification->message,
             ]);
+
+            // Handle 202 Accepted (async processing)
+            if ($response->status() === 202) {
+                $notification->forceFill([
+                    'status' => 'queued',
+                    'gateway_message_id' => null,
+                    'sent_at' => null,
+                    'error_message' => null,
+                    'failed_at' => null,
+                ])->save();
+
+                Log::info('WhatsApp notification queued for processing.', [
+                    'notification_id' => $notification->id,
+                    'target_number' => $notification->target_number,
+                ]);
+
+                return;
+            }
 
             if ($response->failed()) {
                 $reason = $response->json('error') ?? $response->body();
@@ -67,6 +86,12 @@ class SendWhatsAppNotification implements ShouldQueue
                     'invalid_whatsapp_sent_at' => now(),
                 ]);
             }
+
+            Log::info('WhatsApp notification sent successfully.', [
+                'notification_id' => $notification->id,
+                'target_number' => $notification->target_number,
+                'message_id' => $response->json('data.messageId'),
+            ]);
         } catch (Throwable $exception) {
             $notification->forceFill([
                 'error_message' => $exception->getMessage(),
@@ -77,6 +102,7 @@ class SendWhatsAppNotification implements ShouldQueue
                 'target_number' => $notification->target_number,
                 'endpoint' => $endpoint,
                 'error' => $exception->getMessage(),
+                'attempt' => $this->attempts(),
             ]);
 
             throw $exception;
@@ -96,6 +122,12 @@ class SendWhatsAppNotification implements ShouldQueue
             'failed_at' => now(),
             'error_message' => $exception?->getMessage() ?? $notification->error_message,
         ])->save();
+
+        Log::error('WhatsApp notification failed after all retries.', [
+            'notification_id' => $notification->id,
+            'target_number' => $notification->target_number,
+            'error' => $exception?->getMessage(),
+        ]);
     }
 
     private function normalizeTargetNumber(string $number): string
@@ -113,3 +145,4 @@ class SendWhatsAppNotification implements ShouldQueue
         return $number;
     }
 }
+
