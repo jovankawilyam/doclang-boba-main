@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 import Swal from 'sweetalert2';
+import DetailModal from '@/components/documents/detail-modal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -24,9 +25,8 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import DetailModal from '@/components/documents/detail-modal';
-import type { DocumentItem, StatusProses, WhatsappNotification } from '@/types/document';
 import type { BreadcrumbItem } from '@/types';
+import type { DocumentItem, StatusProses, WhatsappNotification } from '@/types/document';
 
 interface PaginationLink {
     url: string | null;
@@ -90,9 +90,6 @@ const getStatusColor = (status: string) => {
             return 'border-amber-200 bg-amber-50 text-amber-800';
     }
 };
-
-const getStatusLabel = (status: StatusProses) =>
-    statusOptions.find((option) => option.value === status)?.label ?? status;
 
 const confirmationAlert = {
     icon: 'warning' as const,

@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
-use App\Enums\JenisLayanan;
 use App\Models\DoclangProses;
-use Carbon\Carbon;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class CsvMigrationSeeder extends Seeder
 {
-    private const CSV_DIR = __DIR__ . '/csv';
+    private const CSV_DIR = __DIR__.'/csv';
 
     private const FILES = [
         'kuitansi' => 'kuitansi.csv',
@@ -39,7 +36,7 @@ class CsvMigrationSeeder extends Seeder
     public function run(): void
     {
         foreach (self::FILES as $service => $filename) {
-            $path = self::CSV_DIR . '/' . $filename;
+            $path = self::CSV_DIR.'/'.$filename;
             if (! file_exists($path)) {
                 $this->command?->warn("CSV tidak ditemukan: {$filename}");
 
@@ -90,9 +87,9 @@ class CsvMigrationSeeder extends Seeder
     }
 
     /**
-     * @param array<int, string> $row
-     * @param array<string, int> $headerIndex
-     * @param list<string> $headers
+     * @param  array<int, string>  $row
+     * @param  array<string, int>  $headerIndex
+     * @param  list<string>  $headers
      * @return array<string, mixed>|null
      */
     private function mapRow(array $row, array $headerIndex, array $headers, string $service): ?array
@@ -135,8 +132,7 @@ class CsvMigrationSeeder extends Seeder
     }
 
     /**
-     * @param array<string, mixed> $data
-     * @param \Closure $get
+     * @param  array<string, mixed>  $data
      */
     private function applyServiceSpecificFields(array &$data, \Closure $get, string $service): void
     {
@@ -149,8 +145,7 @@ class CsvMigrationSeeder extends Seeder
     }
 
     /**
-     * @param array<string, mixed> $data
-     * @param \Closure $get
+     * @param  array<string, mixed>  $data
      */
     private function applyKuitansiFields(array &$data, \Closure $get): void
     {
@@ -160,8 +155,7 @@ class CsvMigrationSeeder extends Seeder
     }
 
     /**
-     * @param array<string, mixed> $data
-     * @param \Closure $get
+     * @param  array<string, mixed>  $data
      */
     private function applyValidasiPphFields(array &$data, \Closure $get): void
     {
@@ -175,8 +169,7 @@ class CsvMigrationSeeder extends Seeder
     }
 
     /**
-     * @param array<string, mixed> $data
-     * @param \Closure $get
+     * @param  array<string, mixed>  $data
      */
     private function applyRisalahLelangFields(array &$data, \Closure $get): void
     {

@@ -1,4 +1,6 @@
 import { Form, Head } from '@inertiajs/react';
+import { Eye, EyeOff } from 'lucide-react';
+import { useState } from 'react';
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
@@ -10,8 +12,6 @@ import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
-import { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
 
 type Props = {
     status?: string;

@@ -1,13 +1,10 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
-    BookOpen,
     BookOpenText,
     FileText,
-    FolderGit2,
     LayoutGrid,
     Smartphone,
     Users,
-    House,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
