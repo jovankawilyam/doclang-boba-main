@@ -256,10 +256,10 @@ export default function Welcome({
 
     const images = useMemo(
         () => [
-            '/images/profile-1.png',
-            '/images/profile-2.png',
-            '/images/profile-3.png',
-            '/images/profile-4.jpeg',
+            '/images/profile-1.svg',
+            '/images/profile-2.svg',
+            '/images/profile-3.svg',
+            '/images/profile-4.svg',
         ],
         [],
     );
