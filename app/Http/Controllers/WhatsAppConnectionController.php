@@ -4,14 +4,26 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Services\DashboardData;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Inertia\Inertia;
+use Inertia\Response;
 use Throwable;
 
 class WhatsAppConnectionController extends Controller
 {
+    public function index(): Response
+    {
+        $whatsappStats = app(DashboardData::class)->toArray()['whatsappStats'];
+
+        return Inertia::render('admin/whatsapp', [
+            'whatsappStats' => $whatsappStats,
+        ]);
+    }
+
     public function status(): JsonResponse
     {
         return $this->proxy((string) config('services.whatsapp.gateway_status_url'));

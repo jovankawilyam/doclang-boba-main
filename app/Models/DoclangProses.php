@@ -51,6 +51,7 @@ class DoclangProses extends Model
         'status_proses',
         'catatan_tidak_valid',
         'invalid_whatsapp_sent_at',
+        'completed_at',
     ];
 
     protected function casts(): array
@@ -62,6 +63,7 @@ class DoclangProses extends Model
             'jenis_layanan' => JenisLayanan::class,
             'status_proses' => PermohonanStatus::class,
             'invalid_whatsapp_sent_at' => 'datetime',
+            'completed_at' => 'datetime',
         ];
     }
 

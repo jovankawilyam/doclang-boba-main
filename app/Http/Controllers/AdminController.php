@@ -16,17 +16,32 @@ use Inertia\Response;
 
 class AdminController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = $request->input('search');
+        $statusFilter = $request->input('status');
+
         $admins = User::whereIn('role', ['super_admin', 'admin'])
+            ->when($search, function ($query, $search) {
+                $query->where(function ($query) use ($search): void {
+                    $query
+                        ->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->when($statusFilter === 'active', fn ($query) => $query->where('is_active', true))
+            ->when($statusFilter === 'inactive', fn ($query) => $query->where('is_active', false))
             ->orderByRaw("CASE WHEN role = 'super_admin' THEN 0 ELSE 1 END")
             ->orderBy('name')
-            ->get(['id', 'name', 'email', 'role', 'is_active', 'created_at']);
+            ->paginate(15)
+            ->withQueryString();
 
         $stats = [
             'super_admin' => User::where('role', 'super_admin')->count(),
             'admin' => User::where('role', 'admin')->count(),
             'total' => User::whereIn('role', ['super_admin', 'admin'])->count(),
+            'active' => User::whereIn('role', ['super_admin', 'admin'])->where('is_active', true)->count(),
+            'inactive' => User::whereIn('role', ['super_admin', 'admin'])->where('is_active', false)->count(),
         ];
 
         return Inertia::render('admin/index', compact('admins', 'stats'));
@@ -35,6 +50,44 @@ class AdminController extends Controller
     public function create(): Response
     {
         return Inertia::render('admin/create');
+    }
+
+    public function edit(User $admin): Response
+    {
+        return Inertia::render('admin/edit', [
+            'admin' => $admin->only(['id', 'name', 'email', 'role']),
+        ]);
+    }
+
+    public function update(Request $request, User $admin): RedirectResponse
+    {
+        if ($admin->id === auth()->id()) {
+            return back()->with('error', 'Tidak dapat mengubah akun Anda sendiri.');
+        }
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$admin->id],
+            'role' => ['required', 'in:admin,super_admin'],
+            'password' => ['nullable', 'confirmed', Password::defaults()],
+        ]);
+
+        $this->authorizeSuperAdminRole($validated['role']);
+
+        $data = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'role' => $validated['role'],
+        ];
+
+        if ($validated['password']) {
+            $data['password'] = Hash::make($validated['password']);
+        }
+
+        $admin->update($data);
+
+        return redirect()->route('admin.index')
+            ->with('success', "Admin {$admin->name} berhasil diperbarui.");
     }
 
     public function store(Request $request): RedirectResponse

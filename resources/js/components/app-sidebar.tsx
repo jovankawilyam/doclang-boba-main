@@ -5,7 +5,9 @@ import {
     FileText,
     FolderGit2,
     LayoutGrid,
+    Smartphone,
     Users,
+    House,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -29,6 +31,13 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: dashboard.url(),
         icon: LayoutGrid,
+        children: [
+            {
+                title: 'WhatsApp Gateway',
+                href: '/admin/whatsapp',
+                icon: Smartphone,
+            },
+        ],
     },
 ];
 
@@ -54,6 +63,7 @@ const middleNavItems: NavItem[] = [
         icon: Users,
     },
 ];
+
 
 const footerNavItems: NavItem[] = [
     // {

@@ -52,7 +52,7 @@ class PermohonanController extends Controller
             ],
         ]);
 
-        $permohonan->update([
+        $data = [
             'nomor_dokumen' => array_key_exists('nomor_dokumen', $validated)
                 ? strip_tags((string) $validated['nomor_dokumen'])
                 : $permohonan->nomor_dokumen,
@@ -60,7 +60,15 @@ class PermohonanController extends Controller
             'tanggal_masuk_pengambilan_dokumen' => $validated['tanggal_masuk_pengambilan_dokumen'] ?? $permohonan->tanggal_masuk_pengambilan_dokumen,
             'status_proses' => $validated['status_proses'],
             'catatan_tidak_valid' => isset($validated['catatan_tidak_valid']) ? strip_tags($validated['catatan_tidak_valid']) : null,
-        ]);
+        ];
+
+        if ($validated['status_proses'] === PermohonanStatus::Selesai->value) {
+            $data['completed_at'] = now();
+        } elseif ($permohonan->status_proses === PermohonanStatus::Selesai) {
+            $data['completed_at'] = null;
+        }
+
+        $permohonan->update($data);
 
         return redirect()->back()->with('success', 'Status permohonan berhasil diperbarui.');
     }

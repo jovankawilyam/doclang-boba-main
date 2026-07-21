@@ -16,7 +16,7 @@ class DashboardData
      */
     public function toArray(): array
     {
-        $documentStats = \App\Http\Controllers\DocumentController::getStatistics();
+        $documentStats = app(DocumentStatsService::class)->getStatistics();
 
         return [
             'admins' => $this->admins(),

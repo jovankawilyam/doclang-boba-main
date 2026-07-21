@@ -2,6 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     CheckCircle,
     Loader2,
+    Pencil,
     Power,
     PowerOff,
     Search,
@@ -43,14 +44,28 @@ interface Admin {
     created_at: string;
 }
 
+interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
+interface PaginatedAdmins {
+    data: Admin[];
+    links: PaginationLink[];
+    total: number;
+}
+
 interface Stats {
     super_admin: number;
     admin: number;
     total: number;
+    active: number;
+    inactive: number;
 }
 
 interface Props {
-    admins: Admin[];
+    admins: PaginatedAdmins;
     stats: Stats;
 }
 
@@ -85,17 +100,37 @@ export default function AdminIndex({ admins, stats }: Props) {
     const [selectedAdmin, setSelectedAdmin] = useState<Admin | null>(null);
     const [deleteProcessing, setDeleteProcessing] = useState(false);
     const [processingId, setProcessingId] = useState<number | null>(null);
+    const [filtering, setFiltering] = useState(false);
 
-    const filtered = admins.filter(
-        (admin) =>
-            (statusFilter === 'all' ||
-                (statusFilter === 'active' && admin.is_active) ||
-                (statusFilter === 'inactive' && !admin.is_active)) &&
-            (admin.name.toLowerCase().includes(search.toLowerCase()) ||
-                admin.email.toLowerCase().includes(search.toLowerCase())),
-    );
-    const activeAdmins = admins.filter((admin) => admin.is_active).length;
-    const inactiveAdmins = admins.length - activeAdmins;
+    
+
+    const handleSearch = (event: React.FormEvent) => {
+        event.preventDefault();
+        setFiltering(true);
+        router.get(
+            '/admin',
+            { search, status: statusFilter === 'all' ? '' : statusFilter },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                onFinish: () => setFiltering(false),
+            },
+        );
+    };
+
+    const handleFilterChange = (value: string) => {
+        setStatusFilter(value);
+        setFiltering(true);
+        router.get(
+            '/admin',
+            { search, status: value === 'all' ? '' : value },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                onFinish: () => setFiltering(false),
+            },
+        );
+    };
 
     const handleToggle = (id: number) => {
         setProcessingId(id);
@@ -156,7 +191,7 @@ export default function AdminIndex({ admins, stats }: Props) {
                             </p>
                         </div>
                         <Link href="/admin/create">
-                            <Button className="gap-2 rounded-md bg-slate-950 text-white hover:bg-slate-800">
+                            <Button className="gap-2 rounded-md border border-slate-950 bg-slate-950 text-white hover:bg-slate-100 hover:text-black">
                                 <UserPlus className="h-4 w-4" />
                                 Tambah Admin
                             </Button>
@@ -190,12 +225,12 @@ export default function AdminIndex({ admins, stats }: Props) {
                         <AdminMetric
                             icon={CheckCircle}
                             label="Aktif"
-                            value={activeAdmins}
+                            value={stats.active}
                         />
                         <AdminMetric
                             icon={XCircle}
                             label="Nonaktif"
-                            value={inactiveAdmins}
+                            value={stats.inactive}
                         />
                     </section>
 
@@ -208,37 +243,49 @@ export default function AdminIndex({ admins, stats }: Props) {
                                     </CardTitle>
                                     <p className="mt-1 text-sm text-slate-500">
                                         Menampilkan{' '}
-                                        {formatStat(filtered.length)} dari{' '}
-                                        {formatStat(admins.length)} akun.
+                                        {formatStat(admins.data.length)} dari{' '}
+                                        {formatStat(stats.total)} akun.
                                     </p>
                                 </div>
                                 <div className="flex flex-col gap-3 sm:flex-row">
-                                    <div className="relative w-full sm:w-72">
-                                        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                                        <Input
-                                            placeholder="Cari nama atau email"
-                                            className="border-slate-300 bg-white pl-9 text-slate-950 placeholder:text-slate-400"
-                                            value={search}
-                                            onChange={(event) =>
-                                                setSearch(event.target.value)
-                                            }
-                                        />
-                                    </div>
-                                    <select
-                                        value={statusFilter}
-                                        onChange={(event) =>
-                                            setStatusFilter(event.target.value)
-                                        }
-                                        className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                                    <form
+                                        onSubmit={handleSearch}
+                                        className="flex gap-3"
                                     >
-                                        <option value="all">
-                                            Semua Status
-                                        </option>
-                                        <option value="active">Aktif</option>
-                                        <option value="inactive">
-                                            Nonaktif
-                                        </option>
-                                    </select>
+                                        <div className="relative w-full sm:w-72">
+                                            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                            <Input
+                                                placeholder="Cari nama atau email"
+                                                className="border-slate-300 bg-white pl-9 text-slate-950 placeholder:text-slate-400"
+                                                value={search}
+                                                onChange={(event) =>
+                                                    setSearch(event.target.value)
+                                                }
+                                            />
+                                        </div>
+                                        <select
+                                            value={statusFilter}
+                                            onChange={(event) =>
+                                                handleFilterChange(
+                                                    event.target.value,
+                                                )
+                                            }
+                                            className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                                        >
+                                            <option value="all">
+                                                Semua Status
+                                            </option>
+                                            <option value="active">
+                                                Aktif
+                                            </option>
+                                            <option value="inactive">
+                                                Nonaktif
+                                            </option>
+                                        </select>
+                                        {filtering && (
+                                            <Loader2 className="h-5 w-5 animate-spin self-center text-slate-500" />
+                                        )}
+                                    </form>
                                 </div>
                             </div>
                         </CardHeader>
@@ -247,8 +294,12 @@ export default function AdminIndex({ admins, stats }: Props) {
                                 <table className="w-full text-left text-sm">
                                     <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-500 uppercase">
                                         <tr>
-                                            <th className="px-5 py-3">Admin</th>
-                                            <th className="px-5 py-3">Role</th>
+                                            <th className="px-5 py-3">
+                                                Admin
+                                            </th>
+                                            <th className="px-5 py-3">
+                                                Role
+                                            </th>
                                             <th className="px-5 py-3">
                                                 Status
                                             </th>
@@ -261,7 +312,7 @@ export default function AdminIndex({ admins, stats }: Props) {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
-                                        {filtered.length === 0 ? (
+                                        {admins.data.length === 0 ? (
                                             <tr>
                                                 <td
                                                     colSpan={5}
@@ -272,7 +323,7 @@ export default function AdminIndex({ admins, stats }: Props) {
                                                 </td>
                                             </tr>
                                         ) : (
-                                            filtered.map((admin) => (
+                                            admins.data.map((admin) => (
                                                 <tr
                                                     key={admin.id}
                                                     className="hover:bg-slate-50"
@@ -335,10 +386,22 @@ export default function AdminIndex({ admins, stats }: Props) {
                                                     </td>
                                                     <td className="px-5 py-4">
                                                         <div className="flex items-center justify-end gap-2">
+                                                            <Link
+                                                                href={`/admin/${admin.id}/edit`}
+                                                            >
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="h-9 gap-2 border-slate-300 hover:text-blue-600 hover:border-blue-300"
+                                                                >
+                                                                    <Pencil className="h-4 w-4" />
+                                                                    Edit
+                                                                </Button>
+                                                            </Link>
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
-                                                                className="h-9 gap-2 border-slate-300 text-slate-700 hover:bg-slate-100"
+                                                                className="h-9 gap-2 border-slate-300 hover:bg-rose text-white hover:text-yellow-700"
                                                                 disabled={
                                                                     processingId ===
                                                                         admin.id ||
@@ -371,7 +434,7 @@ export default function AdminIndex({ admins, stats }: Props) {
                                                                 <Button
                                                                     variant="outline"
                                                                     size="sm"
-                                                                    className="h-9 gap-2 border-rose-200 text-rose-700 hover:bg-rose-50"
+                                                                    className="h-9 gap-2 border-slate-300 hover:bg-rose :text-white hover:text-rose-700"
                                                                     disabled={
                                                                         deleteProcessing ||
                                                                         processingId ===
@@ -395,6 +458,53 @@ export default function AdminIndex({ admins, stats }: Props) {
                                     </tbody>
                                 </table>
                             </div>
+
+                            {admins.links && admins.links.length > 3 && (
+                                <div className="flex flex-wrap items-center justify-center gap-1.5 border-t border-slate-200 p-5">
+                                    {admins.links.map((link, index) =>
+                                        link.url ? (
+                                            <Button
+                                                key={index}
+                                                variant={
+                                                    link.active
+                                                        ? 'default'
+                                                        : 'outline'
+                                                }
+                                                size="sm"
+                                                className={`h-9 min-w-9 rounded-md px-3 font-bold transition-all duration-300 ${
+                                                    link.active
+                                                        ? 'bg-slate-950 text-white hover:bg-slate-800'
+                                                        : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+                                                }`}
+                                                onClick={() =>
+                                                    router.get(
+                                                        link.url ?? '/admin',
+                                                        {},
+                                                        {
+                                                            preserveState: true,
+                                                            preserveScroll: true,
+                                                        },
+                                                    )
+                                                }
+                                                dangerouslySetInnerHTML={{
+                                                    __html: link.label,
+                                                }}
+                                            />
+                                        ) : (
+                                            <Button
+                                                key={index}
+                                                variant="outline"
+                                                size="sm"
+                                                disabled
+                                                className="h-9 min-w-9 rounded-md border-slate-200 px-3 font-bold text-slate-400 opacity-50"
+                                                dangerouslySetInnerHTML={{
+                                                    __html: link.label,
+                                                }}
+                                            />
+                                        ),
+                                    )}
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
@@ -412,8 +522,9 @@ export default function AdminIndex({ admins, stats }: Props) {
                                     <span className="font-semibold text-slate-950">
                                         {selectedAdmin?.name}
                                     </span>{' '}
-                                    akan dihapus dari daftar admin. Akun ini
-                                    tidak bisa login lagi setelah dihapus.
+                                    ({selectedAdmin?.email}) akan dihapus dari
+                                    daftar admin. Akun ini tidak bisa login lagi
+                                    setelah dihapus.
                                 </DialogDescription>
                             </DialogHeader>
                             <DialogFooter>

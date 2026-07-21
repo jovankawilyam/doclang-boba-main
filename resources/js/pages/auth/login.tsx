@@ -10,6 +10,8 @@ import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
+import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 
 type Props = {
     status?: string;
@@ -17,6 +19,9 @@ type Props = {
 };
 
 export default function Login({ status, canResetPassword }: Props) {
+    // State untuk mengontrol sembunyi/tampil password
+    const [showPassword, setShowPassword] = useState(false);
+
     return (
         <AuthLayout
             title="Log in to your account"
@@ -34,6 +39,7 @@ export default function Login({ status, canResetPassword }: Props) {
                         {({ processing, errors }) => (
                             <>
                                 <div className="space-y-5">
+                                    {/* Email Field */}
                                     <div className="space-y-2">
                                         <Label
                                             htmlFor="email"
@@ -55,6 +61,7 @@ export default function Login({ status, canResetPassword }: Props) {
                                         <InputError message={errors.email} />
                                     </div>
 
+                                    {/* Password Field dengan Fitur Show/Hide */}
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
                                             <Label
@@ -73,19 +80,39 @@ export default function Login({ status, canResetPassword }: Props) {
                                                 </TextLink>
                                             )}
                                         </div>
-                                        <Input
-                                            id="password"
-                                            type="password"
-                                            name="password"
-                                            required
-                                            tabIndex={2}
-                                            autoComplete="current-password"
-                                            placeholder="••••••••"
-                                            className="border-slate-300 transition-all duration-200 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 dark:border-slate-700"
-                                        />
+                                        
+                                        {/* Wrapper Input & Tombol */}
+                                        <div className="relative flex items-center">
+                                            <Input
+                                                id="password"
+                                                type={showPassword ? "text" : "password"} // Dinamis berdasarkan state
+                                                name="password"
+                                                required
+                                                tabIndex={2}
+                                                autoComplete="current-password"
+                                                placeholder="••••••••"
+                                                // pr-10 diberikan agar text password panjang tidak tertumpuk di bawah icon mata
+                                                className="pr-10 border-slate-300 transition-all duration-200 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 dark:border-slate-700"
+                                            />
+                                            
+                                            <button
+                                                type="button" // Menghindari tombol mentrigger submit form saat diklik
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors focus:outline-none"
+                                                tabIndex={-1} // Agar tombol ini dilewati saat menekan tombol 'Tab' di keyboard
+                                            >
+                                                {showPassword ? (
+                                                    <EyeOff className="h-4 w-4" />
+                                                ) : (
+                                                    <Eye className="h-4 w-4" />
+                                                )}
+                                            </button>
+                                        </div>
+                                        
                                         <InputError message={errors.password} />
                                     </div>
 
+                                    {/* Remember Me Checkbox */}
                                     <div className="flex items-center space-x-3 pt-1">
                                         <Checkbox
                                             id="remember"
@@ -101,6 +128,7 @@ export default function Login({ status, canResetPassword }: Props) {
                                         </Label>
                                     </div>
 
+                                    {/* Submit Button */}
                                     <Button
                                         type="submit"
                                         className="w-full font-semibold shadow-sm transition-all duration-300 ease-in-out hover:opacity-90 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"

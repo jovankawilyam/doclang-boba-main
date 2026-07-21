@@ -12,7 +12,7 @@ const FormPage = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-20 font-sans text-slate-900">
-            <Head title="Form Doclang Boba" />
+            <Head title=" Formulir " />
 
             <nav className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 px-4 py-4 shadow-sm backdrop-blur md:px-6">
                 <div className="mx-auto flex max-w-5xl items-center gap-4">
@@ -24,7 +24,7 @@ const FormPage = () => {
                         <ChevronLeft className="h-5 w-5" />
                     </Link>
                     <span className="text-sm font-black tracking-widest text-blue-800 uppercase">
-                        Form Doclang Boba
+                        Formulir
                     </span>
                 </div>
             </nav>

@@ -59,7 +59,7 @@ const Persyaratan: React.FC = () => {
     return (
         // Konsisten menggunakan bg-[#F8FAFC] yang cerah dan bersih layaknya form.tsx
         <div className="min-h-screen bg-[#F8FAFC] pb-20 font-sans text-slate-900">
-            <Head title="Persyaratan Dokumen - Doclang Boba" />
+            <Head title="Persyaratan Dokumen" />
 
             {/* STICKY NAVBAR */}
             <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white px-6 py-6 shadow-sm">
@@ -71,7 +71,7 @@ const Persyaratan: React.FC = () => {
                         <ChevronLeft className="h-6 w-6 text-gray-600" />
                     </Link>
                     <span className="font-black tracking-widest text-[#1E56A0] uppercase">
-                        Doclang Boba
+                        Persyaratan Dokumen
                     </span>
                 </div>
             </nav>

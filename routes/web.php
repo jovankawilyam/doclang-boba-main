@@ -38,7 +38,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Admin Management (Super Admin Only)
     Route::middleware(['superadmin'])->group(function () {
-        Route::resource('admin', AdminController::class)->only(['index', 'create', 'store', 'destroy']);
+        Route::resource('admin', AdminController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
         Route::patch('/admin/{user}/toggle-status', [AdminController::class, 'toggleStatus'])->name('admin.toggle-status');
 
         // Redirect link lama agar tidak broken
@@ -64,6 +64,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/permohonan/{permohonan}', [PermohonanController::class, 'destroy'])->name('permohonan.destroy');
         Route::post('/permohonan/{permohonan}/send-invalid-notification', [PermohonanController::class, 'sendInvalidNotification'])->name('permohonan.send-invalid-notification');
         Route::post('/whatsapp-notifications/{notification}/retry', [PermohonanController::class, 'retryWhatsAppNotification'])->name('whatsapp-notifications.retry');
+        Route::get('/admin/whatsapp', [WhatsAppConnectionController::class, 'index'])->name('whatsapp.connection.index');
         Route::get('/admin/whatsapp/status', [WhatsAppConnectionController::class, 'status'])->name('whatsapp.connection.status');
         Route::get('/admin/whatsapp/qr', [WhatsAppConnectionController::class, 'qr'])->name('whatsapp.connection.qr');
         Route::get('/admin/whatsapp/pairing-code', [WhatsAppConnectionController::class, 'currentPairingCode'])->name('whatsapp.connection.current-pairing-code');

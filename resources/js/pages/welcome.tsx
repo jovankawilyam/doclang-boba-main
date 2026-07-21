@@ -82,7 +82,7 @@ const services: ServiceConfig[] = [
         shortLabel: 'Validasi PPh',
         title: 'Pelacakan Validasi PPh',
         description: 'Lihat status validasi PPh untuk dokumen lelang.',
-        placeholder: 'Contoh: 123/V-PPh/2026',
+        placeholder: 'Contoh: 123/VPPH/2026',
         accent: 'text-[#123C69] dark:text-blue-700',
         ring: 'border-[#C7D2E3] bg-[#F4F7FB] dark:border-slate-200 dark:bg-white',
     },
@@ -378,7 +378,7 @@ export default function Welcome({
 
     return (
         <div className="min-h-screen bg-[#F4F7FB] font-sans text-slate-900 dark:bg-[#F4F7FB] dark:text-slate-900">
-            <Head title="Tracking Dokumen Pasca Lelang" />
+            <Head title="" />
 
             <nav
                 className={`sticky top-0 z-50 w-full border-b border-[#D8E0EC] bg-white/95 shadow-sm backdrop-blur transition-transform duration-300 dark:border-slate-200 dark:bg-white/95 ${
@@ -558,30 +558,41 @@ export default function Welcome({
                 </div>
             </section>
 
-            <section className="mx-auto mt-10 flex w-full max-w-5xl flex-col items-center px-4 text-center md:mt-14">
-                <div className="mb-5 flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-5 py-2 dark:border-blue-100 dark:bg-blue-50">
-                    <Search className="h-4 w-4 text-blue-700 dark:text-blue-700" />
-                    <span className="text-xs font-bold tracking-widest text-blue-700 uppercase md:text-sm dark:text-blue-700">
-                        Monitoring Layanan Pasca Lelang
-                    </span>
-                </div>
+<section className="mx-auto flex w-full max-w-6xl items-center justify-center px-4 py-8 md:px-6 md:py-10">
+    {/* Mobile: Vertikal & Tengah | Desktop: Horizontal (Sejajar ke samping) */}
+    <div className="flex flex-col items-center gap-6 md:flex-row md:items-center md:gap-10 select-none">
+        
+        {/* LOGO NAGARA DANA RAKCA */}
+        <img
+            className="h-[100px] w-auto object-contain md:h-[140px]"
+            src="/images/NAGARA-DANA-RAKCA.png"
+            alt="Nagara Dana Rakça"
+        />
 
-                <h1 className="mb-5 text-4xl leading-[1.12] font-black tracking-tight text-slate-950 md:text-7xl dark:text-slate-950">
-                    Lacak Status <br />
-                    <span className="text-blue-700 dark:text-blue-700">
-                        Dokumen Anda
-                    </span>
-                </h1>
-
-                <p className="mx-auto max-w-3xl px-2 text-lg leading-relaxed text-slate-700 md:text-2xl dark:text-slate-700">
-                    Pilih jenis layanan, masukkan nomor tiket, lalu tekan tombol
-                    <span className="font-black text-blue-700 dark:text-blue-700">
-                        {' '}
-                        Lacak Sekarang
-                    </span>
-                    .
-                </p>
-            </section>
+        {/* AREA TEKS: Di desktop, teks "doclang boba" berada di tengah atas sub-judulnya */}
+        <div className="flex flex-col items-center text-center md:items-center md:text-center font-sans tracking-tight">
+            
+            {/* JUDUL UTAMA: doclang boba */}
+            <h1 className="text-[45px] font-bold leading-[1] text-[#0f2d62] md:text-[70px] md:leading-[1.1]">
+                doclang boba
+            </h1>
+            
+            {/* SUB-JUDUL: dokumen pasca lelang bogor bageur */}
+            <h2 className="mt-2 text-[20px] font-bold leading-tight md:text-[38px] md:leading-none">
+                <span className="text-[#f28e2b]">do</span>
+                <span className="text-[#0f2d62]">kumen pas</span>
+                <span className="text-[#f28e2b]">c</span>
+                <span className="text-[#0f2d62]">a le</span>
+                <span className="text-[#f28e2b]">l</span>
+                <span className="text-[#f28e2b]">ang </span>
+                <span className="text-[#f28e2b]">bo</span>
+                <span className="text-[#0f2d62]">gor </span>
+                <span className="text-[#f28e2b]">ba</span>
+                <span className="text-[#0f2d62]">geur</span>
+            </h2>
+        </div>
+    </div>
+</section>
 
             <main
                 id="tracking"
@@ -732,20 +743,7 @@ export default function Welcome({
             </main>
 
             <section className="mt-20">
-                <div className="w-full border-b border-blue-700 bg-blue-500 px-6 py-10 text-center text-white md:px-12">
-                    <p className="mx-auto max-w-7xl text-base leading-relaxed font-medium md:text-xl">
-                        Bahwa dalam rangka mewujudkan Zona Integritas menuju
-                        Wilayah Bebas dari Korupsi,
-                        <strong className="font-extrabold text-slate-950">
-                            {' '}
-                            KPKNL Bogor berkomitmen untuk meningkatkan kualitas
-                            pelayanan{' '}
-                        </strong>
-                        dengan prinsip utama{' '}
-                        <strong className="text-blue-700">BAGeUR</strong>{' '}
-                        (Bersih, Amanah, Gesit, Unggul dan Ramah)
-                    </p>
-                </div>
+                
 
                 <footer className="w-full bg-blue-800 py-16 text-white">
                     <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 md:grid-cols-2 md:px-8">
@@ -770,6 +768,19 @@ export default function Welcome({
                                     Jalan Veteran No. 45, Panaragan, Kecamatan
                                     Bogor Tengah, Kota Bogor, Jawa Barat 16125
                                 </p>
+                               <div className="py-3">
+    <p className="text-center text-xs text-blue-800">
+        Build by
+        <a
+            href="https://www.instagram.com/jovankawilyamm"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-white transition-colors duration-200"
+        >
+            @jovankawilyamm
+        </a>
+    </p>
+</div>
                             </div>
                         </div>
 

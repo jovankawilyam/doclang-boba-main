@@ -8,6 +8,7 @@ use App\Enums\JenisLayanan;
 use App\Enums\PermohonanStatus;
 use App\Models\DoclangProses;
 use App\Models\Document;
+use App\Services\DocumentStatsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,37 +30,7 @@ class DocumentController extends Controller
 
     public static function getStatistics(): array
     {
-        $categories = JenisLayanan::values();
-        $statuses = PermohonanStatus::values();
-        $stats = [];
-
-        foreach ($categories as $cat) {
-            $stats[$cat] = array_fill_keys($statuses, 0);
-            $stats[$cat]['total'] = 0;
-        }
-
-        $rows = DB::table('doclang_proses')
-            ->select('jenis_layanan', 'status_proses', DB::raw('count(*) as total'))
-            ->whereIn('jenis_layanan', array_values(self::CATEGORY_TO_SERVICE))
-            ->groupBy('jenis_layanan', 'status_proses')
-            ->get();
-
-        foreach ($rows as $row) {
-            $category = $row->jenis_layanan;
-            if (! $category) {
-                continue;
-            }
-
-            $total = (int) $row->total;
-            if (in_array($row->status_proses, $statuses, true)) {
-                $stats[$category][$row->status_proses] = $total;
-            }
-            $stats[$category]['total'] += $total;
-        }
-
-        $stats['kutipan_rl'] = $stats[JenisLayanan::RisalahLelang->value];
-
-        return $stats;
+        return app(DocumentStatsService::class)->getStatistics();
     }
 
     public static function findPublicTrackingDocument(string $search, JenisLayanan $service): ?array
@@ -142,7 +113,7 @@ class DocumentController extends Controller
                 'kode_lot_lelang' => strip_tags($validated['nomor_pengajuan']),
                 'id_pengajuan' => $this->generateIdPengajuan($category),
                 'tanggal_masuk_pengambilan_dokumen' => now()->toDateString(),
-                'nama_pemohon' => 'Input Admin',
+                'nama_pemohon' => auth()->user()?->name ?? 'Input Admin',
                 'nomor_wa_pemohon' => config('services.whatsapp.sender_number', '081911883609'),
                 'jenis_layanan' => self::CATEGORY_TO_SERVICE[$category],
                 'status_proses' => $validated['status_proses'] ?? PermohonanStatus::Proses,

@@ -1,6 +1,8 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
 const express = require('express');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const QRCode = require('qrcode');
 const qrcode = require('qrcode-terminal');
 const { Client, LocalAuth } = require('whatsapp-web.js');
@@ -22,7 +24,16 @@ let pairingPhoneNumber = null;
 let pairingGeneratedAt = null;
 let lastReadyAt = null;
 
-app.use(express.json());
+app.use(helmet());
+app.use(express.json({ limit: '10kb' }));
+
+const sendMessageLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: { success: false, error: 'Terlalu banyak permintaan. Coba lagi dalam 1 menit.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 const client = new Client({
   authStrategy: new LocalAuth({
@@ -30,7 +41,7 @@ const client = new Client({
   }),
   puppeteer: {
     headless: true,
-    executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    executablePath: CHROME_PATH,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   },
 });
@@ -174,7 +185,7 @@ client.on('disconnected', (reason) => {
   }
 });
 
-app.get('/health', (req, res) => {
+app.get('/health', requireGatewayToken, (req, res) => {
   res.json({ status: 'ok', whatsapp: getGatewayStatus() });
 });
 
@@ -246,10 +257,16 @@ app.post('/api/admin/reconnect', requireGatewayToken, async (req, res) => {
   }
 });
 
-app.post('/api/send-message', requireGatewayToken, async (req, res) => {
+app.post('/api/send-message', requireGatewayToken, sendMessageLimiter, async (req, res) => {
   try {
     const { phone, message } = req.body;
     if (!message) return res.status(400).json({ success: false, error: 'Message wajib diisi.' });
+    if (typeof message !== 'string' || message.length > 4096) {
+      return res.status(400).json({ success: false, error: 'Maksimal 4096 karakter.' });
+    }
+    if (!phone || typeof phone !== 'string') {
+      return res.status(400).json({ success: false, error: 'Nomor HP wajib diisi.' });
+    }
 
     const gatewayStatus = getGatewayStatus();
     if (!gatewayStatus.ready) return res.status(503).json({ success: false, error: 'Gateway belum siap.', status: gatewayStatus });

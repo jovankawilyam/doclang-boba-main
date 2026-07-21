@@ -2,31 +2,41 @@ import { wayfinder } from '@laravel/vite-plugin-wayfinder';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import laravel from 'laravel-vite-plugin';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 
-export default defineConfig({
-    plugins: [
-        laravel({
-            input: ['resources/css/app.css', 'resources/js/app.tsx'],
-            ssr: 'resources/js/ssr.tsx',
-            refresh: true,
-        }),
-        react({
-            babel: {
-                plugins: ['babel-plugin-react-compiler'],
+export default defineConfig(({ mode }) => {
+    const env = loadEnv(mode, process.cwd(), '')
+
+    return {
+        plugins: [
+            laravel({
+                input: ['resources/css/app.css', 'resources/js/app.tsx'],
+                ssr: 'resources/js/ssr.tsx',
+                refresh: true,
+            }),
+            react({
+                babel: {
+                    plugins: ['babel-plugin-react-compiler'],
+                },
+            }),
+            tailwindcss(),
+            wayfinder({
+                formVariants: true,
+            }),
+        ],
+        esbuild: {
+            jsx: 'automatic',
+        },
+        server: {
+            host: '0.0.0.0',
+            origin: env.VITE_ORIGIN || undefined,
+            hmr: {
+                host: env.VITE_HMR_HOST || 'localhost',
+                clientPort: 443,
+                protocol: 'wss',
             },
-        }),
-        tailwindcss(),
-        wayfinder({
-            formVariants: true,
-        }),
-    ],
-    esbuild: {
-        jsx: 'automatic',
-    },
-    server: {
-        // Allow connections from ngrok tunnel
-        middlewareMode: false,
-        allowedHosts: ['localhost', '127.0.0.1', '.ngrok.io', '.ngrok-free.dev'],
-    },
-});
+            allowedHosts: ['localhost', '127.0.0.1', '.ngrok-free.app', '.ngrok-free.dev'],
+        },
+    }
+})
+
