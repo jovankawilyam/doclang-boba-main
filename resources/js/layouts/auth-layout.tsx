@@ -13,9 +13,9 @@ export default function AuthLayout({ children, title, description }: Props) {
                 {/* KOLOM KIRI - GAMBAR (Desktop Only) */}
                 <div className="relative hidden w-1/2 bg-slate-100 md:block dark:bg-slate-800">
                     <img
-                        src="/images/profile-3.png"
+                        src="/profile/profile3.jpeg"
                         alt="Background"
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-cover object-center"
                     />
                     <div className="absolute inset-0 bg-primary/5" />
                 </div>

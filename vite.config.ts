@@ -30,11 +30,13 @@ export default defineConfig(({ mode }) => {
         server: {
             host: '0.0.0.0',
             origin: env.VITE_ORIGIN || undefined,
-            hmr: {
-                host: env.VITE_HMR_HOST || 'localhost',
-                clientPort: 443,
-                protocol: 'wss',
-            },
+            hmr: env.VITE_HMR_HOST
+                ? {
+                      host: env.VITE_HMR_HOST,
+                      clientPort: 443,
+                      protocol: 'wss',
+                  }
+                : true,
             allowedHosts: ['localhost', '127.0.0.1', '.ngrok-free.app', '.ngrok-free.dev'],
         },
     }

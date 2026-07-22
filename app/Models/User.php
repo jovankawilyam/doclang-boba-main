@@ -54,6 +54,22 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Get the attributes that should be appended to model serialization.
+     *
+     * @return list<string>
+     */
+    protected function appends(): array
+    {
+        return ['avatar'];
+    }
+
+    public function getAvatarAttribute(): string
+    {
+        $hash = md5(strtolower(trim($this->email)));
+        return "https://www.gravatar.com/avatar/{$hash}?s=200&d=mp";
+    }
+
     public function isSuperAdmin(): bool
     {
         return $this->role === 'super_admin';

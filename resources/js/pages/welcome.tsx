@@ -256,10 +256,10 @@ export default function Welcome({
 
     const images = useMemo(
         () => [
-            '/images/profile-1.svg',
-            '/images/profile-2.svg',
-            '/images/profile-3.svg',
-            '/images/profile-4.svg',
+            '/profile/profile1.jpeg',
+            '/profile/profile2.jpeg',
+            '/profile/profile3.jpeg',
+            '/profile/profile4.jpeg',
         ],
         [],
     );
@@ -517,25 +517,25 @@ export default function Welcome({
                 </div>
             </nav>
 
-            <section className="w-full">
-                <div className="relative right-1/2 left-1/2 -mr-[50vw] -ml-[50vw] w-screen">
+            <section className="w-full overflow-hidden">
+                <div className="relative w-full aspect-video max-h-[590px] overflow-hidden">
                     <img
                         src={images[current]}
                         alt="slider"
-                        className="h-[360px] w-full object-cover object-[center_10%] transition-all duration-700 md:h-[590px]"
+                        className="h-full w-full object-cover object-center transition-all duration-700"
                     />
-                    <div className="absolute inset-0 bg-black/20" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                     <button
                         type="button"
                         onClick={prevSlide}
-                        className="absolute top-1/2 left-4 -translate-y-1/2 rounded-full bg-black/50 px-3 py-1 text-white transition hover:bg-black/70"
+                        className="absolute top-1/2 left-4 -translate-y-1/2 rounded-full bg-white/20 backdrop-blur-sm px-3 py-2 text-white transition hover:bg-white/40"
                     >
                         ‹
                     </button>
                     <button
                         type="button"
                         onClick={nextSlide}
-                        className="absolute top-1/2 right-4 -translate-y-1/2 rounded-full bg-black/50 px-3 py-1 text-white transition hover:bg-black/70"
+                        className="absolute top-1/2 right-4 -translate-y-1/2 rounded-full bg-white/20 backdrop-blur-sm px-3 py-2 text-white transition hover:bg-white/40"
                     >
                         ›
                     </button>
