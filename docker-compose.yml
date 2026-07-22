@@ -1,0 +1,119 @@
+version: "3.8"
+
+services:
+  # ============================================
+  # Laravel Backend (PHP + Nginx)
+  # ============================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: doclang-app
+    ports:
+      - "8000:80"
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_URL=http://localhost:8000
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=doclang
+      - DB_USERNAME=doclang
+      - DB_PASSWORD=secret
+      - WA_GATEWAY_URL=http://wa-gateway:3001/api/send-message
+      - WA_GATEWAY_STATUS_URL=http://wa-gateway:3001/api/admin/status
+      - WA_GATEWAY_QR_URL=http://wa-gateway:3001/api/admin/qr
+      - WA_GATEWAY_PAIRING_CODE_URL=http://wa-gateway:3001/api/admin/pairing-code
+      - WA_GATEWAY_RECONNECT_URL=http://wa-gateway:3001/api/admin/reconnect
+      - WA_GATEWAY_TOKEN=local_dev_token
+    volumes:
+      - storage:/var/www/html/storage
+      - uploads:/var/www/html/upload
+    depends_on:
+      db:
+        condition: service_healthy
+      wa-gateway:
+        condition: service_started
+    networks:
+      - doclang
+
+  # ============================================
+  # Queue Worker (same image as app)
+  # ============================================
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: doclang-queue
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=doclang
+      - DB_USERNAME=doclang
+      - DB_PASSWORD=secret
+      - WA_GATEWAY_URL=http://wa-gateway:3001/api/send-message
+    volumes:
+      - storage:/var/www/html/storage
+      - uploads:/var/www/html/upload
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - doclang
+
+  # ============================================
+  # MySQL Database
+  # ============================================
+  db:
+    image: mysql:8.0
+    container_name: doclang-db
+    environment:
+      MYSQL_DATABASE: doclang
+      MYSQL_USER: doclang
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: rootsecret
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - doclang
+
+  # ============================================
+  # WhatsApp Gateway (Node.js + Chromium)
+  # ============================================
+  wa-gateway:
+    build:
+      context: ./whatsapp-gateway
+      dockerfile: Dockerfile
+    container_name: doclang-wa
+    ports:
+      - "3001:3001"
+    environment:
+      - WA_GATEWAY_TOKEN=local_dev_token
+    volumes:
+      - wa-session:/app/.wwebjs_auth
+      - wa-cache:/app/.wwebjs_cache
+    networks:
+      - doclang
+
+volumes:
+  mysql:
+  storage:
+  uploads:
+  wa-session:
+  wa-cache:
+
+networks:
+  doclang:
+    driver: bridge
