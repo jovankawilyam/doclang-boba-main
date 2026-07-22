@@ -42,38 +42,6 @@ services:
         fromDatabase:
           name: doclang-db
           property: password
-      - key: WA_GATEWAY_URL
-        fromService:
-          name: doclang-wa
-          type: web
-          property: url
-          concat: /api/send-message
-      - key: WA_GATEWAY_STATUS_URL
-        fromService:
-          name: doclang-wa
-          type: web
-          property: url
-          concat: /api/admin/status
-      - key: WA_GATEWAY_QR_URL
-        fromService:
-          name: doclang-wa
-          type: web
-          property: url
-          concat: /api/admin/qr
-      - key: WA_GATEWAY_PAIRING_CODE_URL
-        fromService:
-          name: doclang-wa
-          type: web
-          property: url
-          concat: /api/admin/pairing-code
-      - key: WA_GATEWAY_RECONNECT_URL
-        fromService:
-          name: doclang-wa
-          type: web
-          property: url
-          concat: /api/admin/reconnect
-      - key: WA_GATEWAY_TOKEN
-        generateValue: true
       - key: QUEUE_CONNECTION
         value: database
       - key: SESSION_DRIVER
@@ -129,42 +97,12 @@ services:
         fromDatabase:
           name: doclang-db
           property: password
-      - key: WA_GATEWAY_URL
-        fromService:
-          name: doclang-wa
-          type: web
-          property: url
-          concat: /api/send-message
-      - key: WA_GATEWAY_TOKEN
-        fromService:
-          name: doclang-app
-          type: web
-          property: envKey.WA_GATEWAY_TOKEN
       - key: QUEUE_CONNECTION
         value: database
       - key: SESSION_DRIVER
         value: database
       - key: CACHE_STORE
         value: database
-
-  # ============================================
-  # WhatsApp Gateway (Node.js + Chromium)
-  # ============================================
-  - type: web
-    name: doclang-wa
-    runtime: docker
-    rootDir: whatsapp-gateway
-    dockerfilePath: Dockerfile
-    plan: free
-    healthCheckPath: /health
-    envVars:
-      - key: WA_GATEWAY_TOKEN
-        fromService:
-          name: doclang-app
-          type: web
-          property: envKey.WA_GATEWAY_TOKEN
-      - key: CHROME_PATH
-        value: /usr/bin/chromium
 
 # ============================================
 # PostgreSQL Database
